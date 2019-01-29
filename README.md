@@ -1,4 +1,4 @@
-# botminton
+# deliver.ai
 System Design Project 2018/19 - Group 19
 
 # Setup
