@@ -1,65 +1,82 @@
 import smbus
 
-motor_board_address = 0x4
+class MotorMover(object):
+    '''
+    This class interfaces with the Motor Control board connected to the I2C pins
+    on the Rasberry Pi.
+    It is based off a basic Arduino class called SDPArduino.cpp (which at the
+    time of writing is avaible from the )
+    '''
+    MOTOR_BOARD_ADDRESS = 0x4
 
-bus = smbus.SMBus(1)
+    def __init__(self):
+        self.bus = smbus.SMBus(1)
 
-def motor_move(motor_n, motor_power):
-    if motor_power > 0:
-        motor_forward(motor_n, motor_power)
-    elif motor_power < 0:
-        motor_backward(motor_n, abs(motor_power))
-    else:
-        motor_stop(motor_n)
+    def motor_move(self, motor_n, motor_power):
+        '''
+        This method allows for the control of the motor with the number motor_n
+        at the power given by motor_power.
+        If the power is:
+            Positive - Go Forwards
+            Negative - Go Backwards
+            Zero - Stop
+        '''
+        if motor_power > 0:
+            self.motor_forward(motor_n, motor_power)
+        elif motor_power < 0:
+            self.motor_backward(motor_n, abs(motor_power))
+        else:
+            self.motor_stop(motor_n)
 
-def motor_forward(motor_n, motor_power):
-    motor_mode = 0x2
-    cmd_byte = motor_n << 5 | 24 | motor_mode << 1
-    pwr = int(motor_power * 2.55)
+    def motor_forward(self, motor_n, motor_power):
+        '''
+        This method controls the motor a the motor_n to go in a forwards
+        direction, using the motor_power to control how fast that happens
+        '''
+        motor_mode = 0x2
+        cmd_byte = motor_n << 5 | 24 | motor_mode << 1
+        pwr = int(motor_power * 2.55)
 
-    cmd = [cmd_byte, pwr]
+        cmd = [cmd_byte, pwr]
 
-    print("writing: {:b}, {:b}".format(*cmd))
-    bus.write_i2c_block_data(motor_board_address, 0, cmd)
+        print("writing: {:b}, {:b}".format(*cmd))
+        self.bus.write_i2c_block_data(MOTOR_BOARD_ADDRESS, 0, cmd)
 
-def motor_backward(motor_n, motor_power):
-    motor_mode = 0x3
-    cmd_byte = motor_n << 5 | 24 | motor_mode << 1
-    pwr = int(motor_power * 2.55)
+    def motor_backward(self, motor_n, motor_power):
+        '''
+        This method controls the motor a the motor_n to go in a backwards
+        direction, using the motor_power to control how fast that happens
+        '''
+        motor_mode = 0x3
+        cmd_byte = motor_n << 5 | 24 | motor_mode << 1
+        pwr = int(motor_power * 2.55)
 
-    cmd = [cmd_byte, pwr]
+        cmd = [cmd_byte, pwr]
 
-    bus.write_i2c_block_data(motor_board_address, 0, cmd)
+        self.bus.write_i2c_block_data(MOTOR_BOARD_ADDRESS, 0, cmd)
 
-def motor_stop(motor_n):
-    motor_mode = 0x0
-    cmd_byte = motor_n << 5 | 16 | motor_mode << 1
+    def motor_stop(self, motor_n):
+        '''
+        This stops the motor_n
+        '''
+        motor_mode = 0x0
+        cmd_byte = motor_n << 5 | 16 | motor_mode << 1
 
-    bus.write_i2c_block_data(motor_board_address, 0, [cmd_byte])
+        self.bus.write_i2c_block_data(MOTOR_BOARD_ADDRESS, 0, [cmd_byte])
 
-def all_motor_stop():
-    cmd = 0x1
-    bus.write_i2c_block_data(motor_board_address, 0, [cmd])
+    def all_motor_stop(self):
+        '''
+        This stops all motors
+        '''
+        cmd = 0x1
+        self.bus.write_i2c_block_data(MOTOR_BOARD_ADDRESS, 0, [cmd])
 
-motor_forward(3, 50)
+MOTOR = MotorMover()
+MOTOR.motor_forward(3, 50)
+time.sleep(10)
+MOTOR.motor_backward(3, 50)
+time.sleep(10)
+MOTOR.motor_stop(3)
 
 # motor_forward(1, 10)
 # motor_forward(1, 10)
-
-# void motorForward(int motorNum, int motorPower) { //Makes Motor motorNum go forwards at a power of motorPower
-#   if (motorNum >= 0 and motorNum <= 5){
-#     if (motorPower < 0){ //Lowest power possible = 0.
-#       motorPower = 0;
-#     }
-#     if (motorPower > 100) {//Highest power possible = 100.
-#       motorPower = 100;
-#     }
-    # int motorMode = 2; //Mode 2 is Forward
-    # byte motor1 = motorNum<<5 | 24 | motorMode<<1 ;//Build Command Byte
-    # byte motor2 = int(motorPower * 2.55);
-    # uint8_t sender[2] = {motor1, motor2};
-    # Wire.beginTransmission(MotorBoardI2CAddress); //open I2C communation to Motor Board.
-    # Wire.write(sender,2);                    //send data.
-    # byte fred = Wire.endTransmission();		//end I2C communcation.
-#   }
-# }
