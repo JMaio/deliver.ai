@@ -4,6 +4,14 @@ motor_board_address = 0x4
 
 bus = smbus.SMBus(1)
 
+def motor_move(motor_n, motor_power):
+    if motor_power > 0:
+        motor_forward(motor_n, motor_power)
+    elif motor_power < 0:
+        motor_backward(motor_n, abs(motor_power))
+    else:
+        motor_stop(motor_n)
+
 def motor_forward(motor_n, motor_power):
     motor_mode = 0x2
     cmd_byte = motor_n << 5 | 24 | motor_mode << 1
@@ -14,6 +22,24 @@ def motor_forward(motor_n, motor_power):
     print("writing: {:b}, {:b}".format(*cmd))
     bus.write_i2c_block_data(motor_board_address, 0, cmd)
 
+def motor_backward(motor_n, motor_power):
+    motor_mode = 0x3
+    cmd_byte = motor_n << 5 | 24 | motor_mode << 1
+    pwr = int(motor_power * 2.55)
+
+    cmd = [cmd_byte, pwr]
+
+    bus.write_i2c_block_data(motor_board_address, 0, cmd)
+
+def motor_stop(motor_n):
+    motor_mode = 0x0
+    cmd_byte = motor_n << 5 | 16 | motor_mode << 1
+
+    bus.write_i2c_block_data(motor_board_address, 0, [cmd_byte])
+
+def all_motor_stop():
+    cmd = 0x1
+    bus.write_i2c_block_data(motor_board_address, 0, [cmd])
 
 motor_forward(3, 50)
 
