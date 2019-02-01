@@ -1,4 +1,5 @@
 import smbus
+#import time
 
 class MotorMover(object):
     '''
@@ -7,10 +8,10 @@ class MotorMover(object):
     It is based off a basic Arduino class called SDPArduino.cpp (which at the
     time of writing is avaible from the )
     '''
-    MOTOR_BOARD_ADDRESS = 0x4
 
     def __init__(self):
         self.bus = smbus.SMBus(1)
+        self.motor_board_address = 0x4
 
     def motor_move(self, motor_n, motor_power):
         '''
@@ -40,7 +41,7 @@ class MotorMover(object):
         cmd = [cmd_byte, pwr]
 
         print("writing: {:b}, {:b}".format(*cmd))
-        self.bus.write_i2c_block_data(MOTOR_BOARD_ADDRESS, 0, cmd)
+        self.bus.write_i2c_block_data(self.motor_board_address, 0, cmd)
 
     def motor_backward(self, motor_n, motor_power):
         '''
@@ -53,7 +54,7 @@ class MotorMover(object):
 
         cmd = [cmd_byte, pwr]
 
-        self.bus.write_i2c_block_data(MOTOR_BOARD_ADDRESS, 0, cmd)
+        self.bus.write_i2c_block_data(self.motor_board_address, 0, cmd)
 
     def motor_stop(self, motor_n):
         '''
@@ -62,21 +63,21 @@ class MotorMover(object):
         motor_mode = 0x0
         cmd_byte = motor_n << 5 | 16 | motor_mode << 1
 
-        self.bus.write_i2c_block_data(MOTOR_BOARD_ADDRESS, 0, [cmd_byte])
+        self.bus.write_i2c_block_data(self.motor_board_address, 0, [cmd_byte])
 
     def all_motor_stop(self):
         '''
         This stops all motors
         '''
         cmd = 0x1
-        self.bus.write_i2c_block_data(MOTOR_BOARD_ADDRESS, 0, [cmd])
+        self.bus.write_i2c_block_data(self.motor_board_address, 0, [cmd])
 
-MOTOR = MotorMover()
-MOTOR.motor_forward(3, 50)
-time.sleep(10)
-MOTOR.motor_backward(3, 50)
-time.sleep(10)
-MOTOR.motor_stop(3)
+#MOTOR = MotorMover()
+#MOTOR.motor_forward(3, 50)
+#time.sleep(10)
+#MOTOR.motor_backward(3, 50)
+#time.sleep(10)
+#MOTOR.motor_stop(3)
 
 # motor_forward(1, 10)
 # motor_forward(1, 10)
