@@ -71,13 +71,3 @@ class MotorMover(object):
         '''
         cmd = 0x1
         self.bus.write_i2c_block_data(self.motor_board_address, 0, [cmd])
-
-#MOTOR = MotorMover()
-#MOTOR.motor_forward(3, 50)
-#time.sleep(10)
-#MOTOR.motor_backward(3, 50)
-#time.sleep(10)
-#MOTOR.motor_stop(3)
-
-# motor_forward(1, 10)
-# motor_forward(1, 10)
