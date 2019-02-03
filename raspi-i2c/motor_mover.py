@@ -6,7 +6,7 @@ class MotorMover(object):
     This class interfaces with the Motor Control board connected to the I2C pins
     on the Rasberry Pi.
     It is based off a basic Arduino class called SDPArduino.cpp (which at the
-    time of writing is avaible from the )
+    time of writing is available from http://homepages.inf.ed.ac.uk/gde/work/sdp/SDPArduino.zip )
     '''
 
     def __init__(self):
