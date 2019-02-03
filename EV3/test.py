@@ -23,7 +23,7 @@ class DeliverAIBot():
         if wait:
             waitForMotor(motor)
 
-    def move_linear(self, direction=0, speed=100):
+    def move_linear(self, direction=0, speed=100, d=1000):
         # move the robot with polar-coordinate style linear movement
         r = math.radians(direction % 360)
         x = speed * math.cos(r)
@@ -36,12 +36,39 @@ class DeliverAIBot():
             (0, -1),
         ]
         pairs = [(x * a, y * b) for (a, b) in axes]
-        print(pairs)
 
         for (m, p) in enumerate(pairs):
-            self.move_motor(m, speed=sum(p), duration=1000)
-        
+            self.move_motor(m, speed=sum(p), duration=d)
+    
+    def rotate(self, angle=90, speed=100):
+        # rotation determined by speed * duration
+        for m in range(4):
+            self.move_motor(m, speed=speed, duration=(1000)*(angle/speed)**2)
 
+    def follow_line(self, speed=200, start_angle=0):
+        c = ev3.ColorSensor("in1")
+        move_ang = start_angle    
+        delta_a = 10
+        delta_rot = 4
+        while(True):
+            #if (move_ang >= -90 and move_ang <= 90):
+            #    delta_a *= 1
+            #else:
+            #    delta_a *= -1
+            print("delta: ", delta_a)
+
+            print(c.color)
+            if(c.color==3): 
+                move_ang += delta_a
+                self.rotate(delta_a*delta_rot)
+            elif(c.color==6): 
+                move_ang -= delta_a
+                self.rotate(delta_a*delta_rot)
+            elif(c.color==1):
+                move_ang = start_angle
+            #time.sleep(0.01)           
+            self.move_linear(move_ang,speed,200)
+            time.sleep(0.1)
 
 def self_test_wheels():
     print("self-testing wheels")
@@ -87,6 +114,9 @@ if __name__ == "__main__":
 #    bot.move_motor(1, wait=True)
 #    bot.move_motor(2, wait=True)
 #    bot.move_motor(3, wait=True)
-    bot.move_linear(32, 100)
+#    bot.move_linear(32, 100)
+#    while True:
+#        exec(input())
 
 
+b = DeliverAIBot()
