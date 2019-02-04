@@ -26,6 +26,14 @@ class DeliverAIBot():
         if wait:
             self.waitForMotor(motor)
 
+    def rotate(self, angle=90, speed=100):
+        # rotation determined by speed * duration
+        sign = 1
+        if angle < 0:
+            sign = -1
+        for m in range(4):
+            self.move_motor(m, speed=sign*speed, duration=(1000)*(angle/speed)**2)
+
     def move_bearing(self, direction=0, speed=100):
         # Move the robot on the desired bearing (zeroed on the x-axis)
 
@@ -44,7 +52,7 @@ class DeliverAIBot():
         pairs = [(x * a, y * b) for (a, b) in axes]
 
         # Check whether robot is moving backwards
-        if self.reverse:
+        if not self.reverse:
             pairs = [(a*(-1), b) for (a,b) in pairs]
 
         for (m, p) in enumerate(pairs):
@@ -69,33 +77,46 @@ class DeliverAIBot():
         for motor in self.motors:
             motor.stop()
 
-    def follow_line(self, speed=200):
+    def follow_line(self, speed=200, init_offset=0):
         # Line following using the LEGO colour sensor
 
-        # Currently not implemented correction by rotation
-
         cs = ev3.ColorSensor("in1"); assert cs.connected
+        cs.MODE_COL_COLOR
+        print("Connected to Color Sensor")
         bearing = 0
-        offset = 0
+        offset = init_offset
+        delta_rot = 110
+        turned = False
+        prev_c = 0
         while(True):
+            cur_c = cs.color
+            print(cur_c)
             # If black move forward
             if (cs.color==1):
                 bearing = 0
+                turned = False
             # If green move in direction of [-1,1]
-            elif (cs.color==3):
+            elif (cs.color==5):
                 bearing = 30 # Arbitrarily chosen
+                self.rotate(-delta_rot)
+                turned = False
             # If white move in direciton of [1,1]
             elif (cs.color==6):
                 bearing = 330
-
+                self.rotate(delta_rot)
+                turned = False
+            
             # If ground is red we have reached a corner
-            if (cs.color==5):
+            if (cs.color==2 and prev_c ==2):
+                ev3.Sound().beep()
                 self.stop_motors()
-                offset = (offset + 90) % 360
-                while (cs.color==5):
+                if not turned:
+                  offset = (offset + 90) % 360
+                turned = True
+                while (cs.color==2):
                     self.move_bearing(bearing+offset, speed)
             
-
+            prev_c = cs.color
             self.move_bearing(bearing+offset, speed)
             time.sleep(0.05)
         
@@ -104,6 +125,8 @@ class DeliverAIBot():
 
 if __name__ == "__main__":
     bot = DeliverAIBot()
-    
+    bot.follow_line(300)
+
+bot = DeliverAIBot()    
 
 
