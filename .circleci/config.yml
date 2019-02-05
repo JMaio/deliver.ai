@@ -1,0 +1,28 @@
+version: 2.0
+jobs:
+ build:
+   docker:
+     - image: circleci/python:3.6.4
+   steps:
+     - checkout
+     - run:
+         name: The First Step
+         command: |
+           echo 'Hello!'
+     - run:
+         name: Code Has Arrived
+         command: |
+           ls -al
+           echo 'Code from GitHub'
+     - run:
+         name: Intall Dependencies
+         command: |
+           sudo pip install pipenv
+           pipenv install
+     - run:
+         name: Run the Tests
+         command: pipenv run "python -m unittest discover"
+     - run:
+         name: Linter
+         command:  |
+          pipenv run "flake8"
