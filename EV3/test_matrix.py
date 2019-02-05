@@ -90,33 +90,49 @@ class DeliverAIBot():
         prev_c = 0
         while(True):
             cur_c = cs.color
-            print(cur_c)
+           # print(cur_c)
             # If black move forward
-            if (cs.color==1):
+            if (cur_c==1):
                 bearing = 0
                 turned = False
-            # If green move in direction of [-1,1]
-            elif (cs.color==5):
+            # If red move in direction of [-1,1]
+            elif (cur_c==5):
                 bearing = 30 # Arbitrarily chosen
                 self.rotate(-delta_rot)
-                turned = False
+               # turned = False
             # If white move in direciton of [1,1]
-            elif (cs.color==6):
+            elif (cur_c==6):
                 bearing = 330
                 self.rotate(delta_rot)
-                turned = False
+               # turned = False
             
-            # If ground is red we have reached a corner
-            if (cs.color==2 and prev_c ==2):
+            # If ground is blue we have reached a corner
+            if (cs.color==2):
+                print("Blue?")
                 ev3.Sound().beep()
                 self.stop_motors()
+                time.sleep(0.25)
+                self.rotate(angle=50)
+                time.sleep(0.25)
+                if (not cs.color == 2):
+                  print("Nope, nevermind")
+                  self.move_bearing(bearing+offset, speed)
+                  time.sleep(0.05)
+                  continue
+                print("Blue!")
                 if not turned:
+                 # offset_old = offset
                   offset = (offset + 90) % 360
                 turned = True
                 while (cs.color==2):
-                    self.move_bearing(bearing+offset, speed)
+                  self.move_bearing(bearing+offset, speed)
+               # if (not cs.color==1):
+                #  offset = offset_old
             
-            prev_c = cs.color
+           # if (cs.color == 2 and (not cs.color==1)):
+            #  self.stop_motors()
+             # self.move_bearing(-(bearing+offset), speed)
+           # prev_c = cs.color
             self.move_bearing(bearing+offset, speed)
             time.sleep(0.05)
         
