@@ -1,7 +1,8 @@
-from motor_mover import *
+from motor_mover import MotorMover
 import time
 
 m = MotorMover()
+
 
 def self_test_wheels():
     direction = input("Direction?")
@@ -18,23 +19,26 @@ def self_test_wheels():
     time.sleep(10)
     m.all_motor_stop
 
-#Need to check directions
+
 def go_left():
-    dir = [(2,0),(3,40),(4,0),(5,-40)]
-    for (mo,p) in dir:
+    dir = [(2, 0), (3, 40), (4, 0), (5, -40)]
+    for (mo, p) in dir:
         m.motor_move(mo, p)
+
 
 def go_right():
-    dir = [(2,0),(3,-40),(4,0),(5,40)]
-    for (mo,p) in dir:
+    dir = [(2, 0), (3, -40), (4, 0), (5, 40)]
+    for (mo, p) in dir:
         m.motor_move(mo, p)
+
 
 def go_f():
-    dir = [(2,40),(3,0),(4,-40),(5,0)]
-    for (mo,p) in dir:
+    dir = [(2, 40), (3, 0), (4, -40), (5, 0)]
+    for (mo, p) in dir:
         m.motor_move(mo, p)
 
+
 def go_b():
-    dir = [(2,-40),(3,0),(4,40),(5,0)]
-    for (mo,p) in dir:
+    dir = [(2, -40), (3, 0), (4, 40), (5, 0)]
+    for (mo, p) in dir:
         m.motor_move(mo, p)
