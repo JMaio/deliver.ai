@@ -18,6 +18,7 @@ def self_test_wheels():
     time.sleep(10)
     m.all_motor_stop
 
+#Need to check directions
 def go_left():
     dir = [(2,0),(3,40),(4,0),(5,-40)]
     for (mo,p) in dir:
