@@ -80,6 +80,7 @@ class DeliverAIBot():
         # Travel first along x axis, then y axis to recipient 
         self.follow_line(speed, x_count, 0)
         self.follow_line(speed, y_count, -90)
+        #self.rotate(-50)
 
         # Authentic recipient's identity
         self.authenticate()
@@ -88,6 +89,7 @@ class DeliverAIBot():
         self.toggle_reverse()
         self.follow_line(speed, y_count, 90)
         self.follow_line(speed, x_count, 0)
+        #self.rotate(-50)
 
     def authenticate(self):
         # Authenticate the recipient's identity and handle the situation
@@ -97,7 +99,7 @@ class DeliverAIBot():
     def follow_line(self, speed=300, no_js=0, init_offset=0):
         # Line following using the LEGO colour sensor
         # Follow the path counting how many junctions (no_js) we pass along the way
-        # Done recursivel
+        # Done recursively
 
         # Base case: if we have no more junctions to pass we are at our destination
         if (no_js == 0):
@@ -138,12 +140,17 @@ class DeliverAIBot():
             # If ground is blue we have reached a corner
             if (cs.color==2):
                 print("Blue?")
-                time.sleep(0.25)
+                #time.sleep(0.25)
                 self.stop_motors()
 
                 # Double check we are at a junction by rotating a little and re-checking the colour
-                self.rotate(angle=50)
-                time.sleep(0.25)
+                #if (not self.reverse):
+                    #self.rotate(angle=40)
+                #else:
+                    #self.rotate(angle=-40)
+                self.move_bearing(30+offset, speed=100)
+                self.rotate(30)
+                time.sleep(0.35)
                 if (not cs.color == 2):
                     print("Nope, nevermind")
                     # Continue as if this never happened...
@@ -153,6 +160,12 @@ class DeliverAIBot():
                 # We're at a junction!
                 print("Blue!")
                 ev3.Sound().beep()
+                self.stop_motors()
+                #if (not self.reverse):
+                    #self.rotate(-40)
+                #else:
+                    #self.rotate(40)
+                time.sleep(0.25) # Give enough time to move back into position
 
                 # Recurse with one fewer junction to go
                 self.follow_line(speed, (no_js-1), offset)
