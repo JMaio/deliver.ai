@@ -97,12 +97,13 @@ class DeliverAIBot():
     def follow_line(self, speed=300, no_js=0, init_offset=0):
         # Line following using the LEGO colour sensor
         # Follow the path counting how many junctions (no_js) we pass along the way
-        # Done recursivel
+        # Done recursively
 
         # Base case: if we have no more junctions to pass we are at our destination
         if (no_js == 0):
             self.stop_motors()
             return
+
         # Otherwise we follow the path
 
         # Initialise the colour sensor
@@ -113,7 +114,6 @@ class DeliverAIBot():
         bearing = 0 # Current bearing of the robot
         offset = init_offset # Used to change the bearing at junctions
         delta_rot = 110 # Used for rotation
-        turned = False # Used to guard against turning twice at junctions
  
         # We are currently on a junction so need to move off it
         while (cs.color==2):
@@ -125,7 +125,6 @@ class DeliverAIBot():
             # If black move forward
             if (cur_c==1):
                 bearing = 0
-                turned = False
             # If white move in direction of [1,1]
             elif (cur_c==6):
                 bearing = 30 # Arbitrarily chosen
