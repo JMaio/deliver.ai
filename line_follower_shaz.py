@@ -20,7 +20,8 @@ class DeliverAIBot():
 
     def move_motor(self, motor=0, speed=100, duration=500, wait=False):
         # Move a specific motor (given speed and duration of movement)
-        motor = self.motors[motor]; assert motor.connected
+        motor = self.motors[motor]
+        assert motor.connected
         motor.run_timed(speed_sp=speed, time_sp=duration)
 
     def rotate(self, angle=90, speed=100):
@@ -31,11 +32,14 @@ class DeliverAIBot():
         if angle < 0:
             sign = -1
         for m in range(4):
-            self.move_motor(m, speed=sign*speed, duration=(1000)*(angle/speed)**2)
+            self.move_motor(
+                m,
+                speed=sign*speed, duration=(1000)*(angle/speed)**2
+            )
 
     def move_bearing(self, direction=0, speed=100):
         # Move the robot on the desired bearing (zeroed on the x-axis)
-        
+
         # 2x4 matrix of vectors of each motor
         r = math.radians(direction % 360)
         x = speed * math.cos(r)
@@ -52,13 +56,14 @@ class DeliverAIBot():
 
         # Check whether robot is moving backwards
         if not self.reverse:
-            pairs = [(a*(-1), b) for (a,b) in pairs]
+            pairs = [(a*(-1), b) for (a, b) in pairs]
 
         for (m, p) in enumerate(pairs):
-            self.move_motor(m, speed=sum(p), duration=1000) # Speed of each motor is sum of its vector components
+            #  Speed of each motor is sum of its vector components
+            self.move_motor(m, speed=sum(p), duration=1000)
 
     def toggle_reverse(self):
-        if self.reverse == True:
+        if self.reverse is True:
             self.reverse = False
             print("FORWARD")
         else:
@@ -69,18 +74,18 @@ class DeliverAIBot():
         for motor in self.motors:
             motor.stop()
 
-    def deliver(self, speed = 300, coords = (0,0)):
+    def deliver(self, speed=300, coords=(0, 0)):
         # Make sure the robot is facing the right way
         if (self.reverse):
             self.toggle_reverse()
 
-        x_count = coords[0] # Distance along x axis to recipient
-        y_count = coords[1] # Distance along y axis to recipient
+        x_count = coords[0]  # Distance along x axis to recipient
+        y_count = coords[1]  # Distance along y axis to recipient
 
-        # Travel first along x axis, then y axis to recipient 
+        # Travel first along x axis, then y axis to recipient
         self.follow_line(speed, x_count, 0)
         self.follow_line(speed, y_count, -90)
-        #self.rotate(-50)
+        # self.rotate(-50)
 
         # Authentic recipient's identity
         self.authenticate()
@@ -89,7 +94,7 @@ class DeliverAIBot():
         self.toggle_reverse()
         self.follow_line(speed, y_count, 90)
         self.follow_line(speed, x_count, 0)
-        #self.rotate(-50)
+        # self.rotate(-50)
 
     def authenticate(self):
         # Authenticate the recipient's identity and handle the situation
@@ -98,10 +103,11 @@ class DeliverAIBot():
 
     def follow_line(self, speed=300, no_js=0, init_offset=0):
         # Line following using the LEGO colour sensor
-        # Follow the path counting how many junctions (no_js) we pass along the way
-        # Done recursively
+        # Follow the path counting how many junctions (no_js) we pass along the
+        # way this is done recursively
 
-        # Base case: if we have no more junctions to pass we are at our destination
+        # Base case: if we have no more junctions to pass we are at our
+        # destination
         if (no_js == 0):
             self.stop_motors()
             return
@@ -109,44 +115,46 @@ class DeliverAIBot():
         # Otherwise we follow the path
 
         # Initialise the colour sensor
-        cs = ev3.ColorSensor("in1"); assert cs.connected
+        cs = ev3.ColorSensor("in1")
+        assert cs.connected
         cs.MODE_COL_COLOR
         print("Connected to Color Sensor")
 
-        bearing = 0 # Current bearing of the robot
-        offset = init_offset # Used to change the bearing at junctions
-        delta_rot = 110 # Used for rotation
- 
+        bearing = 0  # Current bearing of the robot
+        offset = init_offset  # Used to change the bearing at junctions
+        delta_rot = 110  # Used for rotation
+
         # We are currently on a junction so need to move off it
-        while (cs.color==2):
+        while (cs.color == 2):
             self.move_bearing(bearing+offset, speed)
 
-        while(True): # Main line-following loop
-            cur_c = cs.color # Check the current colour
+        while(True):  # Main line-following loop
+            cur_c = cs.color  # Check the current colour
 
             # If black move forward
-            if (cur_c==1):
+            if (cur_c == 1):
                 bearing = 0
             # If white move in direction of [1,1]
-            elif (cur_c==6):
-                bearing = 30 # Arbitrarily chosen
+            elif (cur_c == 6):
+                bearing = 30  # Arbitrarily chosen
                 self.rotate(delta_rot)
             # If red move in direciton of [-1,1]
-            elif (cur_c==5):
+            elif (cur_c == 5):
                 bearing = 330
                 self.rotate(-delta_rot)
 
             # If ground is blue we have reached a corner
-            if (cs.color==2):
+            if (cs.color == 2):
                 print("Blue?")
-                #time.sleep(0.25)
+                # time.sleep(0.25)
                 self.stop_motors()
 
-                # Double check we are at a junction by rotating a little and re-checking the colour
-                #if (not self.reverse):
-                    #self.rotate(angle=40)
-                #else:
-                    #self.rotate(angle=-40)
+                # Double check we are at a junction by rotating a little and
+                # re-checking the colour
+                # if (not self.reverse):
+                #   self.rotate(angle=40)
+                # else:
+                #   self.rotate(angle=-40)
                 self.move_bearing(30+offset, speed=100)
                 self.rotate(30)
                 time.sleep(0.35)
@@ -160,17 +168,15 @@ class DeliverAIBot():
                 print("Blue!")
                 ev3.Sound().beep()
                 self.stop_motors()
-                #if (not self.reverse):
-                    #self.rotate(-40)
-                #else:
-                    #self.rotate(40)
-                time.sleep(0.25) # Give enough time to move back into position
+                # if (not self.reverse):
+                #   self.rotate(-40)
+                # else:
+                #   self.rotate(40)
+                time.sleep(0.25)  # Give enough time to move back into position
 
                 # Recurse with one fewer junction to go
                 self.follow_line(speed, (no_js-1), offset)
                 return
 
-            self.move_bearing(bearing+offset, speed) # Move
+            self.move_bearing(bearing+offset, speed)  # Move
             time.sleep(0.05)
-
-
