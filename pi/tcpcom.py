@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+# flake8: noqa
 
 '''
 Event-based TCP library for communcation between multiple devices.
