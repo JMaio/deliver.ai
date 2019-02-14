@@ -34,7 +34,7 @@ class DeliverAIBot():
         self.try_connect()
 
     def __del__(self):
-        client.disconnect()
+        self.client_connection.disconnect()
         threading.cleanup_stop_thread()
         print("CleanedUp - Disconnected from Server")
 
@@ -55,7 +55,7 @@ class DeliverAIBot():
         elif (state == "DISCONNECTED"):
             self.connected = False
             print("ERROR: SERVER HAS DISCONNECTED")
-            try_connect()
+            self.try_connect()
         elif (state == "MESSAGE"):
             self.process_msg(msg)
 
@@ -64,7 +64,7 @@ class DeliverAIBot():
         print("process start")
         if (broken_msg[0] == "GOTO"):
             input = (int(broken_msg[1]), int(broken_msg[2]))
-            print("Moving to "+ input)
+            print("Moving to " + input)
             self.deliver(coords=input)
         elif (broken_msg[0] == "STOP"):
             self.stop_motors()
