@@ -1,43 +1,81 @@
+{# obtains the current url path and removes slashes to highlight on navbar #}
+{% set path = request.path[1:request.path.rindex('/')] %}
+{% set active_page = path %}
+{# assign navbar items #}
+{% set navigation_bar = [
+    ('/deliver/', 'deliver', 'Deliver'),
+    ('/receive/', 'receive', 'Receive'),
+    ('/about/', 'about', 'About'),
+    ('/help/', 'help', 'Help')
+] -%}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        {% block fulltitle %}
+            {% block title %}{{ active_page|capitalize }}{% endblock %} | deliver.ai
+        {% endblock %}
+    </title>
     {% include "styles.html" %}
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-    <div class="container">
-        <a href="/" class="navbar-brand">deliver.ai</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText"
-                aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarText">
-            <ul class="navbar-nav mr-auto">
-                <li class="nav-item active">
-                    <a class="nav-link" href="#">Deliver <span class="sr-only">(current)</span></a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Receive</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Help</a>
-                </li>
-            </ul>
-            {% if username %}
-                <a href="/user/{{ username }}" class="navbar-text">{{ username }}</a>
-            {% else %}
-                <a href="/login/" class="navbar-text">Login</a>
-            {% endif %}
+{% block nav %}
+    <nav class="navbar navbar-expand-sm navbar-dark bg-lightblue shadow mb-3 sticky-top">
+        <div class="container">
+            <a href="/" class="navbar-brand">deliver.ai</a>
+
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText"
+                    aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarText">
+                <ul class="navbar-nav mr-auto">
+                    {% for href, id, caption in navigation_bar %}
+                        <li class="nav-item {% if id == active_page %} active{% endif %}">
+                            <a class="nav-link" href={{ href }}>{{ caption|e }}</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+
+                {% set username = username|default('ash.ketchum') %}
+                {# TODO update this to match request data / cookie / session with user #}
+                <div class="btn-group" role="group" aria-label="Authentication buttons">
+                    <a class="btn btn-light"
+                            {% if username %}
+                       href="/user/{{ username }}"
+                            {% else %}
+                       href="/login/"
+                            {% endif %}>{{ username | default('Log in') }}
+                    </a>
+                    {% if username %}
+                        <a href="/logout/" class="btn btn-light border-left">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </a>
+                        {# <button type="button" class="btn btn-secondary">Right</button>#}
+                    {% endif %}
+                </div>
+            </div>
         </div>
-    </div>
-</nav>
-<div class="container">
+    </nav>
+{% endblock %}
+
+<div class="container align-content-center align-items-center">
     {% block content %}
 
     {% endblock %}
+    <section id="footer">
+        <footer class="align-middle mt-5">
+            <hr>
+            <p class="text-dark m-0">&copy; 2019 deliver.ai</p>
+        </footer>
+    </section>
 </div>
+
+
 
 {% block scripts %}
     {% include "scripts.html" %}
