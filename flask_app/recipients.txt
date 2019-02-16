@@ -1,0 +1,8 @@
+brock.rock, Brock Rock, 0, 0
+misty.water, Misty Water, 0, 1
+surge.lt, Lt. Surge, 0, 2
+erika.grass, Erika Grass, 0, 3
+koga.poison, Koga Poison, 1, 0
+sabrina.psychic, Sabrina Psychic, 1, 1
+blaine.fire, Blaine Fire, 1, 2
+giovanni.rocket, Giovanni Rocket, 1, 3
