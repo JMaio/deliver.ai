@@ -76,6 +76,9 @@ def send_delivery(ticket):
     origin = ticket.sender.coordinates
     destination = ticket.recipient.coordinates
     # send the command to the robot
+    print("sending bot to {} for pickup!".format(origin))
+    print("sending bot from {} to {} for delivery!"
+          .format(origin, destination))
     pass
 
 

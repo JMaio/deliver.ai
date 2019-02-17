@@ -36,7 +36,8 @@ class Person:
 
 
 class Ticket:
-    def __init__(self, pickup_time, sender, recipient, message, created=datetime.now()):
+    def __init__(self, pickup_time, sender, recipient, message,
+                 created=datetime.now()):
         self.created = created
         self.pickup_time = pickup_time  # type: datetime
         self.sender = sender  # type: Person
