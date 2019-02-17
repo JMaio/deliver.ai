@@ -56,6 +56,25 @@ def login():
 def send_delivery():
     pass
 
+@app.errorhandler(404)
+def error_page(
+        error,
+        icon='far fa-question-circle',
+        line1="Whoa!",
+        line2="<em>This is not the page you're looking for</em>",
+        button_href='/',
+        button_text='Go back'):
+    return render_template(
+        'error.html',
+        error=error,
+        icon=icon,
+        line1=line1,
+        line2=line2,
+        button_href=button_href,
+        button_text=button_text,
+    )
+
+
 
 if __name__ == '__main__':
     app.run()
