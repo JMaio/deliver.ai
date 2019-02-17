@@ -1,5 +1,9 @@
-# deliver.ai
-System Design Project 2018/19 - Group 19
+<h1 align="center">deliver.ai</h1>
+
+<p align="center">System Design Project 2018/19 - Group 19</p>
+<p align="center">
+  <img src="https://circleci.com/gh/JMaio/deliver.ai.svg?style=svg&circle-token=011ef6be1434239ca561203d45e70003fb37f596">
+</p>
 
 # Setup
 ## Raspberry Pi
