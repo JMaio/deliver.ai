@@ -35,11 +35,26 @@ class Person:
                     for person in f.readlines()]
 
 
-# offices = Office.from_file("recipients.txt")
-#
-# print(offices)
+class Ticket:
+    def __init__(self, pickup_time, sender, recipient, message, created=datetime.now()):
+        self.created = created
+        self.pickup_time = pickup_time  # type: datetime
+        self.sender = sender  # type: Person
+        self.recipient = recipient  # type: Person
+        self.message = message  # type: str
 
-# with open("recipients.txt") as f:
-#     txt = [line.split(',') for line in map(str.strip, f.readlines())]
-#     offices = [(name, (int(x), int(y))) for name, x, y in txt]
-#     del txt
+    def __repr__(self):
+        return "Ticket[{}] {} --> {}".format(
+            self.pickup_time,
+            self.sender,
+            self.recipient,
+        )
+
+    def to_params(self):
+        return {
+            'created': ('Created on', self.created),
+            'pickup_time': ('Pickup time', self.pickup_time),
+            'sender': ('Sender', self.sender),
+            'recipient': ('Recipient', self.recipient),
+            'message': ('Message', self.message),
+        }
