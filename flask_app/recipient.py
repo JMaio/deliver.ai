@@ -22,14 +22,14 @@ class Recipient:
 
     @classmethod
     def from_params(cls, params):
-        username, name, x, y = params.split(',')
+        username, name, x, y = map(str.strip, params.split(','))
         return cls(username, name, (int(x), int(y)))
 
     @classmethod
     def from_file(cls, filename):
         with open(filename) as f:
-            return [Recipient.from_params(recipient) for recipient in f.readlines()]
-
+            return [Recipient.from_params(recipient)
+                    for recipient in f.readlines()]
 
 # offices = Office.from_file("recipients.txt")
 #

@@ -13,24 +13,59 @@
     </div>
     <hr>
     <div class="container text-center">
-        <div class="card mx-auto" style="max-width: 300px;">
+        <div class="card mx-auto" style="max-width: 360px;">
             <div class="card-body">
                 <h3 class="card-title mb-0">Delivery details</h3>
                 <hr>
-                <form action="" method="post">
+                <form action="/send-delivery" method="post" id="pickup-form">
                     <div class="form-group">
-                        <label for="delivery-time">Delivery time</label>
-                        <input type="time" class="form-control w-auto mx-auto" name="Delivery time" title="Delivery time"
-                               id="delivery-time" placeholder="Time of delivery">
+                        <input type="text" hidden readonly
+                               value="{{ recipient.username }}">
                     </div>
-                    <div class="custom-control custom-switch">
-                        <input type="checkbox" class="custom-control-input" id="urgent-check">
+                    <div class="form-group">
+                        <label for="delivery-time">Pickup time</label>
+                        <input type="time" class="form-control w-auto mx-auto" name="delivery-time"
+                               title="Delivery time" value="11:00"
+                               id="delivery-time" placeholder="Time of delivery" required>
+                        <p>Your office: {{ user.coordinates }}</p>
+                    </div>
+                    <div class="custom-control custom-switch mb-4">
+                        <input type="checkbox" class="custom-control-input" id="urgent-check" name="urgent">
                         <label class="custom-control-label" for="urgent-check">Urgent</label>
                     </div>
-                    <button type="submit" class="btn btn-primary" formaction="">Submit!</button>
+                    <div class="form-group">
+                        <label for="delivery-message">Delivery message</label>
+                        <textarea type="text" class="form-control w-100 mx-auto" name="delivery-message"
+                                  title="Delivery message"
+                                  id="delivery-message" placeholder="What are you sending?" required></textarea>
+                    </div>
+                    <div class="btn-block">
+                        <a href="/deliver/" class="btn btn-danger btn-upper mx-2">Cancel <i
+                                class="fas fa-sm fa-fw fa-ban"></i></a>
+                        <button type="submit" class="btn btn-info btn-upper mx-2">Send <i
+                                class="fas fa-sm fa-fw fa-paper-plane"></i></button>
+                    </div>
                 </form>
+
             </div>
         </div>
     </div>
 
+{% endblock %}
+{% block scripts %}
+    {{ super() }}
+    <script>
+        $(document).ready(function () {
+                // set pickup time to 5 minutes from now
+                $('#delivery-time').val(moment().add(5, 'minutes').format('H:mm'));
+            }
+        );
+
+        function validatePickup() {
+            let form = $('#pickup-form')
+
+        }
+
+        {#$('#delivery-time').#}
+    </script>
 {% endblock %}

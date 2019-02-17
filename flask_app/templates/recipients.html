@@ -2,7 +2,8 @@
 
 {% block content %}
     <h1 class="mb-3 text-center" style="font-weight: 300">Deliver to</h1>
-    <input class="mb-3 mx-auto form-control ds-input" style="max-width: 300px;" id="recipient-search" title="Search recipients"
+    <input class="mb-3 mx-auto form-control ds-input" style="max-width: 300px;" id="recipient-search"
+           title="Search recipients"
            type="search" placeholder="Search...">
     <hr>
     <div class="row">
@@ -18,8 +19,8 @@
 
                         <p class="card-text">Office {{ recipient.coordinates }}</p>
                         <div class="text-center">
-                            <a href="{{ recipient.username }}">
-                                <button class="btn btn-upper bg-lightblue text-light">deliver</button>
+                            <a href="{{ recipient.username }}" class="btn btn-info">
+                                <p class="btn-upper">Schedule <i class="fas fa-pen fa-sm"></i></p>
                             </a>
                         </div>
                     </div>

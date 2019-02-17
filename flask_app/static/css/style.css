@@ -1,10 +1,10 @@
 .bg-lightblue {
-    background-color: #62b0ff;
+    background-color: #17a2b8;
 }
 
-.bg-lightblue:hover {
-    background-color: #5ca2ec;
-}
+/*.btn.bg-lightblue:hover {*/
+    /*background-color: #5ca2ec;*/
+/*}*/
 
 .card-name {
     font-weight: 300;
@@ -14,7 +14,13 @@
 .btn-upper {
     text-transform: uppercase;
     letter-spacing: 1pt;
-    font-weight: 500;
+    font-weight: 400;
+    margin: 0;
+    color: #fff;
+}
+
+.btn-upper:hover {
+    color: #fff;
 }
 
 .shadow-hover {

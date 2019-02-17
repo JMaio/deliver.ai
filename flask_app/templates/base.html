@@ -5,6 +5,7 @@
 {% set navigation_bar = [
     ('/deliver/', 'deliver', 'Deliver'),
     ('/receive/', 'receive', 'Receive'),
+    ('/status/', 'status', 'Status'),
     ('/about/', 'about', 'About'),
     ('/help/', 'help', 'Help')
 ] -%}
@@ -23,7 +24,7 @@
 </head>
 <body>
 {% block nav %}
-    <nav class="navbar navbar-expand-sm navbar-dark bg-lightblue shadow mb-3 sticky-top">
+    <nav class="navbar navbar-expand-sm navbar-dark bg-lightblue shadow mb-3 sticky-top text-center">
         <div class="container">
             <a href="/" class="navbar-brand">deliver.ai</a>
 
@@ -41,7 +42,7 @@
                     {% endfor %}
                 </ul>
 
-                {% set username = username|default('ash.ketchum') %}
+                {% set username = user.username|default('ash.ketchum') %}
                 {# TODO update this to match request data / cookie / session with user #}
                 <div class="btn-group" role="group" aria-label="Authentication buttons">
                     <a class="btn btn-light"
@@ -68,7 +69,7 @@
 
     {% endblock %}
     <section id="footer">
-        <footer class="align-middle mt-5">
+        <footer class="align-middle mt-5 mb-3">
             <hr>
             <p class="text-dark m-0">&copy; 2019 deliver.ai</p>
         </footer>

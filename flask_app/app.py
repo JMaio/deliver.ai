@@ -1,10 +1,12 @@
-from flask import Flask, render_template, request
+from datetime import datetime
+
+from flask import Flask, render_template, request, abort
 from recipient import Recipient
 
 app = Flask(__name__)
-curr_username = "ash.ketchum"
 recipients = Recipient.from_file("recipients.txt")
-recv_map = {recv.username: recv for recv in recipients}
+rec_map = {rec.username: rec for rec in recipients}
+user = rec_map.pop("ash.ketchum", None)
 
 
 @app.route('/')
@@ -12,7 +14,6 @@ def index():
     return render_template(
         'index.html',
         title="Secure Office Delivery",
-        username=curr_username,
     )
 
 
@@ -20,17 +21,29 @@ def index():
 def recipients_index():
     return render_template(
         'recipients.html',
-        username=curr_username,
-        recipients=recipients,
+        recipients=rec_map.values(),
     )
 
 
 @app.route('/deliver/<string:username>')
 def recipient_info(username):
-    recipient = recv_map[username]
+    if username == user.username:
+        return error_page(
+            icon="far fa-check-circle",
+            line1="Hey",
+            line2="looks like you've found yourself!",
+            button_text="View inbox",
+            button_href='/receive/'
+        )
+    if username not in rec_map:
+        return error_page(
+            icon="fas fa-robot",
+            line1="Oops...",
+            line2="it looks like that person doesn't exist!",
+        )
+    recipient = rec_map[username]
     return render_template(
         'recipient_info.html',
-        username=curr_username,
         recipient=recipient,
     )
 
@@ -54,7 +67,8 @@ def login():
 
 @app.route('/send-delivery', methods=['POST'])
 def send_delivery():
-    pass
+    return "{}".format(request.form)
+
 
 @app.errorhandler(404)
 def error_page(
