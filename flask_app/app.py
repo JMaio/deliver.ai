@@ -75,6 +75,14 @@ def error_page(
     )
 
 
+@app.context_processor
+def inject_template_globals():
+    return {
+        # an html-friendly time construct to force CSS refresh
+        'now': datetime.utcnow().strftime("%Y-%m-%d-%H%M%S"),
+        'user': user,
+    }
+
 
 if __name__ == '__main__':
     app.run()
