@@ -1,20 +1,23 @@
-class Recipient:
+from datetime import datetime
+
+
+class Person:
     def __init__(self, username, name, coordinates):
-        self.name = name
+        self.name = name  # type: str
         self.first, self.last = name.split()
-        self.username = username
-        self.coordinates = coordinates
+        self.username = username  # type: str
+        self.coordinates = coordinates  # type: (int, int)
         self.x, self.y = coordinates
 
     def __str__(self):
-        return "Recipient@({x},{y}) [{name}]".format(
+        return "{name}@({x},{y})".format(
             x=self.x,
             y=self.y,
             name=self.name,
         )
 
     def __repr__(self):
-        return "Recipient@({x},{y}) [{name}]".format(
+        return "{name}@({x},{y})".format(
             x=self.x,
             y=self.y,
             name=self.name,
@@ -28,8 +31,9 @@ class Recipient:
     @classmethod
     def from_file(cls, filename):
         with open(filename) as f:
-            return [Recipient.from_params(recipient)
-                    for recipient in f.readlines()]
+            return [Person.from_params(person)
+                    for person in f.readlines()]
+
 
 # offices = Office.from_file("recipients.txt")
 #
