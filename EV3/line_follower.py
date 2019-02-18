@@ -23,6 +23,16 @@ class DeliverAIBot():
         # Keep track of which direction the robot is moving in around the track
         self.reverse = False
 
+        self.x_cord = 0
+        self.y_cord = 0
+        self.status = "READY"
+
+         self.client_connection = TCPClient(
+            server_ip,
+            server_port,
+            stateChanged=self.onMsgRecv
+        )
+
         self.connected = False
 
         self.try_connect()
@@ -64,19 +74,26 @@ class DeliverAIBot():
         if (broken_msg[0] == "GOTO"):
             print(broken_msg[1] + " " + broken_msg[2])
             input = (int(broken_msg[1]), int(broken_msg[2]))
-            inputer = {'coords':input}
+            inputer = {'coords': input}
             print("Moving to ")
-            self.movment_thread = threading.Thread(target=self.deliver, kwargs=inputer).start()
+            self.movment_thread = threading.Thread(
+                target=self.deliver,
+                kwargs=inputer
+            ).start()
         elif (broken_msg[0] == "STOP"):
+            self.status = "STOPPED"
             self.stop_event.set()
             print("STOP EVENT SET")
         elif (broken_msg[0] == "CONT"):
+            self.status = "MOVING"
             self.stop_event.clear()
             print("CONTINUE")
         elif (broken_msg[0] == "STATUS"):
             print("status requested")
+            self.client_connection.sendMessage(self.status)
         elif (broken_msg[0] == "GETLOC"):
             print("location requested")
+            self.client_connection.sendMessage(self.x_cord + "$" + self.y_cord)
         else:
             print("UNPROCESSED MSG received: " + msg)
 
@@ -149,7 +166,9 @@ class DeliverAIBot():
 
         # Travel first along x axis, then y axis to recipient
         self.follow_line(speed, x_count, 0)
+        self.x_cord += x_count
         self.follow_line(speed, y_count, -90)
+        self.y_cord += y_count
 
         # Authentic recipient's identity
         self.authenticate()
@@ -157,7 +176,9 @@ class DeliverAIBot():
         # Return home by following the mirrored route
         self.toggle_reverse()
         self.follow_line(speed, y_count, 90)
+        self.x_cord -= x_count
         self.follow_line(speed, x_count, 0)
+        self.y_cord -= y_count
 
     def authenticate(self):
         # Authenticate the recipient's identity and handle the situation
@@ -209,7 +230,7 @@ class DeliverAIBot():
                 bearing = 330
                 self.rotate(-delta_rot)
 
-            if (self.stop_event.is_set()):
+            while (self.stop_event.is_set()):
                 print("STOPPED")
                 self.stop_motors()
                 time.sleep(10)
