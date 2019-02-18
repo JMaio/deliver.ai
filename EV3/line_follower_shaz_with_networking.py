@@ -6,7 +6,7 @@ import time
 import math
 import threading
 
-server_ip = "abomasnow.inf.ed.ac.uk"
+server_ip = "koch.inf.ed.ac.uk"
 server_port = 5005
 
 
@@ -32,6 +32,11 @@ class DeliverAIBot():
         self.connected = False
 
         self.try_connect()
+
+        # Set up threading for non blocking line following
+
+        self.movment_thread = None
+        self.stop_event = threading.Event()
 
     def __del__(self):
         self.client_connection.disconnect()
@@ -63,12 +68,21 @@ class DeliverAIBot():
         broken_msg = msg.split("$")
         print("process start")
         if (broken_msg[0] == "GOTO"):
+            print(broken_msg[1] + " " + broken_msg[2])
             input = (int(broken_msg[1]), int(broken_msg[2]))
-            print("Moving to " + input)
-            self.deliver(coords=input)
+            inputer = {'coords':input}
+            print("Moving to ")
+            self.movment_thread = threading.Thread(target=self.deliver, kwargs=inputer).start()
         elif (broken_msg[0] == "STOP"):
-            self.stop_motors()
-            print("STOP")
+            self.stop_event.set()
+            print("STOP EVENT SET")
+        elif (broken_msg[0] == "CONT"):
+            self.stop_event.clear()
+            print("CONTINUE")
+        elif (broken_msg[0] == "STATUS"):
+            print("status requested")
+        elif (broken_msg[0] == "GETLOC"):
+            print("location requested")
         else:
             print("UNPROCESSED MSG received: " + msg)
 
@@ -169,6 +183,9 @@ class DeliverAIBot():
             self.stop_motors()
             return
 
+        if (self.stop_event.is_set()):
+            print("STOP")
+
         # Otherwise we follow the path
 
         # Initialise the colour sensor
@@ -199,6 +216,11 @@ class DeliverAIBot():
             elif (cur_c == 5):
                 bearing = 330
                 self.rotate(-delta_rot)
+
+            if (self.stop_event.is_set()):
+                print("STOPPED")
+                self.stop_motors()
+                time.sleep(10)
 
             # If ground is blue we have reached a corner
             if (cs.color == 2):
