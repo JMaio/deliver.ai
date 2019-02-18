@@ -9,6 +9,7 @@ with app.app_context():
     people = Person.from_file("people.txt")
     people_map = {person.username: person for person in people}
     user = people_map.pop("ash.ketchum", None)
+    tickets = []
     deliver_server = DeliverAIServer()
 
 
@@ -114,6 +115,7 @@ def process_delivery(recipient):
 
     # create a record of submission
     ticket = create_ticket(form)
+    tickets.append(ticket)
     # TODO make delivery not instant, go to queue
     send_delivery(ticket)
 
@@ -141,6 +143,14 @@ def login():
         # TODO authenticate the user
         pass
     return "this is a login screen"
+
+
+@app.route('/tickets/')
+def show_tickets():
+    return render_template(
+        'tickets.html',
+        tickets=tickets
+    )
 
 
 @app.errorhandler(404)
