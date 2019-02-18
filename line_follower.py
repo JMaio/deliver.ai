@@ -47,15 +47,15 @@ class DeliverAIBot():
 
         # the vector associated with each motor
         axes = [
-            (1, 0),
-            (0, 1),
             (-1, 0),
+            (0, 1),
+            (1, 0),
             (0, -1),
         ]
         pairs = [(x * a, y * b) for (a, b) in axes]
 
         # Check whether robot is moving backwards
-        if not self.reverse:
+        if self.reverse:
             pairs = [(a*(-1), b) for (a, b) in pairs]
 
         for (m, p) in enumerate(pairs):
@@ -85,7 +85,6 @@ class DeliverAIBot():
         # Travel first along x axis, then y axis to recipient
         self.follow_line(speed, x_count, 0)
         self.follow_line(speed, y_count, -90)
-        # self.rotate(-50)
 
         # Authentic recipient's identity
         self.authenticate()
@@ -94,7 +93,6 @@ class DeliverAIBot():
         self.toggle_reverse()
         self.follow_line(speed, y_count, 90)
         self.follow_line(speed, x_count, 0)
-        # self.rotate(-50)
 
     def authenticate(self):
         # Authenticate the recipient's identity and handle the situation
@@ -146,15 +144,10 @@ class DeliverAIBot():
             # If ground is blue we have reached a corner
             if (cs.color == 2):
                 print("Blue?")
-                # time.sleep(0.25)
                 self.stop_motors()
 
-                # Double check we are at a junction by rotating a little and
+                # Double check we are at a junction by moving a little and
                 # re-checking the colour
-                # if (not self.reverse):
-                #   self.rotate(angle=40)
-                # else:
-                #   self.rotate(angle=-40)
                 self.move_bearing(30+offset, speed=100)
                 self.rotate(30)
                 time.sleep(0.35)
@@ -168,10 +161,6 @@ class DeliverAIBot():
                 print("Blue!")
                 ev3.Sound().beep()
                 self.stop_motors()
-                # if (not self.reverse):
-                #   self.rotate(-40)
-                # else:
-                #   self.rotate(40)
                 time.sleep(0.25)  # Give enough time to move back into position
 
                 # Recurse with one fewer junction to go
