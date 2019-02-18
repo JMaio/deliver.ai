@@ -1,12 +1,15 @@
 import datetime
 
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, g
 from deliverai_utils import Person, Ticket
+from server import DeliverAIServer
 
 app = Flask(__name__)
-people = Person.from_file("people.txt")
-people_map = {person.username: person for person in people}
-user = people_map.pop("ash.ketchum", None)
+with app.app_context():
+    people = Person.from_file("people.txt")
+    people_map = {person.username: person for person in people}
+    user = people_map.pop("ash.ketchum", None)
+    deliver_server = DeliverAIServer()
 
 
 @app.route('/')
@@ -71,14 +74,19 @@ def create_ticket(form):
         form['delivery-message'],
     )
 
-
+# @app.app_context
 def send_delivery(ticket):
     origin = ticket.sender.coordinates
     destination = ticket.recipient.coordinates
     # send the command to the robot
     print("sending bot to {} for pickup!".format(origin))
-    print("sending bot from {} to {} for delivery!"
-          .format(origin, destination))
+    x, y = ticket.sender.coordinates
+    deliver_server.sendCords(str(x), str(y))
+    # sendCords(, str(y), server)
+    # print("sending bot from {} to {} for delivery!"
+    #       .format(origin, destination))
+    # x, y = ticket.recipient.coordinates
+    # sendCords(str(x), str(y), server)
     pass
 
 
@@ -166,3 +174,4 @@ def inject_template_globals():
 
 if __name__ == '__main__':
     app.run()
+
