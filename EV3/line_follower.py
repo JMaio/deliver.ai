@@ -6,8 +6,8 @@ import time
 import math
 import threading
 
-server_ip = "koch.inf.ed.ac.uk"
-server_port = 5005
+server_ip = "abomasnow.inf.ed.ac.uk"
+server_port = 5010
 
 
 class DeliverAIBot():
@@ -27,7 +27,7 @@ class DeliverAIBot():
         self.y_cord = 0
         self.status = "READY"
 
-         self.client_connection = TCPClient(
+        self.client_connection = TCPClient(
             server_ip,
             server_port,
             stateChanged=self.onMsgRecv
