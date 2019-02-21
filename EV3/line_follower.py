@@ -77,7 +77,7 @@ class DeliverAIBot():
             inputer = {'coords': input}
             print("Moving to ")
             self.movment_thread = threading.Thread(
-                target=self.deliver,
+                target=self.go_to,
                 kwargs=inputer
             ).start()
         elif (broken_msg[0] == "STOP"):
@@ -155,6 +155,36 @@ class DeliverAIBot():
     def stop_motors(self):
         for motor in self.motors:
             motor.stop()
+
+    def go_to(self, speed=300, coords=(0, 0)):
+        if (self.reverse):
+            self.toggle_reverse()
+
+        # Return to (x, 0)
+        self.toggle_reverse()
+        self.follow_line(speed, self.y_cord, 90)
+        self.y_cord = 0
+        self.toggle_reverse()
+
+        # Moving forwards - x wise
+        x_move = coords[0] - self.x_cord
+
+        if (x_move > 0):
+            self.follow_line(speed, x_move, 0)
+            self.x_cord += x_move
+        elif (x_move < 0):
+            self.toggle_reverse()
+            self.follow_line(speed, abs(x_move), 0)
+            self.x_cord += x_move
+            self.toggle_reverse()
+
+        # Moving y wise
+        y_move = coords[1]
+        self.follow_line(speed, y_move, -90)
+        self.y_cord += y_move
+
+        self.send_msg()
+
 
     def deliver(self, speed=300, coords=(0, 0)):
         # Make sure the robot is facing the right way
