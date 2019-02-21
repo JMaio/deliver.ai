@@ -23,9 +23,13 @@ class Toddler:
 
         self.not_sent_stop = [True, True, True, True]
 
-        self.client = TCPClient("neumayer.inf.ed.ac.uk", 5005, stateChanged=self.onClientMsg)
+        self.client = TCPClient("brogdon.inf.ed.ac.uk", 5005, stateChanged=self.onClientMsg)
         self.connected = False
         self.try_connect()
+
+        self.mode = "READY"
+        self.pick_from = (0, 0)
+        self.deliver_to = (0, 0)
 
     def control(self):
         self.detect_obstacle()
@@ -43,10 +47,17 @@ class Toddler:
             print("Server:-- Connected to" + msg)
         elif state == "MESSAGE":
             print("Server:-- Message received:" + msg)
-            self.process_message(msg)
+            self.process_server_message(msg)
 
     def onClientMsg(self, state, msg):
-        self.server.sendMessage(msg)
+        if (state == "CONNECTED"):
+            print("Sucess - Connected to Server :" + msg)
+        elif (state == "DISCONNECTED"):
+            print("Disconnected from Server - Trying to connect again...")
+            self.try_connect()
+        elif (state == "MESSAGE"):
+            print("Message Recived from server")
+            self.process_client_message(msg)
 
     def try_connect(self):
         while not(self.connected):
@@ -57,8 +68,48 @@ class Toddler:
                 self.connected = False
                 time.sleep(10)
 
-    def process_message(self, msg):
+    def process_server_message(self, msg):
         print("Process Message Please")
+        if (msg == "ARRIVED"):
+            print("Arrived at dest requested")
+            if (self.state == "GOINGHOME"):
+                print("nout")
+                # do nothing
+            elif (self.state == "PICKINGUP" or self.state == "DELIVERING"):
+                print("Autherise")
+                self.request_authentication()
+
+    def process_client_message(self, msg):
+        print("Starting To Process Client Msg")
+        broken_msg =  msg.split("$")
+        if (broken_msg[0] == "GOHOME"):
+            self.state = "GOINGHOME"
+            self.send_roboot_to(0, 0)
+        elif (broken_msg[0] == "PICK"):
+            self.state = "PICKINGUP"
+            self.pick_from = (int(broken_msg[1]), int(broken_msg[2]))
+            self.deliver_to = (int(broken_msg[4]), int(broken_msg[5]))
+            self.send_roboot_to(self.pick_from[0], self.pick_from[1])
+        elif (broken_msg[0] == "OPEN"):
+            self.open_box()
+
+    def open_box(self):
+        print("Send Request to open box")
+        # opening box code
+        time.sleep(50)
+        if (self.state == "PICKINGUP"):
+            self.state = "DELIVERING"
+            self.send_roboot_to(self.deliver_to[0], self.deliver_to[1])
+        if (self.state == "DELIVERING"):
+            self.state = "READY"
+            self.client.sendMessage("READY")
+
+    def send_roboot_to(self, x, y):
+        print("Sending Robot to " + str(x) + ", " + str(y))
+        self.server.sendMessage("GOTO$" + str(x) + "$" + str(y))
+
+    def request_authentication(self):
+        self.client.sendMessage("AUTHENTICATE")
 
     def send_coords(self, x, y):
         self.server.sendMessage("GOTO$" + str(x) + "$" + str(y))
