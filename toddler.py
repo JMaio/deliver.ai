@@ -18,12 +18,18 @@ class Toddler:
         self.mc = IO.motor_control
         self.sc = IO.servo_control
 
-        self.port = 5010
-        self.server = TCPServer(self.port, stateChanged=self.onServerMsg)
+        self.server_port = 5010
+        self.server = TCPServer(self.server_port, stateChanged=self.onServerMsg)
 
         self.not_sent_stop = [True, True, True, True]
 
-        self.client = TCPClient("brogdon.inf.ed.ac.uk", 5005, stateChanged=self.onClientMsg)
+        self.client_connect_to = "brogdon.inf.ed.ac.uk"
+        self.client_port = 5005
+        self.client = TCPClient(
+            self.client_connect_to,
+            self.client_port,
+            stateChanged=self.onClientMsg
+        )
         self.connected = False
         self.try_connect()
 
@@ -37,7 +43,7 @@ class Toddler:
         print("Next Iteration")
 
     def vision(self):
-    # Block vision branch for now because we don't use it
+        # Block vision branch for now because we don't use it
         time.sleep(0.5)
 
     def onServerMsg(self, state, msg):
@@ -120,7 +126,7 @@ class Toddler:
         irInput = [anInput[i] for i in range(4)]
         dist = [self.irToCm(x) for x in irInput]
         for i in range(4):
-            if dist[i]!= -1 and dist[i]<40:
+            if dist[i] != -1 and dist[i] < 40:
                 self.stop(i)
             else:
                 self.continue_path(i)
@@ -140,12 +146,13 @@ class Toddler:
                 self.server.sendMessage("CONT")
 
     # Convert analog input from IR sensor to cm
-    # Formula taken from: https://www.phidgets.com/?tier=3&catid=5&pcid=3&prodid=70#Voltage_Ratio_Input
+    # Formula taken from: https://www.phidgets.com/?tier=3&catid=5&pcid=3&prodid=70#Voltage_Ratio_Input # noqa: E501
     # IR sensor model used: GD2D12 - range: 10-80cm
     def irToCm(self, anInput):
-    # Input has to be adapted as the input differs from the value range on the website by a factor of 100
+        # Input has to be adapted as the input differs from the value range on
+        # the website by a factor of 100
         voltageRatio = anInput/1000.0
-        if voltageRatio > 0.08 and voltageRatio < 0.53:    # taken from the website
+        if voltageRatio > 0.08 and voltageRatio < 0.53:  # taken from website
             dist = 4.8 / (voltageRatio-0.02)
         else:
             dist = -1
