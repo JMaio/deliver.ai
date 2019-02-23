@@ -133,6 +133,15 @@ def receive():
     )
 
 
+@app.route('/history/')
+def history():
+    return render_template(
+        'history.html',
+        # username=username,
+        # offices=offices,
+    )
+
+
 @app.route('/login/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
