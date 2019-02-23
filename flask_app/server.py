@@ -20,12 +20,26 @@ class DeliverAIServer:
         m = ["PICKUP", x1, y1, "DEL", x2, y2]
         self.send_encoded_message(m)
 
+    def go_home(self):
+        self.send_encoded_message("GOHOME")
+
+    def open_box(self):
+        self.send_encoded_message("OPEN")
+
     def send_stop(self):
-        self.send_encoded_message(["STOP"])
+        self.send_encoded_message("STOP")
 
     def send_encoded_message(self, message):
         # encode a message for sending to Pi
-        m = "$".join(map(str, message))
+        if type(message) is list:
+            m = "$".join(map(str, message))
+        elif type(message) is str:
+            m = message
+        else:
+            print("  ! > Flask could not send message '{}'".format(message))
+            return
+
+        print(" --> Flask sending: {}".format(m))
         self.server.sendMessage(m)
 
 # if __name__ == '__main__':

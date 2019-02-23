@@ -81,8 +81,8 @@ def send_delivery(ticket):
     orig = (1, 1)
     dest = ticket.recipient.coordinates
 
-    print("sending bot for pickup @ {} \n"
-          "  |--> to deliver @ {} !".format(orig, dest))
+    # print("sending bot for pickup @ {} \n"
+    #       "  |--> to deliver @ {} !".format(orig, dest))
 
     deliver_server.send_pickup(orig, dest)
 
