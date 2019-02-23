@@ -2,15 +2,9 @@
 
 {% block content %}
     <h1 class="text-center font-weight-light">Delivering to</h1>
-    <div class="row justify-content-center">
-        <div class="col-auto card text-center bg-light">
-            <div class="card-body">
-                <h2 class="font-weight-normal">{{ recipient.last }}, {{ recipient.first }}</h2>
-                <code class="text-info">{{ recipient.username }}</code>
-                <p class="mb-0 mt-2">Office {{ recipient.coordinates }}</p>
-            </div>
-        </div>
-    </div>
+    {% with user = recipient %}
+        {% include "components/user_info_card.html" %}
+    {% endwith %}
     <hr>
     <div class="container text-center">
         <div class="card mx-auto" style="max-width: 360px;">
