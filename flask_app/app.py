@@ -75,19 +75,20 @@ def create_ticket(form):
         form['delivery-message'],
     )
 
-# @app.app_context
+
 def send_delivery(ticket):
     origin = ticket.sender.coordinates
     destination = ticket.recipient.coordinates
     # send the command to the robot
-    print("sending bot to {} for pickup!".format(origin))
-    x, y = ticket.sender.coordinates
+    # print("sending bot to {} for pickup!".format(origin))
+    # x, y = origin
+    # deliver_server.sendCords(str(x), str(y))
+
+    print("sending bot to {} for delivery!"
+          .format(destination))
+    x, y = ticket.recipient.coordinates
     deliver_server.sendCords(str(x), str(y))
-    # sendCords(, str(y), server)
-    # print("sending bot from {} to {} for delivery!"
-    #       .format(origin, destination))
-    # x, y = ticket.recipient.coordinates
-    # sendCords(str(x), str(y), server)
+
     pass
 
 
