@@ -1,5 +1,6 @@
 from tcpcom import TCPServer
 
+
 class DeliverAIServer:
     def __init__(self, port=5005):
         self.server = TCPServer(port, stateChanged=self.on_msg)
@@ -26,7 +27,6 @@ class DeliverAIServer:
         # encode a message for sending to Pi
         m = "$".join(map(str, message))
         self.server.sendMessage(m)
-
 
 # if __name__ == '__main__':
 #     main()

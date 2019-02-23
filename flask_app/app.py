@@ -1,6 +1,6 @@
 import datetime
 
-from flask import Flask, render_template, request, g
+from flask import Flask, render_template, request
 from deliverai_utils import Person, Ticket
 from server import DeliverAIServer
 
@@ -180,4 +180,3 @@ def inject_template_globals():
 
 if __name__ == '__main__':
     app.run()
-
