@@ -10,7 +10,7 @@ class Toddler:
     __version = '2018a'
 
     def __init__(self, IO):
-        print('[Toddler] I am toddler {} playing in a sandbox'.format(Toddler.__version))
+        print('[Toddler] I am toddler {} playing in a sandbox'.format(Toddler.__version))  # noqa: E501
 
         self.camera = IO.camera.initCamera('pi', 'low')
         self.getInputs = IO.interface_kit.getInputs
@@ -19,7 +19,10 @@ class Toddler:
         self.sc = IO.servo_control
 
         self.server_port = 5010
-        self.server = TCPServer(self.server_port, stateChanged=self.onServerMsg)
+        self.server = TCPServer(
+            self.server_port,
+            stateChanged=self.onServerMsg
+        )
 
         self.not_sent_stop = [True, True, True, True]
 
@@ -87,7 +90,7 @@ class Toddler:
 
     def process_client_message(self, msg):
         print("Starting To Process Client Msg")
-        broken_msg =  msg.split("$")
+        broken_msg = msg.split("$")
         if (broken_msg[0] == "GOHOME"):
             self.state = "GOINGHOME"
             self.send_roboot_to(0, 0)
@@ -130,7 +133,6 @@ class Toddler:
                 self.stop(i)
             else:
                 self.continue_path(i)
-
 
     # Dummy function for reacting according to obstacle in direction dir where
     # 0 - Front, 1 - Right, 2 - Back, 3 - Left
