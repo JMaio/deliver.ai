@@ -185,7 +185,6 @@ class DeliverAIBot():
 
         self.send_msg()
 
-
     def deliver(self, speed=300, coords=(0, 0)):
         # Make sure the robot is facing the right way
         if (self.reverse):
