@@ -30,7 +30,7 @@ def recipients_index():
 
 
 @app.route('/deliver/<string:username>', methods=['GET', 'POST'])
-def schedule_delivery(username):
+def schedule_pickup(username):
     recipient = people_map[username]
     if request.method == 'GET':
         if username == user.username:
@@ -48,7 +48,7 @@ def schedule_delivery(username):
                 line2="it looks like that person doesn't exist!",
             )
         return render_template(
-            'schedule_delivery.html',
+            'schedule_pickup.html',
             recipient=recipient,
         )
     else:
@@ -116,7 +116,7 @@ def process_delivery(recipient):
     send_delivery(ticket)
 
     return render_template(
-        'schedule_delivery_confirm.html',
+        'schedule_pickup_confirm.html',
         recipient=ticket.recipient,
         ticket=ticket,
     )
