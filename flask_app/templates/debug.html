@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    {% for cmd, text in [
+        ('OPEN', 'Open box'),
+        ('GOHOME', 'Go home'),
+        ('ALARMSTOP', 'Stop alarm'),
+    ] %}
+        {% include '/components/debug_button.html' %}
+    {% endfor %}
+
+{% endblock %}

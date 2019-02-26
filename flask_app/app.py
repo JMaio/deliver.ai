@@ -158,6 +158,13 @@ def show_tickets():
     )
 
 
+@app.route('/debug/')
+def debug_mode():
+    return render_template(
+        'debug.html',
+    )
+
+
 @app.route('/cmd/<string:command>', methods=['GET', 'POST'])
 def send_cmd(command):
     deliver_server.send_encoded_message(command)
