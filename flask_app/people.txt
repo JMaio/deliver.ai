@@ -4,6 +4,6 @@ misty.water, Misty Water, 0, 1
 surge.lt, Lt. Surge, 0, 2
 erika.grass, Erika Grass, 0, 3
 koga.poison, Koga Poison, 1, 0
-sabrina.psychic, Sabrina Psychic, 1, 1
-blaine.fire, Blaine Fire, 1, 2
+sabrina.psychic, Sabrina Psychic, 3, 1
+blaine.fire, Blaine Fire, 2, 2
 giovanni.rocket, Giovanni Rocket, 1, 3
