@@ -127,7 +127,7 @@ def process_delivery(recipient):
 @app.route('/receive/')
 def receive():
     return render_template(
-        'base.html',
+        'receive.html',
         # username=username,
         # offices=offices,
     )
