@@ -120,7 +120,7 @@ def process_delivery(recipient):
         recipient=ticket.recipient,
         ticket=ticket,
     )
-    return "{}".format(ticket)
+    # return "{}".format(ticket)
     # return "{}".format(request.form)
 
 
@@ -156,6 +156,12 @@ def show_tickets():
         'tickets.html',
         tickets=tickets
     )
+
+
+@app.route('/cmd/<string:command>', methods=['GET', 'POST'])
+def send_cmd(command):
+    deliver_server.send_encoded_message(command)
+    return "sending command: '{}'".format(command)
 
 
 @app.errorhandler(404)
