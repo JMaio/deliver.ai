@@ -3,12 +3,12 @@
 {% set active_page = path %}
 {# assign navbar items #}
 {% set navigation_bar = [
-    ('/deliver/', 'deliver', 'Deliver'),
-    ('/receive/', 'receive', 'Receive'),
-    ('/history/', 'history', 'History'),
-    ('/about/', 'about', 'About'),
-    ('/help/', 'help', 'Help')
+    (url_for('send'), 'send', 'Send'),
+    (url_for('receive'), 'receive', 'Receive'),
+    (url_for('history'), 'history', 'Your tickets'),
 ] -%}
+{#    ('/about/', 'about', 'About'),#}
+{#    ('/help/', 'help', 'Help')#}
 
 <!DOCTYPE html>
 <html lang="en">

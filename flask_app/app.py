@@ -1,6 +1,6 @@
 import datetime
 
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, url_for
 from deliverai_utils import Person, Ticket
 from server import DeliverAIServer
 
@@ -21,15 +21,15 @@ def index():
     )
 
 
-@app.route('/deliver/')
-def recipients_index():
+@app.route('/send/')
+def send():
     return render_template(
         'recipients.html',
         recipients=people_map.values(),
     )
 
 
-@app.route('/deliver/<string:username>', methods=['GET', 'POST'])
+@app.route('/send/<string:username>', methods=['GET', 'POST'])
 def schedule_pickup(username):
     recipient = people_map[username]
     if request.method == 'GET':
@@ -39,7 +39,7 @@ def schedule_pickup(username):
                 line1="Hey",
                 line2="looks like you've found yourself!",
                 button_text="View inbox",
-                button_href='/receive/'
+                button_href=url_for('send')
             )
         if username not in people_map:
             return error_page(
