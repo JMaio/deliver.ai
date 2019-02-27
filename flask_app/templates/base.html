@@ -46,18 +46,14 @@
                 {# TODO update this to match request data / cookie / session with user #}
                 <div class="btn-group" role="group" aria-label="Authentication buttons">
                     <a class="btn btn-light"
-{#                            {% if username %}#}
-{#                       href="/user/{{ username }}"#}
-{#                            {% else %}#}
-{#                       href="/login/"#}
-{#                            {% endif %}#}
-                    >
-                        {{ username | default('Log in') }}
+                            {% if username %}
+                       href="/user/{{ username }}"
+                            {% else %}
+                       href="/login/"
+                            {% endif %}>{{ username | default('Log in') }}
                     </a>
                     {% if username %}
-                        <a
-{#                                href="/logout/" #}
-                                class="btn btn-light border-left">
+                        <a href="/logout/" class="btn btn-light border-left">
                             <i class="fas fa-sign-out-alt"></i>
                         </a>
                         {# <button type="button" class="btn btn-secondary">Right</button>#}
