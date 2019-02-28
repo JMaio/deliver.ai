@@ -1,16 +1,17 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import time
 from tcpcom import TCPServer, TCPClient
 from functools import reduce
 import operator
-
+import sys
+from adafruit_lsm303 import LSM303
 
 class Toddler:
     __version = '2018a'
 
     def __init__(self, IO):
-        print('[Toddler] I am toddler {} playing in a sandbox'.format(Toddler.__version))  # noqa: E501
+        print('[Toddler] I am toddler {} playing in a sandbox'.format(Toddler.__version))
 
         self.camera = IO.camera.initCamera('pi', 'low')
         self.getInputs = IO.interface_kit.getInputs
@@ -18,36 +19,50 @@ class Toddler:
         self.mc = IO.motor_control
         self.sc = IO.servo_control
 
-        self.server_port = 5010
-        self.server = TCPServer(
-            self.server_port,
-            stateChanged=self.onServerMsg
-        )
-
+        self.port = 5010
+        self.server = TCPServer(self.port, stateChanged=self.onServerMsg)
+        print(sys.version)
         self.not_sent_stop = [True, True, True, True]
 
-        self.client_connect_to = "brogdon.inf.ed.ac.uk"
-        self.client_port = 5005
-        self.client = TCPClient(
-            self.client_connect_to,
-            self.client_port,
-            stateChanged=self.onClientMsg
-        )
+        self.client = TCPClient("brogdon.inf.ed.ac.uk", 5005, 
+                               stateChanged=self.onClientMsg)
         self.connected = False
         self.try_connect()
 
         self.mode = "READY"
         self.pick_from = (0, 0)
         self.deliver_to = (0, 0)
+        #self.servoTest()
+        self.accel = LSM303()
+        self.alarm = False
+        self.box_open = False
 
+    # CONTROL THREAD
     def control(self):
-        self.detect_obstacle()
+	self.detect_obstacle()
+        self.accel_alarm()
+        self.box_alarm()
         time.sleep(0.5)
-        print("Next Iteration")
+        # print("Next Iteration")
 
+    # VISION THREAD
     def vision(self):
-        # Block vision branch for now because we don't use it
+    # Block vision branch for now because we don't use it
         time.sleep(0.5)
+
+    def box_alarm(self):
+        box_alarm = self.getInputs()[0]
+        if (box_alarm == 1 and not(self.box_open)):
+            self.send_alarm()
+            print("Box Open - Not Due to be")
+
+    def servoTest(self):
+        self.sc.engage()
+        self.sc.setPosition(0)
+        self.box_open = True
+        time.sleep(10)
+        self.sc.setPosition(180)
+        self.box_closed = False
 
     def onServerMsg(self, state, msg):
         if state == "LISTENING":
@@ -85,27 +100,35 @@ class Toddler:
                 print("nout")
                 # do nothing
             elif (self.state == "PICKINGUP" or self.state == "DELIVERING"):
-                print("Autherise")
+                print("Authorise")
                 self.request_authentication()
 
     def process_client_message(self, msg):
         print("Starting To Process Client Msg")
-        broken_msg = msg.split("$")
+        broken_msg =  msg.split("$")
         if (broken_msg[0] == "GOHOME"):
             self.state = "GOINGHOME"
             self.send_roboot_to(0, 0)
-        elif (broken_msg[0] == "PICK"):
+        elif (broken_msg[0] == "PICKUP"):
             self.state = "PICKINGUP"
             self.pick_from = (int(broken_msg[1]), int(broken_msg[2]))
             self.deliver_to = (int(broken_msg[4]), int(broken_msg[5]))
             self.send_roboot_to(self.pick_from[0], self.pick_from[1])
         elif (broken_msg[0] == "OPEN"):
             self.open_box()
+        elif (broken_msg[0] == "ALARMSTOP"):
+           self.server.sendMessage("ALARMSTOP")
+           self.alarm = False
 
     def open_box(self):
         print("Send Request to open box")
         # opening box code
-        time.sleep(50)
+        # ev3.Sound().beep('600')
+        self.box_open = True
+        self.servoTest()
+        time.sleep(10)
+        self.box_open = False
+        time.sleep(1)
         if (self.state == "PICKINGUP"):
             self.state = "DELIVERING"
             self.send_roboot_to(self.deliver_to[0], self.deliver_to[1])
@@ -129,10 +152,57 @@ class Toddler:
         irInput = [anInput[i] for i in range(4)]
         dist = [self.irToCm(x) for x in irInput]
         for i in range(4):
-            if dist[i] != -1 and dist[i] < 40:
+            if dist[i]!= -1 and dist[i]<20:
                 self.stop(i)
             else:
                 self.continue_path(i)
+
+    # Testing method for obstacle detection - Runs until interrupt and writes results to obstacleTest
+    def test_detect_obstacle(self, testNum, thresh):
+        obstCount = [0,0,0,0]
+        round = 0
+	test_pos = 0
+	comment = "Place obstacle at the FRONT"
+        print("Ready for testing. " + comment)
+	with open("obstacleTest", "w+") as f:
+	    while round <=testNum:
+		obstFound = [False,False,False,False]
+                anInput = self.getSensors()
+                irInput = [anInput[i] for i in range(4)]
+                dist = [self.irToCm(x) for x in irInput]
+                if test_pos >= 0:
+		    if dist[test_pos]!= -1 and dist[test_pos]<20:
+			obstFound[test_pos] = True
+			obstCount[test_pos] += 1
+                else:
+		    for i in range(4):
+                        if dist[i]!= -1 and dist[i]<20:
+                            obstFound[i] = True
+			    obstCount[i] += 1
+
+                if True in obstFound:
+		    f.write("Round {}: {} --- Total {}\n".format(round, obstFound, obstCount))
+		    print("Obstacle(s) found in position {} - please remove obstacle and wait...".format(obstFound))
+		    round += 1
+		    if round == thresh[0]:
+                        test_pos = 1
+                        comment = "Place obstacle on the LEFT"
+                    elif round == thresh[1]:
+                        test_pos = 2
+                        comment = "Place obstacle at the BACK"
+                    elif round == thresh[2]:
+                        test_pos = 3
+                        comment = "Place obstacle on the RIGHT"
+                    elif round == thresh[3]:
+                        test_pos = -1
+                        comment = "Test whatever direction you like"
+		    time.sleep(2)
+		    print("Ready. " + comment)
+		else:
+                    time.sleep(0.2)
+
+        print("Test ended please exit. Results in obstacleTest")
+	sys.exit()
 
     # Dummy function for reacting according to obstacle in direction dir where
     # 0 - Front, 1 - Right, 2 - Back, 3 - Left
@@ -148,14 +218,25 @@ class Toddler:
                 self.server.sendMessage("CONT")
 
     # Convert analog input from IR sensor to cm
-    # Formula taken from: https://www.phidgets.com/?tier=3&catid=5&pcid=3&prodid=70#Voltage_Ratio_Input # noqa: E501
+    # Formula taken from: https://www.phidgets.com/?tier=3&catid=5&pcid=3&prodid=70#Voltage_Ratio_Input
     # IR sensor model used: GD2D12 - range: 10-80cm
     def irToCm(self, anInput):
-        # Input has to be adapted as the input differs from the value range on
-        # the website by a factor of 100
+    # Input has to be adapted as the input differs from the value range on the website by a factor of 100
         voltageRatio = anInput/1000.0
-        if voltageRatio > 0.08 and voltageRatio < 0.53:  # taken from website
+        if voltageRatio > 0.08 and voltageRatio < 0.53:    # taken from the website
             dist = 4.8 / (voltageRatio-0.02)
         else:
             dist = -1
         return dist
+
+    def accel_alarm(self):
+       accel_all, mag = self.accel.read()
+       accel_x, accel_y, accel_z = accel_all
+       if abs(accel_x) > 400 or abs(accel_y) > 200 or (abs(accel_z) >1200 and abs(accel_z) <1500):
+           if (not(self.alarm)):
+               self.send_alarm()
+               self.alarm = True
+           print("ALARM STATE" + str(accel_x) + " X " + str(accel_y) + " Y  " + str(accel_z) + " Z")
+
+    def send_alarm(self):
+       self.server.sendMessage("ALARM")
