@@ -41,15 +41,17 @@ class DeliverAIBot():
 
         self.movment_thread = None
         self.stop_event = threading.Event()
-        self.alarm_event = threading.Event()
-        self.alarm_thread = None
+
+        # Set up Alarm variables
+
         self.alarm_active = False
         self.alarm_on = False
 
     def __del__(self):
+        # Disconnect from the server, clean up the threads then we can exit
         self.client_connection.disconnect()
         threading.cleanup_stop_thread()
-        print("CleanedUp - Disconnected from Server")
+        print("[__del__] CleanedUp - Disconnected from Server")
 
     def try_connect(self):
         connection_attempts = 0
@@ -60,6 +62,9 @@ class DeliverAIBot():
             else:
                 self.connected = False
                 connection_attempts += 1
+                if connection_attempts > 20:
+                    print("[try_connect] Tried 20 times - STOPPING!")
+                    return
                 time.sleep(1)
 
     def onMsgRecv(self, state, msg):
@@ -67,7 +72,7 @@ class DeliverAIBot():
             self.connected = True
         elif (state == "DISCONNECTED"):
             self.connected = False
-            print("ERROR: SERVER HAS DISCONNECTED")
+            print("[onMsgRecv] ERROR: SERVER HAS DISCONNECTED")
             self.try_connect()
         elif (state == "MESSAGE"):
             self.process_msg(msg)
@@ -76,52 +81,63 @@ class DeliverAIBot():
         broken_msg = msg.split("$")
         print("process start")
         if (broken_msg[0] == "GOTO"):
+            # As soon as GOTO is received robot starts to go there
             print(broken_msg[1] + " " + broken_msg[2])
             input = (int(broken_msg[1]), int(broken_msg[2]))
             inputer = {'coords': input}
-            print("Moving to ")
+            print("[process_msg] Moving to ")
             self.movment_thread = threading.Thread(
                 target=self.go_to,
                 kwargs=inputer
             ).start()
         elif (broken_msg[0] == "STOP"):
+            # STOP stopes the robot ASAP is moving, if not does not allow to go
+            # Sets the event stop_event that can be seen by other threads
             self.status = "STOPPED"
             self.stop_event.set()
-            print("STOP EVENT SET")
+            print("[process_msg] STOP EVENT MSG RECEIVED")
         elif (broken_msg[0] == "CONT"):
+            # Start moving again
             self.status = "MOVING"
             self.stop_event.clear()
             print("CONTINUE")
         elif (broken_msg[0] == "STATUS"):
-            print("status requested")
+            # Get the current status that the robot thinks it is in
+            print("[process_msg] status requested")
             self.client_connection.sendMessage(self.status)
         elif (broken_msg[0] == "GETLOC"):
-            print("location requested")
+            # Get the current co-ordinates of the robot
+            print("[process_msg] location requested")
             self.client_connection.sendMessage(self.x_cord + "$" + self.y_cord)
         elif (broken_msg[0] == "ALARM"):
-            self.alarm_event.set()
+            # Set the alarm off
             self.alarm_active = True
             if (not(self.alarm_on)):
-                alarm_thread = threading.Thread(target=self.alarm).start()
+                threading.Thread(target=self.alarm).start()
                 self.alarm_on = True
         elif (broken_msg[0] == "ALARMSTOP"):
-            self.alarm_event.clear()
+            # Stop the alarm
             self.alarm_active = False
             self.alarm_on = False
-            print("Stopping Alarm - cleared by admin")
+            print("[process_msg] Stopping Alarm - cleared by admin")
         else:
-            print("UNPROCESSED MSG received: " + msg)
+            print("[process_msg] UNPROCESSED MSG received: " + msg)
 
-    def send_msg(self):
+    def send_arrived(self):
         self.client_connection.sendMessage("ARRIVED")
 
     def alarm(self):
-        print("alarm") 
+        print("[alarm] Alarming!")
         while (self.alarm_active):
-            bbep = "-r 30 -l 100 -f 1000"
-            threading.Thread(target=ev3.Sound().beep, args=(bbep,)).start() 
+            beep_args = "-r 30 -l 100 -f 1000"
+            # Starts a new thread as the EV3's beep blocks the sleep and
+            # disarming of the alarm
+            threading.Thread(
+                target=ev3.Sound().beep,
+                args=(beep_args,)
+            ).start()
             time.sleep(6)
-        print("DONE")
+        print("[alarm] Disarmed - Stopped Alarming")
         return
 
     def move_motor(self, motor=0, speed=100, duration=500, wait=False):
@@ -132,13 +148,13 @@ class DeliverAIBot():
 
     def rotate(self, angle=90, speed=100):
         # rotation determined by speed * duration
-        #angle = -angle
+        # angle = -angle
         if (self.reverse):
-            print("rewv")      
+            print("[rotate] Reversing...")
             angle = -angle
         sign = 1
         if angle < 0:
-            print("angle<0")
+            print("[rotate] Angle is < 0")
             sign = -1
         for m in range(4):
             self.move_motor(
@@ -176,20 +192,21 @@ class DeliverAIBot():
     def toggle_reverse(self):
         if self.reverse is True:
             self.reverse = False
-            print("FORWARD")
+            print("[toggle_reverse] FORWARD")
         else:
             self.reverse = True
-            print("REVERSE")
+            print("[toggle_reverse] REVERSE")
 
     def stop_motors(self):
         for motor in self.motors:
             motor.stop()
 
     def go_to(self, speed=300, coords=(0, 0)):
+        # Check we are facing forwards
         if (self.reverse):
             self.toggle_reverse()
 
-        # Return to (x, 0)
+        # Return to (x, 0) - if at (x, 0) already exits
         self.toggle_reverse()
         self.follow_line(speed, self.y_cord, 90)
         self.y_cord = 0
@@ -198,21 +215,22 @@ class DeliverAIBot():
         # Moving forwards - x wise
         x_move = coords[0] - self.x_cord
 
-        if (x_move > 0):
+        if (x_move > 0):   # Go down the x axis
             self.follow_line(speed, x_move, 0)
             self.x_cord += x_move
-        elif (x_move < 0):
+        elif (x_move < 0):  # Going back up the x axis
             self.toggle_reverse()
             self.follow_line(speed, abs(x_move), 0)
             self.x_cord += x_move
             self.toggle_reverse()
 
-        # Moving y wise
+        # Move in y wise
         y_move = coords[1]
         self.follow_line(speed, y_move, -90)
         self.y_cord += y_move
 
-        self.send_msg()
+        # Send that we have arrived
+        self.send_arrived()
 
     def deliver(self, speed=300, coords=(0, 0)):
         # Make sure the robot is facing the right way
@@ -251,26 +269,28 @@ class DeliverAIBot():
             self.stop_motors()
             return
         if (self.stop_event.is_set()):
-            print("STOP")
+            print("[follow_line] STOP - Object in way!")
 
         # Otherwise follow path
 
         # Initialise both colour sensors
-        cs1 = ev3.ColorSensor("in1"); assert cs1.connected
-        cs2 = ev3.ColorSensor("in2"); assert cs2.connected
+        cs1 = ev3.ColorSensor("in1")
+        assert cs1.connected
+        cs2 = ev3.ColorSensor("in2")
+        assert cs2.connected
         cs1.MODE_COL_COLOR
         cs2.MODE_COL_COLOR
 
         # Initialise some parameters
-        bearing = 0 # Current bearing of the robot
-        offset = init_offset # Used to change the bearing at junctions
+        bearing = 0  # Current bearing of the robot
+        offset = init_offset  # Used to change the bearing at junctions
         delta_rot = 22.5
 
         # We begin on a junction so need to move off it
         while (cs1.color == 2 or cs2.color == 2):
             self.move_bearing(bearing+offset, speed)
 
-        while (True): # Main line-following loop
+        while (True):  # Main line-following loop
             # Take readings from both sensors
             cur_c1 = cs1.color
             cur_c2 = cs2.color
@@ -294,7 +314,7 @@ class DeliverAIBot():
                 self.rotate(delta_rot)
 
             while (self.stop_event.is_set()):
-                print("STOPPED")
+                print("[follow_line] STOP - Object in Way!")
                 self.stop_motors()
                 time.sleep(5)
 
@@ -302,13 +322,13 @@ class DeliverAIBot():
             if (cs1.color == 2):
                 time.sleep(0.075)
                 self.stop_motors()
-                print("Junction?")
+                print("[follow_line] Junction?")
                 if not (cs2.color == 1 or cs2.color == 5):
-                    print("Junction!")
+                    print("[follow_line] At Junction!")
                     ev3.Sound().beep()
-                
-                    self.follow_line(speed, (no_js-1), offset)
-                    return               
 
-            self.move_bearing(bearing+offset, speed) # Move
+                    self.follow_line(speed, (no_js-1), offset)
+                    return
+
+            self.move_bearing(bearing+offset, speed)  # Move
             time.sleep(0.05)
