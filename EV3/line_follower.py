@@ -41,6 +41,10 @@ class DeliverAIBot():
 
         self.movment_thread = None
         self.stop_event = threading.Event()
+        self.alarm_event = threading.Event()
+        self.alarm_thread = None
+        self.alarm_active = False
+        self.alarm_on = False
 
     def __del__(self):
         self.client_connection.disconnect()
@@ -94,11 +98,31 @@ class DeliverAIBot():
         elif (broken_msg[0] == "GETLOC"):
             print("location requested")
             self.client_connection.sendMessage(self.x_cord + "$" + self.y_cord)
+        elif (broken_msg[0] == "ALARM"):
+            self.alarm_event.set()
+            self.alarm_active = True
+            if (not(self.alarm_on)):
+                alarm_thread = threading.Thread(target=self.alarm).start()
+                self.alarm_on = True
+        elif (broken_msg[0] == "ALARMSTOP"):
+            self.alarm_event.clear()
+            self.alarm_active = False
+            self.alarm_on = False
+            print("Stopping Alarm - cleared by admin")
         else:
             print("UNPROCESSED MSG received: " + msg)
 
     def send_msg(self):
         self.client_connection.sendMessage("ARRIVED")
+
+    def alarm(self):
+        print("alarm") 
+        while (self.alarm_active):
+            bbep = "-r 30 -l 100 -f 1000"
+            threading.Thread(target=ev3.Sound().beep, args=(bbep,)).start() 
+            time.sleep(6)
+        print("DONE")
+        return
 
     def move_motor(self, motor=0, speed=100, duration=500, wait=False):
         # Move a specific motor (given speed and duration of movement)
@@ -108,10 +132,13 @@ class DeliverAIBot():
 
     def rotate(self, angle=90, speed=100):
         # rotation determined by speed * duration
+        #angle = -angle
         if (self.reverse):
+            print("rewv")      
             angle = -angle
         sign = 1
         if angle < 0:
+            print("angle<0")
             sign = -1
         for m in range(4):
             self.move_motor(
@@ -121,6 +148,8 @@ class DeliverAIBot():
 
     def move_bearing(self, direction=0, speed=100):
         # Move the robot on the desired bearing (zeroed on the x-axis)
+
+        direction = direction + 180
 
         # 2x4 matrix of vectors of each motor
         r = math.radians(direction % 360)
@@ -215,80 +244,71 @@ class DeliverAIBot():
         return
 
     def follow_line(self, speed=300, no_js=0, init_offset=0):
-        # Line following using the LEGO colour sensor
-        # Follow the path counting how many junctions (no_js) we pass along the
-        # way this is done recursively
+        # Line-following using two colour sensors
 
-        # Base case: if we have no more junctions to pass we are at our
-        # destination
+        # Base case: no more junctions to pass so we stop
         if (no_js == 0):
             self.stop_motors()
             return
-
         if (self.stop_event.is_set()):
             print("STOP")
 
-        # Otherwise we follow the path
+        # Otherwise follow path
 
-        # Initialise the colour sensor
-        cs = ev3.ColorSensor("in1")
-        assert cs.connected
-        cs.MODE_COL_COLOR
-        print("Connected to Color Sensor")
+        # Initialise both colour sensors
+        cs1 = ev3.ColorSensor("in1"); assert cs1.connected
+        cs2 = ev3.ColorSensor("in2"); assert cs2.connected
+        cs1.MODE_COL_COLOR
+        cs2.MODE_COL_COLOR
 
-        bearing = 0  # Current bearing of the robot
-        offset = init_offset  # Used to change the bearing at junctions
-        delta_rot = 110  # Used for rotation
+        # Initialise some parameters
+        bearing = 0 # Current bearing of the robot
+        offset = init_offset # Used to change the bearing at junctions
+        delta_rot = 22.5
 
-        # We are currently on a junction so need to move off it
-        while (cs.color == 2):
+        # We begin on a junction so need to move off it
+        while (cs1.color == 2 or cs2.color == 2):
             self.move_bearing(bearing+offset, speed)
 
-        while(True):  # Main line-following loop
-            cur_c = cs.color  # Check the current colour
+        while (True): # Main line-following loop
+            # Take readings from both sensors
+            cur_c1 = cs1.color
+            cur_c2 = cs2.color
 
-            # If black move forward
-            if (cur_c == 1):
+            # Move forward if cs1 is black and cs2 is red
+            if (cur_c1 == 1):
                 bearing = 0
-            # If white move in direction of [1,1]
-            elif (cur_c == 6):
-                bearing = 30  # Arbitrarily chosen
+            # Drifting left
+            elif (cur_c1 == 6):
+                bearing = 20
                 self.rotate(delta_rot)
-            # If red move in direciton of [-1,1]
-            elif (cur_c == 5):
-                bearing = 330
+            # Drifting right
+            elif (cur_c1 == 5):
+                bearing = -20
                 self.rotate(-delta_rot)
+            # We hope to never reach this stage! However if we find
+            # that we are over white the most likely position is
+            # inside the line
+            elif (cur_c1 == 6 and cur_c2 == 6):
+                bearing = 20
+                self.rotate(delta_rot)
 
             while (self.stop_event.is_set()):
                 print("STOPPED")
                 self.stop_motors()
-                time.sleep(10)
+                time.sleep(5)
 
-            # If ground is blue we have reached a corner
-            if (cs.color == 2):
-                print("Blue?")
+            # If the ground is blue we have reached a corner
+            if (cs1.color == 2):
+                time.sleep(0.075)
                 self.stop_motors()
+                print("Junction?")
+                if not (cs2.color == 1 or cs2.color == 5):
+                    print("Junction!")
+                    ev3.Sound().beep()
+                
+                    self.follow_line(speed, (no_js-1), offset)
+                    return               
 
-                # Double check we are at a junction by moving a little and
-                # re-checking the colour
-                self.move_bearing(30+offset, speed=100)
-                self.rotate(30)
-                time.sleep(0.35)
-                if (not cs.color == 2):
-                    print("Nope, nevermind")
-                    # Continue as if this never happened...
-                    self.move_bearing(bearing+offset, speed)
-                    time.sleep(0.05)
-                    continue
-                # We're at a junction!
-                print("Blue!")
-                ev3.Sound().beep()
-                self.stop_motors()
-                time.sleep(0.25)  # Give enough time to move back into position
-
-                # Recurse with one fewer junction to go
-                self.follow_line(speed, (no_js-1), offset)
-                return
-
-            self.move_bearing(bearing+offset, speed)  # Move
+            self.move_bearing(bearing+offset, speed) # Move
             time.sleep(0.05)
