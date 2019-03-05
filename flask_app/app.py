@@ -1,14 +1,41 @@
 import datetime
 
-from flask import Flask, render_template, request, url_for
+from flask import Flask, render_template, request, url_for, g
 from deliverai_utils import Person, Ticket, Bot
 from server import DeliverAIServer
 
 
 def create_app():
     """ Flask application factory """
-
     app = Flask(__name__)
+
+    with app.app_context():
+        # users
+        people = Person.from_file("people.txt")
+        people_map = {person.username: person for person in people}
+        user = people_map.pop("ash.ketchum", None)
+
+        # robots
+        bots = Bot.from_file("bots.txt")
+
+        tickets = []
+
+        deliver_server = DeliverAIServer()
+
+        debug_items = {
+            'server': {
+                'server ip': deliver_server.server.getIPAddress(),
+                'connected': deliver_server.server.isConnected(),
+                'client ip': deliver_server.client_ip
+            },
+            'bot': {
+                'last location': (0, 0),
+                'status': "ready",
+                'going to': (1, 1),
+                'battery': 60,
+            }
+        }
+        debug_log = deliver_server.log
 
     @app.route('/')
     def index():
@@ -21,7 +48,7 @@ def create_app():
     def admin_page():
         return render_template(
             'admin.html',
-            bots=bots
+            bots=bots,
         )
 
     @app.route('/send/')
@@ -33,8 +60,17 @@ def create_app():
 
     @app.route('/send/<string:username>', methods=['GET', 'POST'])
     def schedule_pickup(username):
-        if request.method == 'GET':
+        try:
+            recipient = people_map[username]
+        except KeyError:
+            return error_page(
+                error='',
+                icon="fas fa-robot",
+                line1="Oops...",
+                line2="it looks like that person doesn't exist!",
+            )
 
+        if request.method == 'GET':
             if username == user.username:
                 return error_page(
                     error='',
@@ -44,16 +80,7 @@ def create_app():
                     button_text="View inbox",
                     button_href=url_for('send')
                 )
-
-            if username not in people_map:
-                return error_page(
-                    error='',
-                    icon="fas fa-robot",
-                    line1="Oops...",
-                    line2="it looks like that person doesn't exist!",
-                )
             else:
-                recipient = people_map[username]
                 return render_template(
                     'schedule_pickup.html',
                     recipient=recipient,
@@ -160,6 +187,8 @@ def create_app():
     def debug_mode():
         return render_template(
             'debug.html',
+            debug_items=debug_items,
+            debug_log=debug_log,
         )
 
     @app.route('/cmd/<string:command>', methods=['GET', 'POST'])
@@ -198,19 +227,6 @@ def create_app():
 
 
 if __name__ == '__main__':
-    app = create_app()
+    flask_app = create_app()
 
-    with app.app_context():
-        # users
-        people = Person.from_file("people.txt")
-        people_map = {person.username: person for person in people}
-        user = people_map.pop("ash.ketchum", None)
-
-        # robots
-        bots = Bot.from_file("bots.txt")
-
-        tickets = []
-
-        deliver_server = DeliverAIServer()
-
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    flask_app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=True)
