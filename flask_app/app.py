@@ -7,9 +7,8 @@ from server import DeliverAIServer
 
 def create_app():
     """ Flask application factory """
- 
+
     app = Flask(__name__)
-    
 
     @app.route('/')
     def index():
@@ -18,7 +17,6 @@ def create_app():
             title="Secure Office Delivery",
         )
 
-
     @app.route('/admin/')
     def admin_page():
         return render_template(
@@ -26,14 +24,12 @@ def create_app():
             bots=bots
         )
 
-
     @app.route('/send/')
     def send():
         return render_template(
             'recipients.html',
             recipients=people_map.values(),
         )
-
 
     @app.route('/send/<string:username>', methods=['GET', 'POST'])
     def schedule_pickup(username):
@@ -57,14 +53,13 @@ def create_app():
                     line2="it looks like that person doesn't exist!",
                 )
             else:
-                recipient = people_map[username]    
+                recipient = people_map[username]
                 return render_template(
                     'schedule_pickup.html',
                     recipient=recipient,
                 )
         else:
             return process_delivery(recipient)
-
 
     def validate_delivery(form):
         assert request.method == 'POST'
@@ -77,7 +72,6 @@ def create_app():
         #     return "{}".format([k for (k, v) in form.items() if not v])
         # return True
 
-
     def create_ticket(form):
         return Ticket(
             form['pickup-time'],
@@ -85,7 +79,6 @@ def create_app():
             people_map[form['recipient-username']],
             form['delivery-message'],
         )
-
 
     def send_delivery(ticket):
         # orig = ticket.sender.coordinates
@@ -96,7 +89,6 @@ def create_app():
         #       "  |--> to deliver @ {} !".format(orig, dest))
 
         deliver_server.send_pickup(orig, dest)
-
 
     def process_delivery(recipient):
         form = {
@@ -134,7 +126,6 @@ def create_app():
         # return "{}".format(ticket)
         # return "{}".format(request.form)
 
-
     @app.route('/receive/')
     def receive():
         return render_template(
@@ -142,7 +133,6 @@ def create_app():
             # username=username,
             # offices=offices,
         )
-
 
     @app.route('/history/')
     def history():
@@ -152,14 +142,12 @@ def create_app():
             # offices=offices,
         )
 
-
     @app.route('/login/', methods=['GET', 'POST'])
     def login():
         if request.method == 'POST':
             # TODO authenticate the user
             pass
         return "this is a login screen"
-
 
     @app.route('/tickets/')
     def show_tickets():
@@ -168,19 +156,16 @@ def create_app():
             tickets=tickets
         )
 
-
     @app.route('/debug/')
     def debug_mode():
         return render_template(
             'debug.html',
         )
 
-
     @app.route('/cmd/<string:command>', methods=['GET', 'POST'])
     def send_cmd(command):
         deliver_server.send_encoded_message(command)
         return "sending command: '{}'".format(command)
-
 
     @app.errorhandler(404)
     def error_page(
@@ -200,7 +185,6 @@ def create_app():
             button_text=button_text,
         )
 
-
     @app.context_processor
     def inject_template_globals():
         return {
@@ -215,7 +199,7 @@ def create_app():
 
 if __name__ == '__main__':
     app = create_app()
-    
+
     with app.app_context():
         # users
         people = Person.from_file("people.txt")
@@ -230,4 +214,3 @@ if __name__ == '__main__':
         deliver_server = DeliverAIServer()
 
     app.run(host='0.0.0.0', port=5000, debug=True)
-    
