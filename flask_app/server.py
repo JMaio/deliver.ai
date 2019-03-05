@@ -1,17 +1,23 @@
+import datetime
+
 from tcpcom import TCPServer
 
 
 class DeliverAIServer:
     def __init__(self, port=5005):
         self.server = TCPServer(port, stateChanged=self.on_msg)
+        self.log = []
+        self.client_ip = "(unknown)"
 
     def on_msg(self, state, msg):
         if state == "LISTENING":
+            self.client_ip = "(unknown)"
             print("Server:-- Listening...")
         elif state == "CONNECTED":
-            print("Server:-- Connected to" + msg)
+            self.client_ip = msg
+            print("Server:-- Connected to " + msg)
         elif state == "MESSAGE":
-            print("Server:-- Message received:" + msg)
+            print("Server:-- Message received: " + msg)
             self.server.sendMessage("HELLO")
 
     def send_pickup(self, orig, dest):
@@ -36,11 +42,19 @@ class DeliverAIServer:
         elif type(message) is str:
             m = message
         else:
-            print("  ! > Flask could not send message '{}'".format(message))
+            log_m = "  ! > Flask could not send message '{}'".format(message)
+            self.log_message(log_m)
             return
 
-        print(" --> Flask sending: {}".format(m))
+        log_m = "IP: {} <-- {}".format(self.client_ip, m)
+        self.log_message(log_m)
+        print(log_m)
         self.server.sendMessage(m)
+
+    def log_message(self, m):
+        t = datetime.datetime.utcnow().strftime("%H:%M:%S")
+        self.log.append("[{}] {}".format(t, m))
+
 
 # if __name__ == '__main__':
 #     main()
