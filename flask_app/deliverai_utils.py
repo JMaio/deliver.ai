@@ -59,3 +59,33 @@ class Ticket:
             'recipient': ('Recipient', self.recipient),
             'message': ('Message', self.message),
         }
+
+
+class Bot:
+    def __init__(self, uid, name):
+        self.uid = uid  # type: str
+        self.name = name
+        self.battery = 42
+
+    def __str__(self):
+        return "Bot '{name}' [{uid}]".format(
+            name=self.name,
+            uid=self.uid,
+        )
+
+    def __repr__(self):
+        return "Bot '{name}' [{uid}]".format(
+            name=self.name,
+            uid=self.uid,
+        )
+
+    @classmethod
+    def from_params(cls, params):
+        uid, name = map(str.strip, params.split(','))
+        return cls(uid, name)
+
+    @classmethod
+    def from_file(cls, filename):
+        with open(filename) as f:
+            return [Bot.from_params(bot)
+                    for bot in f.readlines()]
