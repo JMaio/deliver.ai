@@ -9,22 +9,9 @@
     <div class="row">
         {% for recipient in recipients %}
             <div class="col-12 col-sm-6 col-lg-3">
-                <div class="card border-light mb-3 shadow-hover text-decoration-none text-center">
-                    <div class="card-body">
-                        <div class="card-title">
-                            <p class="mb-0 card-name">{{ recipient.last }}<span
-                                    style="font-size: 1.2rem"> , {{ recipient.first }}</span></p>
-                            <code class="text-info">{{ recipient.username }}</code>
-                        </div>
-
-                        <p class="card-text">Office {{ recipient.coordinates }}</p>
-                        <div class="text-center">
-                            <a href="{{ recipient.username }}" class="btn btn-info">
-                                <p class="btn-upper">Schedule <i class="fas fa-pen fa-sm"></i></p>
-                            </a>
-                        </div>
-                    </div>
-                </div>
+                {% with user = recipient %}
+                    {% include 'components/user_card.html' %}
+                {% endwith %}
             </div>
         {% endfor %}
     </div>

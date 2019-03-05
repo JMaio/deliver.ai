@@ -3,12 +3,15 @@
 }
 
 /*.btn.bg-lightblue:hover {*/
-    /*background-color: #5ca2ec;*/
+/*background-color: #5ca2ec;*/
 /*}*/
 
 .card-name {
     font-weight: 300;
     font-size: 1.8rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 .btn-upper {
