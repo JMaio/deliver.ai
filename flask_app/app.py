@@ -1,6 +1,7 @@
 import datetime
 
-from flask import Flask, render_template, request, url_for, g
+from flask import Flask, render_template, request, url_for
+
 from deliverai_utils import Person, Ticket, Bot
 from server import DeliverAIServer
 
