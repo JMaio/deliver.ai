@@ -1,15 +1,21 @@
 import datetime
 
 from flask import Flask, render_template, request, url_for
-from deliverai_utils import Person, Ticket
+from deliverai_utils import Person, Ticket, Bot
 from server import DeliverAIServer
 
 app = Flask(__name__)
 with app.app_context():
+    # users
     people = Person.from_file("people.txt")
     people_map = {person.username: person for person in people}
     user = people_map.pop("ash.ketchum", None)
+
+    # robots
+    bots = Bot.from_file("bots.txt")
+
     tickets = []
+
     deliver_server = DeliverAIServer()
 
 
@@ -18,6 +24,14 @@ def index():
     return render_template(
         'index.html',
         title="Secure Office Delivery",
+    )
+
+
+@app.route('/admin/')
+def admin_page():
+    return render_template(
+        'admin.html',
+        bots=bots
     )
 
 
