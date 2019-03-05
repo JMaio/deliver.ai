@@ -1,12 +1,38 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    {% for cmd, text, type in [
-        ('OPEN', 'Open box', 'success'),
-        ('GOHOME', 'Go home', 'warning'),
-        ('ALARMSTOP', 'Stop alarm', 'danger'),
-    ] %}
-        {% include '/components/debug_button.html' %}
-    {% endfor %}
+    <div class="row">
+        <div class="col col-12 col-md-4">
+            {% for cmd, text, type in [
+                ('OPEN', 'Open box', 'success'),
+                ('GOHOME', 'Go home', 'warning'),
+                ('ALARMSTOP', 'Stop alarm', 'danger'),
+            ] %}
+                {% include '/components/debug_button.html' %}
+            {% endfor %}
+        </div>
+        <div class="col col-12 col-md-8">
+            {% for name, props in debug_items.items() %}
+                <div>
+                    <h3>{{ name }}</h3>
+                    {% for prop, val in props.items() %}
+                        <div class="row align-text-bottom">
+                            <p class="col col-3 text-right">{{ prop }}</p>
+                            <code class="col col-9">{{ val }}</code>
+                        </div>
+                    {% endfor %}
+                </div>
+                <hr>
+            {% endfor %}
+            <h3>Log</h3>
+            {% for line in debug_log[:-10:-1] %}
+                <p class="text-monospace mb-1">{{ loop.index }} {{ line }}</p>
+            {% endfor %}
+        </div>
+    </div>
+    <hr>
+    <div>
+
+    </div>
 
 {% endblock %}
