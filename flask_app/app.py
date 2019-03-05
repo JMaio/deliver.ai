@@ -31,26 +31,31 @@ def send():
 
 @app.route('/send/<string:username>', methods=['GET', 'POST'])
 def schedule_pickup(username):
-    recipient = people_map[username]
     if request.method == 'GET':
+
         if username == user.username:
             return error_page(
+                error='',
                 icon="far fa-check-circle",
                 line1="Hey",
                 line2="looks like you've found yourself!",
                 button_text="View inbox",
                 button_href=url_for('send')
             )
+
         if username not in people_map:
             return error_page(
+                error='',
                 icon="fas fa-robot",
                 line1="Oops...",
                 line2="it looks like that person doesn't exist!",
             )
-        return render_template(
-            'schedule_pickup.html',
-            recipient=recipient,
-        )
+        else:
+            recipient = people_map[username]    
+            return render_template(
+                'schedule_pickup.html',
+                recipient=recipient,
+            )
     else:
         return process_delivery(recipient)
 
