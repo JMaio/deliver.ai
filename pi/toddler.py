@@ -47,6 +47,8 @@ class Toddler:
         self.alarm = False
         self.box_open = False
 
+        self.debug_mode_on = False
+
     # CONTROL THREAD
     def control(self):
         self.detect_obstacle()
@@ -116,7 +118,9 @@ class Toddler:
     def process_client_message(self, msg):
         print("[process_client_message] Processing Msg Recived")
         broken_msg = msg.split("$")
-        if (broken_msg[0] == "GOHOME"):
+        if (self.debug_mode_on):
+            self.process_debug_msg(msg)
+        elif (broken_msg[0] == "GOHOME"):
             self.state = "GOINGHOME"
             self.send_roboot_to(0, 0)
         elif (broken_msg[0] == "PICKUP"):
@@ -129,6 +133,14 @@ class Toddler:
         elif (broken_msg[0] == "ALARMSTOP"):
             self.server.sendMessage("ALARMSTOP")
             self.alarm = False
+        elif (broken_msg[0] == "DEBUGMODEON"):
+            self.debug_mode_on = True
+
+    def process_debug_msg(self, msg):
+        broken_msg = msg.split("$")
+        self.server.sendMessage("In Debug Mode....")
+        if (broken_msg[0] == "OBSTACLESENSOR"):
+            print("ObsSensor...")
 
     def open_box(self):
         print("[open_box] Opening Box")
@@ -190,25 +202,25 @@ class Toddler:
                             obstFound[i] = True
                             obstCount[i] += 1
                 if True in obstFound:
-                    f.write("Round {}: {} --- Total {}\n".format(round, obstFound, obstCount))
-                    print("Obstacle(s) found in position {} - please remove obstacle and wait...".format(obstFound))
+                    f.write("Round {}: {} --- Total {}\n".format(round, obstFound, obstCount))  # noqa: E501
+                    print("Obstacle(s) found in position {} - please remove obstacle and wait...".format(obstFound))  # noqa: E501
                     round += 1
-                        if round == thresh[0]:
-                            test_pos = 1
-                            comment = "Place obstacle on the LEFT"
-                        elif round == thresh[1]:
-                            test_pos = 2
-                            comment = "Place obstacle at the BACK"
-                        elif round == thresh[2]:
-                            test_pos = 3
-                            comment = "Place obstacle on the RIGHT"
-                        elif round == thresh[3]:
-                            test_pos = -1
-                            comment = "Test whatever direction you like"
-                        time.sleep(2)
-                        print("Ready. " + comment)
-                    else:
-                        time.sleep(0.2)
+                    if round == thresh[0]:
+                        test_pos = 1
+                        comment = "Place obstacle on the LEFT"
+                    elif round == thresh[1]:
+                        test_pos = 2
+                        comment = "Place obstacle at the BACK"
+                    elif round == thresh[2]:
+                        test_pos = 3
+                        comment = "Place obstacle on the RIGHT"
+                    elif round == thresh[3]:
+                        test_pos = -1
+                        comment = "Test whatever direction you like"
+                    time.sleep(2)
+                    print("Ready. " + comment)
+                else:
+                    time.sleep(0.2)
 
             print("Test ended please exit. Results in obstacleTest")
             sys.exit()
@@ -227,12 +239,13 @@ class Toddler:
                 self.server.sendMessage("CONT")
 
     # Convert analog input from IR sensor to cm
-    # Formula taken from: https://www.phidgets.com/?tier=3&catid=5&pcid=3&prodid=70#Voltage_Ratio_Input
+    # Formula taken from: https://www.phidgets.com/?tier=3&catid=5&pcid=3&prodid=70#Voltage_Ratio_Input  # noqa: E501
     # IR sensor model used: GD2D12 - range: 10-80cm
     def irToCm(self, anInput):
-    # Input has to be adapted as the input differs from the value range on the website by a factor of 100
+        # Input has to be adapted as the input differs from the value range on
+        # the website by a factor of 100
         voltageRatio = anInput/1000.0
-        if voltageRatio > 0.08 and voltageRatio < 0.53:    # taken from the website
+        if voltageRatio > 0.08 and voltageRatio < 0.53:   # taken from the website  # noqa: E501
             dist = 4.8 / (voltageRatio-0.02)
         else:
             dist = -1
