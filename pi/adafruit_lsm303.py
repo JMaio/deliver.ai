@@ -1,3 +1,4 @@
+# flake8: noqa
 # The MIT License (MIT)
 #
 # Copyright (c) 2016 Adafruit Industries

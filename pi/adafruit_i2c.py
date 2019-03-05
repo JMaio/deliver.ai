@@ -1,3 +1,4 @@
+# flake8: noqa
 # Copyright (c) 2014 Adafruit Industries
 # Author: Tony DiCola
 # Based on Adafruit_I2C.py created by Kevin Townsend.

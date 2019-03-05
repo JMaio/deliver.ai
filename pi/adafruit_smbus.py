@@ -1,3 +1,4 @@
+# flake8: noqa
 # Copyright (c) 2016 Adafruit Industries
 # Author: Tony DiCola
 #
