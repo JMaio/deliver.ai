@@ -24,7 +24,7 @@ class Toddler:
         # Set up servers and client
         self.server_port = 5010
         self.client_port = 5005
-        self.client_connect_address = "brogdon.inf.ed.ac.uk"
+        self.client_connect_address = "jacobsen.inf.ed.ac.uk"
 
         self.server = TCPServer(
             self.server_port,
@@ -47,7 +47,7 @@ class Toddler:
         self.alarm = False
         self.box_open = False
 
-        self.debug_mode_on = False
+        self.mode_debug_on = False
 
     # CONTROL THREAD
     def control(self):
@@ -118,16 +118,17 @@ class Toddler:
     def process_client_message(self, msg):
         print("[process_client_message] Processing Msg Recived")
         broken_msg = msg.split("$")
-        if (self.debug_mode_on):
+        if (self.mode_debug_on):
+            print("[process_client_message] Debug Msg Received")
             self.process_debug_msg(msg)
         elif (broken_msg[0] == "GOHOME"):
             self.state = "GOINGHOME"
-            self.send_roboot_to(0, 0)
+            self.send_robot_to(0, 0)
         elif (broken_msg[0] == "PICKUP"):
             self.state = "PICKINGUP"
             self.pick_from = (int(broken_msg[1]), int(broken_msg[2]))
             self.deliver_to = (int(broken_msg[4]), int(broken_msg[5]))
-            self.send_roboot_to(self.pick_from[0], self.pick_from[1])
+            self.send_robot_to(self.pick_from[0], self.pick_from[1])
         elif (broken_msg[0] == "OPEN"):
             self.open_box()
         elif (broken_msg[0] == "ALARMSTOP"):
@@ -138,7 +139,6 @@ class Toddler:
 
     def process_debug_msg(self, msg):
         broken_msg = msg.split("$")
-        self.server.sendMessage("In Debug Mode....")
         if (broken_msg[0] == "OBSTACLESENSOR"):
             print("ObsSensor...")
 
@@ -152,13 +152,13 @@ class Toddler:
         time.sleep(1)
         if (self.state == "PICKINGUP"):
             self.state = "DELIVERING"
-            self.send_roboot_to(self.deliver_to[0], self.deliver_to[1])
+            self.send_robot_to(self.deliver_to[0], self.deliver_to[1])
         if (self.state == "DELIVERING"):
             self.state = "READY"
             self.client.sendMessage("READY")
 
-    def send_roboot_to(self, x, y):
-        print("[send_roboot_to] Sending Robot to " + str(x) + ", " + str(y))
+    def send_robot_to(self, x, y):
+        print("[send_robot_to] Sending Robot to " + str(x) + ", " + str(y))
         self.server.sendMessage("GOTO$" + str(x) + "$" + str(y))
 
     def request_authentication(self):
