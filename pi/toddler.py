@@ -29,12 +29,12 @@ class Toddler:
 
         self.server = TCPServer(
             self.server_port,
-            stateChanged=self.onServerMsg
+            stateChanged=self.on_server_msg
         )
         self.client = TCPClient(
             self.client_connect_address,
             self.client_port,
-            stateChanged=self.onClientMsg
+            stateChanged=self.on_client_msg
         )
         self.connected = False
         self.try_connect()
@@ -70,25 +70,25 @@ class Toddler:
         self.sc.setPosition(180)
         self.box_closed = False
 
-    def onServerMsg(self, state, msg):
+    def on_server_msg(self, state, msg):
         if state == "LISTENING":
-            print("[onServerMsg] Server:-- Listening...")
+            print("[on_server_msg] Server:-- Listening...")
         elif state == "CONNECTED":
-            print("[onServerMsg] Server:-- Connected to" + msg)
+            print("[on_server_msg] Server:-- Connected to" + msg)
         elif state == "MESSAGE":
-            print("[onServerMsg] Server:-- Message received:" + msg)
+            print("[on_server_msg] Server:-- Message received:" + msg)
             self.process_server_message(msg)
 
-    def onClientMsg(self, state, msg):
+    def on_client_msg(self, state, msg):
         if (state == "CONNECTED"):
-            print("[onClientMsg] Sucess - Connected to Server :" + msg)
+            print("[on_client_msg] Sucess - Connected to Server :" + msg)
         elif (state == "DISCONNECTED"):
             print(
-                "[onClientMsg] Disconnected from Server - Trying to connect "
-                "again...")
+                "[on_client_msg] Disconnected from Server - Trying to "
+                "connect again...")
             self.try_connect()
         elif (state == "MESSAGE"):
-            print("[onClientMsg] Message Recived from server")
+            print("[on_client_msg] Message Received from server")
             self.process_client_message(msg)
 
     def try_connect(self):
@@ -101,7 +101,7 @@ class Toddler:
                 time.sleep(10)
 
     def process_server_message(self, msg):
-        print("[process_server_message] Processing Msg Recived")
+        print("[process_server_message] Processing Msg Received")
         if (msg == "ARRIVED"):
             print("[process_server_message] Arrived at dest requested")
             if (self.state == "GOINGHOME"):
@@ -175,58 +175,6 @@ class Toddler:
             else:
                 self.continue_path(i)
 
-    # Testing method for obstacle detection - Runs until interrupt and
-    # writes results to obstacleTest
-    # Can be modified to be used for debugging/troubleshooting by the sysAdmin
-    def test_detect_obstacle(self, testNum, thresh):
-        obstCount = [0, 0, 0, 0]
-        round = 0
-        test_pos = 0
-        comment = "Place obstacle at the FRONT"
-        print("Ready for testing. " + comment)
-        with open("obstacleTest", "w+") as f:
-            while round <= testNum:
-                obstFound = [False, False, False, False]
-                anInput = self.getSensors()
-                irInput = [anInput[i] for i in range(4)]
-                dist = [self.input_to_cm(x) for x in irInput]
-                if test_pos >= 0:
-                    if dist[test_pos] != -1 and dist[test_pos] < 20:
-                        obstFound[test_pos] = True
-                        obstCount[test_pos] += 1
-                else:
-                    for i in range(4):
-                        if dist[i] != -1 and dist[i] < 20:
-                            obstFound[i] = True
-                            obstCount[i] += 1
-                if True in obstFound:
-                    f.write(
-                        "Round {}: {} --- Total {}\n".format(round, obstFound,
-                                                             obstCount))
-                    print(
-                        "Obstacle(s) found in position {} - please remove "
-                        "obstacle and wait...".format(obstFound))
-                    round += 1
-                    if round == thresh[0]:
-                        test_pos = 1
-                        comment = "Place obstacle on the LEFT"
-                    elif round == thresh[1]:
-                        test_pos = 2
-                        comment = "Place obstacle at the BACK"
-                    elif round == thresh[2]:
-                        test_pos = 3
-                        comment = "Place obstacle on the RIGHT"
-                    elif round == thresh[3]:
-                        test_pos = -1
-                        comment = "Test whatever direction you like"
-                    time.sleep(2)
-                    print("Ready. " + comment)
-                else:
-                    time.sleep(0.2)
-
-            print("Test ended please exit. Results in obstacleTest")
-            sys.exit()
-
     # Dummy function for reacting according to obstacle in direction dir where
     # 0 - Front, 1 - Right, 2 - Back, 3 - Left
     def stop(self, dir):
@@ -241,7 +189,8 @@ class Toddler:
                 self.server.sendMessage("CONT")
 
     # Convert analog input from IR sensor to cm
-    # Formula taken from: https://www.phidgets.com/?tier=3&catid=5&pcid=3
+    # Formula taken from:
+    # https://www.phidgets.com/?tier=3&catid=5&pcid=3
     # &prodid=70#Voltage_Ratio_Input
     # IR sensor model used: GD2D12 - range: 10-80cm
     def input_to_cm(self, an_input):
