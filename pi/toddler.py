@@ -12,7 +12,8 @@ class Toddler:
     __version = '2018a'
 
     def __init__(self, IO):
-        print('[Toddler] I am toddler {} playing in a sandbox'.format(Toddler.__version))  # noqa: E501
+        print('[Toddler] I am toddler {} playing in a sandbox'.format(
+            Toddler.__version))  # noqa: E501
 
         # Start up all the External IO stuff
         self.camera = IO.camera.initCamera('pi', 'low')
@@ -83,7 +84,9 @@ class Toddler:
         if (state == "CONNECTED"):
             print("[onClientMsg] Sucess - Connected to Server :" + msg)
         elif (state == "DISCONNECTED"):
-            print("[onClientMsg] Disconnected from Server - Trying to connect again...")  # noqa: E501
+            print(
+                "[onClientMsg] Disconnected from Server - Trying to connect "
+                "again...")  # noqa: E501
             self.try_connect()
         elif (state == "MESSAGE"):
             print("[onClientMsg] Message Recived from server")
@@ -198,9 +201,14 @@ class Toddler:
                             obstFound[i] = True
                             obstCount[i] += 1
                 if True in obstFound:
-                    f.write("Round {}: {} --- Total {}\n".format(round, obstFound, obstCount))  # noqa: E501
-                    print("Obstacle(s) found in position {} - please remove obstacle and wait...".format(
-                        obstFound))  # noqa: E501
+                    f.write(
+                        "Round {}: {} --- Total {}\n".format(round, obstFound,
+                                                             obstCount))  #
+                    # noqa: E501
+                    print(
+                        "Obstacle(s) found in position {} - please remove "
+                        "obstacle and wait...".format(
+                            obstFound))  # noqa: E501
                     round += 1
                     if round == thresh[0]:
                         test_pos = 1
@@ -236,13 +244,15 @@ class Toddler:
                 self.server.sendMessage("CONT")
 
     # Convert analog input from IR sensor to cm
-    # Formula taken from: https://www.phidgets.com/?tier=3&catid=5&pcid=3&prodid=70#Voltage_Ratio_Input  # noqa: E501
+    # Formula taken from: https://www.phidgets.com/?tier=3&catid=5&pcid=3
+    # &prodid=70#Voltage_Ratio_Input  # noqa: E501
     # IR sensor model used: GD2D12 - range: 10-80cm
     def input_to_cm(self, anInput):
         # Input has to be adapted as the input differs from the value range on
         # the website by a factor of 100
         voltageRatio = anInput / 1000.0
-        if voltageRatio > 0.08 and voltageRatio < 0.53:  # taken from the website  # noqa: E501
+        if voltageRatio > 0.08 and voltageRatio < 0.53:  # taken from the
+            # website  # noqa: E501
             dist = 4.8 / (voltageRatio - 0.02)
         else:
             dist = -1
@@ -262,10 +272,13 @@ class Toddler:
     def accel_alarm(self):
         accel_all, mag = self.accel.read()
         accel_x, accel_y, accel_z = accel_all
-        # Basic detection method - needs more complexity to achieve higher accuracy
-        if abs(accel_x) > 400 or abs(accel_y) > 200 or (abs(accel_z) > 1200 and abs(accel_z) < 1500):  # noqa: E501
+        # Basic detection method - needs more complexity to achieve higher
+        # accuracy
+        if abs(accel_x) > 400 or abs(accel_y) > 200 or (
+                abs(accel_z) > 1200 and abs(accel_z) < 1500):
             if (not (self.alarm)):
                 self.send_alarm()
                 self.alarm = True
-                print("[accel_alarm] ALARM STATE" + str(accel_x) + " X " + str(accel_y) + " Y  " + str(
+                print("[accel_alarm] ALARM STATE" + str(accel_x) + " X " + str(
+                    accel_y) + " Y  " + str(
                     accel_z) + " Z")  # noqa: E501
