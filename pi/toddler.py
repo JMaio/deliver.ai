@@ -13,7 +13,7 @@ class Toddler:
 
     def __init__(self, IO):
         print('[Toddler] I am toddler {} playing in a sandbox'.format(
-            Toddler.__version))  # noqa: E501
+            Toddler.__version))
 
         # Start up all the External IO stuff
         self.camera = IO.camera.initCamera('pi', 'low')
@@ -56,7 +56,6 @@ class Toddler:
         self.accel_alarm()
         self.box_alarm()
         time.sleep(0.5)
-        # print("Next Iteration")
 
     # VISION THREAD
     def vision(self):
@@ -86,7 +85,7 @@ class Toddler:
         elif (state == "DISCONNECTED"):
             print(
                 "[onClientMsg] Disconnected from Server - Trying to connect "
-                "again...")  # noqa: E501
+                "again...")
             self.try_connect()
         elif (state == "MESSAGE"):
             print("[onClientMsg] Message Recived from server")
@@ -203,12 +202,10 @@ class Toddler:
                 if True in obstFound:
                     f.write(
                         "Round {}: {} --- Total {}\n".format(round, obstFound,
-                                                             obstCount))  #
-                    # noqa: E501
+                                                             obstCount))
                     print(
                         "Obstacle(s) found in position {} - please remove "
-                        "obstacle and wait...".format(
-                            obstFound))  # noqa: E501
+                        "obstacle and wait...".format(obstFound))
                     round += 1
                     if round == thresh[0]:
                         test_pos = 1
@@ -245,14 +242,13 @@ class Toddler:
 
     # Convert analog input from IR sensor to cm
     # Formula taken from: https://www.phidgets.com/?tier=3&catid=5&pcid=3
-    # &prodid=70#Voltage_Ratio_Input  # noqa: E501
+    # &prodid=70#Voltage_Ratio_Input
     # IR sensor model used: GD2D12 - range: 10-80cm
-    def input_to_cm(self, anInput):
+    def input_to_cm(self, an_input):
         # Input has to be adapted as the input differs from the value range on
-        # the website by a factor of 100
-        voltageRatio = anInput / 1000.0
-        if voltageRatio > 0.08 and voltageRatio < 0.53:  # taken from the
-            # website  # noqa: E501
+        # the website by a factor of 1000
+        voltageRatio = an_input / 1000.0
+        if voltageRatio > 0.08 and voltageRatio < 0.53:  # from the website
             dist = 4.8 / (voltageRatio - 0.02)
         else:
             dist = -1
@@ -281,5 +277,4 @@ class Toddler:
                 self.send_alarm()
                 self.alarm = True
                 print("[accel_alarm] ALARM STATE" + str(accel_x) + " X " + str(
-                    accel_y) + " Y  " + str(
-                    accel_z) + " Z")  # noqa: E501
+                    accel_y) + " Y  " + str(accel_z) + " Z")
