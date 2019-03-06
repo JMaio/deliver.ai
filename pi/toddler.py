@@ -260,7 +260,8 @@ class Toddler:
 
     # Checks for unauthorized opening of the box - using bump sensor
     def box_alarm(self):
-        box_alarm = self.getInputs()[0]  # Get the sensor value from bump switch
+        box_alarm = self.getInputs()[
+            0]  # Get the sensor value from bump switch
         if (box_alarm == 1 and not (self.box_open)):
             self.send_alarm()
             print("[box_alarm] Box Open - Not Due to be")
