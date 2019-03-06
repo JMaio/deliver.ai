@@ -4,7 +4,6 @@ import time
 from tcpcom import TCPServer, TCPClient
 from functools import reduce
 import operator
-import sys
 from adafruit_lsm303 import LSM303
 
 
