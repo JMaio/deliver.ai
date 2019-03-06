@@ -62,12 +62,6 @@ class Toddler:
         # Block vision branch for now because we don't use it
         time.sleep(0.5)
 
-    def box_alarm(self):
-        box_alarm = self.getInputs()[0]  # Get the sensor value
-        if (box_alarm == 1 and not(self.box_open)):
-            self.send_alarm()
-            print("[box_alarm] Box Open - Not Due to be")
-
     def open_box_servo(self):
         self.sc.engage()
         self.sc.setPosition(0)
@@ -96,7 +90,7 @@ class Toddler:
             self.process_client_message(msg)
 
     def try_connect(self):
-        while not(self.connected):
+        while not (self.connected):
             conn = self.client.connect()
             if conn:
                 self.connected = True
@@ -167,19 +161,21 @@ class Toddler:
     def send_coords(self, x, y):
         self.server.sendMessage("GOTO$" + str(x) + "$" + str(y))
 
-    # Detect obstacle
+    # Detect obstacle within the range of min_dist
     def detect_obstacle(self):
-        anInput = self.getSensors()
-        irInput = [anInput[i] for i in range(4)]
-        dist = [self.irToCm(x) for x in irInput]
+        min_dist = 20
+        an_input = self.getSensors()
+        ir_input = [an_input[i] for i in range(4)]
+        dist = [self.input_to_cm(x) for x in ir_input]
         for i in range(4):
-            if dist[i] != -1 and dist[i] < 20:
+            if dist[i] != -1 and dist[i] < min_dist:
                 self.stop(i)
             else:
                 self.continue_path(i)
 
     # Testing method for obstacle detection - Runs until interrupt and
     # writes results to obstacleTest
+    # Can be modified to be used for debugging/troubleshooting by the sysAdmin
     def test_detect_obstacle(self, testNum, thresh):
         obstCount = [0, 0, 0, 0]
         round = 0
@@ -188,10 +184,10 @@ class Toddler:
         print("Ready for testing. " + comment)
         with open("obstacleTest", "w+") as f:
             while round <= testNum:
-                obstFound = [False, False, False,  False]
+                obstFound = [False, False, False, False]
                 anInput = self.getSensors()
                 irInput = [anInput[i] for i in range(4)]
-                dist = [self.irToCm(x) for x in irInput]
+                dist = [self.input_to_cm(x) for x in irInput]
                 if test_pos >= 0:
                     if dist[test_pos] != -1 and dist[test_pos] < 20:
                         obstFound[test_pos] = True
@@ -203,7 +199,8 @@ class Toddler:
                             obstCount[i] += 1
                 if True in obstFound:
                     f.write("Round {}: {} --- Total {}\n".format(round, obstFound, obstCount))  # noqa: E501
-                    print("Obstacle(s) found in position {} - please remove obstacle and wait...".format(obstFound))  # noqa: E501
+                    print("Obstacle(s) found in position {} - please remove obstacle and wait...".format(
+                        obstFound))  # noqa: E501
                     round += 1
                     if round == thresh[0]:
                         test_pos = 1
@@ -233,7 +230,7 @@ class Toddler:
         self.server.sendMessage("STOP")
 
     def continue_path(self, i):
-        if not(self.not_sent_stop[i]):
+        if not (self.not_sent_stop[i]):
             self.not_sent_stop[i] = True
             if (reduce(operator.and_, self.not_sent_stop, True)):
                 self.server.sendMessage("CONT")
@@ -241,24 +238,34 @@ class Toddler:
     # Convert analog input from IR sensor to cm
     # Formula taken from: https://www.phidgets.com/?tier=3&catid=5&pcid=3&prodid=70#Voltage_Ratio_Input  # noqa: E501
     # IR sensor model used: GD2D12 - range: 10-80cm
-    def irToCm(self, anInput):
+    def input_to_cm(self, anInput):
         # Input has to be adapted as the input differs from the value range on
         # the website by a factor of 100
-        voltageRatio = anInput/1000.0
-        if voltageRatio > 0.08 and voltageRatio < 0.53:   # taken from the website  # noqa: E501
-            dist = 4.8 / (voltageRatio-0.02)
+        voltageRatio = anInput / 1000.0
+        if voltageRatio > 0.08 and voltageRatio < 0.53:  # taken from the website  # noqa: E501
+            dist = 4.8 / (voltageRatio - 0.02)
         else:
             dist = -1
         return dist
 
-    def accel_alarm(self):
-        accel_all, mag = self.accel.read()
-        accel_x, accel_y, accel_z = accel_all
-        if abs(accel_x) > 400 or abs(accel_y) > 200 or (abs(accel_z) > 1200 and abs(accel_z) < 1500):  # noqa: E501
-            if (not(self.alarm)):
-                self.send_alarm()
-                self.alarm = True
-                print("[accel_alarm] ALARM STATE" + str(accel_x) + " X " + str(accel_y) + " Y  " + str(accel_z) + " Z")  # noqa: E501
+    # Checks for unauthorized opening of the box - using bump sensor
+    def box_alarm(self):
+        box_alarm = self.getInputs()[0]  # Get the sensor value from bump switch
+        if (box_alarm == 1 and not (self.box_open)):
+            self.send_alarm()
+            print("[box_alarm] Box Open - Not Due to be")
 
     def send_alarm(self):
         self.server.sendMessage("ALARM")
+
+    # Checks for unexpected movement/robot being stolen - using accelerometer
+    def accel_alarm(self):
+        accel_all, mag = self.accel.read()
+        accel_x, accel_y, accel_z = accel_all
+        # Basic detection method - needs more complexity to achieve higher accuracy
+        if abs(accel_x) > 400 or abs(accel_y) > 200 or (abs(accel_z) > 1200 and abs(accel_z) < 1500):  # noqa: E501
+            if (not (self.alarm)):
+                self.send_alarm()
+                self.alarm = True
+                print("[accel_alarm] ALARM STATE" + str(accel_x) + " X " + str(accel_y) + " Y  " + str(
+                    accel_z) + " Z")  # noqa: E501
