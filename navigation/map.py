@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 from office import Office
+import json
 
 class Map():
     def __init__(self, size=(10,10)):
@@ -15,6 +16,11 @@ class Map():
         # Offices are stored in a hash table {coordinates : office}
         self.offices = {(0,0) : self.home}
 
+    def addJsonFile(self, json_file):
+        json_data = json.loads(json_file)
+        for office in json_data['offices']:
+            self.addOffice(Office(office['name'], (office['x_cord'], office['y_cord'])))
+
     def addOffices(self, new_offices):
         ''' Add a list of offices '''
         for new_office in new_offices:
@@ -27,12 +33,12 @@ class Map():
 
     def addOffice(self, new_office):
         ''' Add a new office to the map '''
-        
+
         # If office already exists stop
         if new_office.coords in self.offices:
             print("ERROR: Office already exists.")
             return
-        
+
         # Otherwise we add the new office and find its neighbours
         self.offices[new_office.coords] = new_office
         self.addNeighbours(new_office)
@@ -48,7 +54,7 @@ class Map():
             print("ERROR: Office not found.")
 
     def addNeighbours(self, office):
-        ''' Find all existing neighbours of a new office (max of 4) 
+        ''' Find all existing neighbours of a new office (max of 4)
             We then also update the map to account for this new office'''
 
         (x, y) = office.coords
