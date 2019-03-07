@@ -1,6 +1,6 @@
 import datetime
 
-from flask import Flask, render_template, request, url_for
+from flask import Flask, render_template, request, url_for, render_template_string
 
 from deliverai_utils import Person, Ticket, Bot
 from server import DeliverAIServer
@@ -196,6 +196,40 @@ def create_app():
     def send_cmd(command):
         deliver_server.send_encoded_message(command)
         return "sending command: '{}'".format(command)
+
+    @app.route('/api/')
+    def api_help():
+        return render_template_string(
+            '''
+            <ul>
+                <li><a href="/api/botinfo">bot info</a></li>
+            </ul>
+            '''
+        )
+
+    @app.route('/api/<string:args>', methods=['GET'])
+    def api_get(args):
+        if args == 'botinfo':
+            bot = bots.get(request.args.get('name'), None)  # type: Bot
+            if bot:
+                return bot.to_json()
+            else:
+                return "error"
+
+    @app.route('/api/<string:args>', methods=['POST'])
+    def api_post(args):
+        if args == 'botinfo':
+            bot = bots.get(request.args.get('name'), None)  # type: Bot
+            if bot:
+                bot.update_from_dict({
+                    # send key, value pair only if value present
+                    k: request.args.get(k) for k in
+                    ['x_loc', 'y_loc', 'state', 'battery_volts']
+                    if request.args.get(k)
+                })
+                return bot.to_json()
+            else:
+                return "error"
 
     @app.errorhandler(404)
     def error_page(
