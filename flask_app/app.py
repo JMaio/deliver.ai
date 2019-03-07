@@ -55,7 +55,7 @@ def create_app():
     @app.route('/send/')
     def send():
         return render_template(
-            'recipients.html',
+            'send/index.html',
             recipients=people_map.values(),
         )
 
@@ -83,7 +83,7 @@ def create_app():
                 )
             else:
                 return render_template(
-                    'schedule_pickup.html',
+                    'send/schedule_pickup.html',
                     recipient=recipient,
                 )
         else:
@@ -147,7 +147,7 @@ def create_app():
         send_delivery(ticket)
 
         return render_template(
-            'schedule_pickup_confirm.html',
+            'send/schedule_pickup_confirm.html',
             recipient=ticket.recipient,
             ticket=ticket,
         )
