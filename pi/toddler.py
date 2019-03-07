@@ -159,9 +159,6 @@ class Toddler:
     def request_authentication(self):
         self.client.sendMessage("AUTHENTICATE")
 
-    def send_coords(self, x, y):
-        self.server.sendMessage("GOTO$" + str(x) + "$" + str(y))
-
     # Detect obstacle within the range of min_dist
     def detect_obstacle(self):
         min_dist = 20
