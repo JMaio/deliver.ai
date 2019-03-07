@@ -24,6 +24,13 @@ class Person:
             name=self.name,
         )
 
+    def json_dict(self):
+        return {
+            'name': self.name,
+            'x_coord': self.x,
+            'y_coord': self.y,
+        }
+
     @classmethod
     def from_params(cls, params):
         username, name, x, y = map(str.strip, params.split(','))
@@ -101,4 +108,5 @@ class Bot:
     def from_file(cls, filename):
         with open(filename) as f:
             return {bot.name: bot for bot in [Bot.from_params(l)
-                    for l in f.readlines()]}
+                                              for l in f.readlines()]}
+
