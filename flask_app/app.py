@@ -10,33 +10,33 @@ def create_app():
     """ Flask application factory """
     app = Flask(__name__)
 
-    with app.app_context():
-        # users
-        people = Person.from_file("people.txt")
-        people_map = {person.username: person for person in people}
-        user = people_map.pop("ash.ketchum", None)
+    # with app.app_context():
+    # users
+    people = Person.from_file("people.txt")
+    people_map = {person.username: person for person in people}
+    user = people_map.pop("ash.ketchum", None)
 
-        # robots
-        bots = Bot.from_file("bots.txt")
+    # robots
+    bots = Bot.from_file("bots.txt")
 
-        tickets = []
+    tickets = []
 
-        deliver_server = DeliverAIServer()
+    deliver_server = DeliverAIServer()
 
-        debug_items = {
-            'server': {
-                'server ip': deliver_server.server.getIPAddress(),
-                'connected': deliver_server.server.isConnected(),
-                'client ip': deliver_server.client_ip
-            },
-            'bot': {
-                'last location': (0, 0),
-                'status': "ready",
-                'going to': (1, 1),
-                'battery': 60,
-            }
+    debug_items = {
+        'server': {
+            'server ip': deliver_server.server.getIPAddress(),
+            'connected': deliver_server.server.isConnected(),
+            'client ip': deliver_server.client_ip
+        },
+        'bot': {
+            'last location': (0, 0),
+            'status': "ready",
+            'going to': (1, 1),
+            'battery': 60,
         }
-        debug_log = deliver_server.log
+    }
+    debug_log = deliver_server.log
 
     @app.route('/')
     def index():
