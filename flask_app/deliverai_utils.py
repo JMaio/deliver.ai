@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 
 
 class Person:
@@ -65,19 +66,31 @@ class Bot:
     def __init__(self, uid, name):
         self.uid = uid  # type: str
         self.name = name
-        self.battery = 42
+        self.props = {
+            'uid': uid,
+            'name': name,
+            'x_loc': None,
+            'y_loc': None,
+            'state': None,
+            'battery_volts': None,
+        }
 
     def __str__(self):
-        return "Bot '{name}' [{uid}]".format(
+        return "Bot '{name}' [{uid}] - {props}".format(
             name=self.name,
             uid=self.uid,
+            props=self.props.items()
         )
 
     def __repr__(self):
-        return "Bot '{name}' [{uid}]".format(
-            name=self.name,
-            uid=self.uid,
-        )
+        return str(self)
+
+    def update_from_dict(self, props):
+        for prop, val in props.items():
+            self.props[prop] = val
+
+    def to_json(self):
+        return json.dumps(self.props)
 
     @classmethod
     def from_params(cls, params):
@@ -87,5 +100,5 @@ class Bot:
     @classmethod
     def from_file(cls, filename):
         with open(filename) as f:
-            return [Bot.from_params(bot)
-                    for bot in f.readlines()]
+            return {bot.name: bot for bot in [Bot.from_params(l)
+                    for l in f.readlines()]}
