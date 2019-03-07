@@ -24,13 +24,13 @@ def create_app():
 
     tickets = []
 
-    deliver_server = DeliverAIServer()
+    tcp_server = DeliverAIServer()
 
     debug_items = {
         'server': {
-            'server ip': deliver_server.server.getIPAddress(),
-            'connected': deliver_server.server.isConnected(),
-            'client ip': deliver_server.client_ip
+            'server ip': tcp_server.server.getIPAddress(),
+            'connected': tcp_server.server.isConnected(),
+            'client ip': tcp_server.client_ip
         },
         'bot': {
             'last location': (0, 0),
@@ -39,7 +39,7 @@ def create_app():
             'battery': 60,
         }
     }
-    debug_log = deliver_server.log
+    debug_log = tcp_server.log
 
     @app.route('/')
     def index():
@@ -119,7 +119,7 @@ def create_app():
         # print("sending bot for pickup @ {} \n"
         #       "  |--> to deliver @ {} !".format(orig, dest))
 
-        deliver_server.send_pickup(orig, dest)
+        tcp_server.send_pickup(orig, dest)
 
     def process_delivery(recipient):
         form = {
@@ -197,7 +197,7 @@ def create_app():
 
     @app.route('/cmd/<string:command>', methods=['GET', 'POST'])
     def send_cmd(command):
-        deliver_server.send_encoded_message(command)
+        tcp_server.send_encoded_message(command)
         return "sending command: '{}'".format(command)
 
     @app.route('/api/')
@@ -229,8 +229,9 @@ def create_app():
             if bot:
                 bot.update_from_dict({
                     # send key, value pair only if value present
-                    k: request.args.get(k) for k in
-                    ['x_loc', 'y_loc', 'state', 'battery_volts']
+                    k: request.args.get(k, type=t) for k, t in
+                    [('x_loc', int), ('y_loc', int), ('state', str),
+                     ('battery_volts', float)]
                     if request.args.get(k)
                 })
                 return bot.to_json()
@@ -262,6 +263,7 @@ def create_app():
             'now': datetime.datetime.utcnow().strftime("%Y-%m-%d-%H%M%S"),
             'dt': datetime,
             'user': user,
+            'tcp_server': tcp_server,
         }
 
     return app

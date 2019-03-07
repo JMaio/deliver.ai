@@ -76,10 +76,10 @@ class Bot:
         self.props = {
             'uid': uid,
             'name': name,
-            'x_loc': None,
-            'y_loc': None,
-            'state': None,
-            'battery_volts': None,
+            'x_loc': 0,
+            'y_loc': 0,
+            'state': 'unknown',
+            'battery_volts': 5,
         }
 
     def __str__(self):
@@ -95,6 +95,12 @@ class Bot:
     def update_from_dict(self, props):
         for prop, val in props.items():
             self.props[prop] = val
+
+    def battery(self):
+        # estimate battery % - between 5 and 7.5 Volt
+        return max(0, min(
+            round(100 * (self.props['battery_volts'] - 5) / 2.5),
+            100))
 
     def to_json(self):
         return json.dumps(self.props)

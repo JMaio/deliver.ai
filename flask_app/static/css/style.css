@@ -14,6 +14,27 @@
     overflow: hidden;
 }
 
+@keyframes blink {
+    50% {
+        opacity: 0.3;
+    }
+}
+
+.robot-status-light {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    animation: blink 3s cubic-bezier(0, 0, 0.1, 1) 0s infinite;
+}
+
+.robot-status-light.connected {
+    background-color: #28a745;
+}
+
+.robot-status-light.disconnected {
+    background-color: #dc3545;
+}
+
 .btn-upper {
     text-transform: uppercase;
     letter-spacing: 1pt;
