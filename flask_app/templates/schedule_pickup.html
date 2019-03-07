@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1 class="text-center font-weight-light">Sending to</h1>
+    {% with user = recipient %}
+        {% include "components/user_info_card.html" %}
+    {% endwith %}
+    <hr>
+    <div class="container text-center">
+        <div class="card mx-auto" style="max-width: 360px;">
+            <div class="card-body">
+                <h3 class="card-title mb-0">Delivery details</h3>
+                <hr>
+                <form method="post" id="pickup-form">
+                    <div class="form-group">
+                        <label for="pickup-time">Pickup time (your office: {{ user.coordinates }})</label>
+                        {% set pickup_time = (dt.datetime.utcnow() + dt.timedelta(minutes=5)).strftime("%H:%M") %}
+                        <input type="time" class="form-control w-auto mx-auto mb-2" name="pickup-time"
+                               title="Pickup time" value="{{ pickup_time }}"
+                               id="pickup-time" placeholder="Time of delivery" required>
+                        <input hidden type="checkbox" id="pickup-now" name="pickup-now">
+                        <div class="btn-toolbar btn-group-toggle" data-toggle="buttons" role="toolbar">
+                            <!-- class btn-toolbar  -->
+                            <div class="btn-group mb-1 mx-auto">
+                                <label class="btn btn-outline-info" onclick="addTime(0)">
+                                    <input type="radio" name="options" id="pickup-now-btn">
+                                    now
+                                </label>
+                            </div>
+                            <div class="btn-group mb-1 mx-auto">
+                                {% for d, scale in [
+                            (5, 'minutes'),
+                            (10, 'minutes'),
+                            (30, 'minutes'),
+                            (1, 'hours'),
+                            ] %}
+                                    <label class="btn btn-outline-info" onclick="addTime({{ d }}, '{{ scale }}')">
+                                        <input type="radio" name="options" id="pickup-{{ d }}-{{ scale[:1] }}-btn">
+                                        {{ d }}{{ scale[:1] }}
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" hidden readonly id="form-recipient-username"
+                               value="{{ recipient.username }}" name="recipient-username">
+                    </div>
+                    <div class="custom-control custom-switch mb-3">
+                        <input type="checkbox" class="custom-control-input" id="urgent-check" name="urgent">
+                        <label class="custom-control-label" for="urgent-check">Urgent</label>
+                    </div>
+                    <div class="form-group">
+                        <label for="delivery-message">Manifest</label>
+                        <input type="text" class="form-control w-100 mx-auto" name="delivery-message"
+                               title="Delivery message"
+                               id="delivery-message" placeholder="What are you sending?" required>
+                    </div>
+                    <div class="btn-block">
+                        <a href="/deliver/" class="btn btn-danger btn-upper mx-2 mb-1">Cancel <i
+                                class="fas fa-sm fa-fw fa-ban"></i></a>
+                        <button type="submit" class="btn btn-info btn-upper mx-2 mb-1">Send <i
+                                class="fas fa-sm fa-fw fa-paper-plane"></i></button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+{% block scripts %}
+    {{ super() }}
+    <script>
+        $(document).ready(function () {
+                {#console.log(`current time = ${$('#pickup-time').val()}`);#}
+                // set pickup time to 5 minutes from now
+                // $('#delivery-time').val(moment().add(5, 'minutes').format('H:mm'));
+            }
+        );
+
+        function addTime(amount, scale) {
+            let picker = $('#pickup-time');
+            // console.log(`current time = ${picker.val()}`);
+            $('#pickup-now').prop("checked", amount === 0);
+
+            console.log(`adding ${amount} ${scale}`);
+            picker.val(moment().add(amount, scale).format('H:mm'))
+        }
+
+        function validatePickup() {
+            let form = $('#pickup-form');
+            console.log();
+        }
+    </script>
+{% endblock %}

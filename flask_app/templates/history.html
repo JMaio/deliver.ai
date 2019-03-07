@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1 class="text-center font-weight-light font-italic">Your details</h1>
+    {% include "components/user_info_card.html" %}
+    <hr>
+    <div class="container">
+        <h2 class="text-center font-italic">Past tickets</h2>
+        <div class="row">
+            <div class="col col-12 col-sm-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="my-0">Delivered</h3>
+                    </div>
+                    <div class="card-body">
+
+                        <hr>
+                    </div>
+                </div>
+            </div>
+            <div class="col col-12 col-sm-6">
+                <div class="card">
+                    <div class="card-header">
+                        <p class="my-0">Received</p>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        {% for i in range(6) %}
+                            <li class="list-group-item">
+                                <div class="d-flex flex-column">
+                                    <h4>01/02</h4>
+                                    <h5>12:34</h5>
+                                </div>
+                                <p>Lt. Sarge</p>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+{% block scripts %}
+    {{ super() }}
+    <script>
+        $(document).ready(function () {
+                {#console.log(`current time = ${$('#pickup-time').val()}`);#}
+                // set pickup time to 5 minutes from now
+                // $('#delivery-time').val(moment().add(5, 'minutes').format('H:mm'));
+            }
+        );
+
+        function addTime(amount, scale) {
+            let picker = $('#pickup-time');
+            // console.log(`current time = ${picker.val()}`);
+            $('#pickup-now').prop("checked", amount === 0);
+
+            console.log(`adding ${amount} ${scale}`);
+            picker.val(moment().add(amount, scale).format('H:mm'))
+        }
+
+        function validatePickup() {
+            let form = $('#pickup-form');
+            console.log();
+        }
+
+
+    </script>
+{% endblock %}

@@ -1,0 +1,37 @@
+.bg-lightblue {
+    background-color: #17a2b8;
+}
+
+/*.btn.bg-lightblue:hover {*/
+/*background-color: #5ca2ec;*/
+/*}*/
+
+.card-name {
+    font-weight: 300;
+    font-size: 1.8rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.btn-upper {
+    text-transform: uppercase;
+    letter-spacing: 1pt;
+    font-weight: 400;
+    margin: 0;
+    color: #fff;
+}
+
+.btn-upper:hover {
+    color: #fff;
+}
+
+.shadow-hover {
+    box-shadow: 0 .1rem .2rem 0 rgba(0, 0, 0, .075);
+    transition: 0.4s box-shadow ease;
+}
+
+.shadow-hover:hover {
+    box-shadow: 0 .25rem .8rem .1rem rgba(0, 0, 0, .1);
+    transition: 0.2s box-shadow ease;
+}
