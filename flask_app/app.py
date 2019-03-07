@@ -1,8 +1,9 @@
 import datetime
 
-from flask import Flask, render_template, request, url_for, render_template_string
+from flask import Flask, render_template, request, url_for, \
+    render_template_string
 
-from deliverai_utils import Person, Ticket, Bot
+from deliverai_utils import Person, Ticket, Bot, Map
 from server import DeliverAIServer
 
 
@@ -15,6 +16,8 @@ def create_app():
     people = Person.from_file("people.txt")
     people_map = {person.username: person for person in people}
     user = people_map.pop("ash.ketchum", None)
+
+    office_map = Map(people_map)
 
     # robots
     bots = Bot.from_file("bots.txt")
@@ -202,6 +205,7 @@ def create_app():
         return render_template_string(
             '''
             <ul>
+                <li><a href="/api/map.json">map.json</a></li>
                 <li><a href="/api/botinfo">bot info</a></li>
             </ul>
             '''
@@ -209,6 +213,8 @@ def create_app():
 
     @app.route('/api/<string:args>', methods=['GET'])
     def api_get(args):
+        if args == 'map.json':
+            return office_map.to_json()
         if args == 'botinfo':
             bot = bots.get(request.args.get('name'), None)  # type: Bot
             if bot:
