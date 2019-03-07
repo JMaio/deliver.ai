@@ -110,3 +110,16 @@ class Bot:
             return {bot.name: bot for bot in [Bot.from_params(l)
                                               for l in f.readlines()]}
 
+
+class Map:
+    def __init__(self, offices=None):
+        self.offices = offices  # type: dict[Person]
+
+    def to_json(self):
+        return json.dumps(
+            {'offices': [o.json_dict() for o in self.offices.values()]}
+        )
+
+    @classmethod
+    def from_dict(cls, d):
+        return Map(d)
