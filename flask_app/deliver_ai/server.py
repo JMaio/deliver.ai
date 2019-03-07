@@ -1,6 +1,24 @@
 import datetime
+from flask import g, current_app
+from deliver_ai.tcpcom import TCPServer
 
-from tcpcom import TCPServer
+
+# def init_server():
+#     tcp_server = get_server()
+
+
+def get_server():
+    if 'tcp_server' not in g:
+        g.tcp_server = DeliverAIServer()
+
+    return g.tcp_server
+
+
+def terminate_server(e=None):
+    tcp_server = g.pop('tcp_server', None)
+
+    if tcp_server is not None:
+        tcp_server.server.terminate()
 
 
 class DeliverAIServer:
@@ -55,6 +73,9 @@ class DeliverAIServer:
         t = datetime.datetime.utcnow().strftime("%H:%M:%S")
         self.log.append("[{}] {}".format(t, m))
 
+    def terminate(self):
+        # print("Terminating DeliverAIServer! (running: {})".format(self.server.terminateServer))
+        self.server.terminate()
 
 # if __name__ == '__main__':
 #     main()

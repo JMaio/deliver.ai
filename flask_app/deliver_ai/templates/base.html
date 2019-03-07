@@ -3,7 +3,7 @@
 {% set active_page = path %}
 {# assign navbar items #}
 {% set navigation_bar = [
-    (url_for('send'), 'send', 'Send'),
+    (url_for('send.send'), 'send', 'Send'),
     (url_for('receive'), 'receive', 'Receive'),
     (url_for('history'), 'history', 'Your tickets'),
 ] -%}

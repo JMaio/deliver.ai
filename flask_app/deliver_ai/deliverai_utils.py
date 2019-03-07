@@ -1,4 +1,7 @@
+import os
 from datetime import datetime
+
+from deliver_ai import server
 
 
 class Person:
@@ -89,3 +92,17 @@ class Bot:
         with open(filename) as f:
             return [Bot.from_params(bot)
                     for bot in f.readlines()]
+
+
+path = os.path.dirname(os.path.abspath(__file__))
+
+people = Person.from_file(os.path.join(path, '..', 'people.txt'))
+people_map = {person.username: person for person in people}
+user = people_map.pop("ash.ketchum", None)
+
+# robots
+bots = Bot.from_file(os.path.join(path, '..', "bots.txt"))
+
+tickets = []
+
+tcp_server = server.get_server()
