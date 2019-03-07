@@ -87,6 +87,7 @@ class DeliverAIBot():
             self.bearing = self.getBearing(route[i], route[i+1])
             print("Going to: ", route[i+1])
             print("Bearing: ", self.bearing)
+            self.send_bearing(self.bearing)
             cs_port = "in1" if self.bearing == 0 or self.bearing == 90 else "in2"
             rs_port = "in2" if cs_port == "in1" else "in1"
             self.cs = ev3.ColorSensor(cs_port); assert self.cs.connected
@@ -132,7 +133,7 @@ class DeliverAIBot():
 
             while (self.stop_event.is_set()):
                 count = 0
-                print("[follow_line] STOP - Object in Way!")
+                # print("[follow_line] STOP - Object in Way!")
                 self.stopMotors()
                 count += 1
                 if (count > 10):
@@ -197,7 +198,7 @@ class DeliverAIBot():
 
             while (self.stop_event.is_set()):
                 count = 0
-                print("[follow_line] STOP - Object in Way!")
+                # print("[follow_line] STOP - Object in Way!")
                 self.stopMotors()
                 count += 1
                 if (count > 10):
@@ -380,6 +381,18 @@ class DeliverAIBot():
 
     def send_arrived(self):
         self.client_connection.sendMessage("ARRIVED")
+
+    def send_bearing(self, bearing):
+        dir_go = -1
+        if (bearing == 0):
+            dir_go = 0
+        elif (bearing == 90):
+            dir_go = 1
+        elif (bearing == 180):
+            dir_go = 2
+        elif (bearing == 270):
+            dir_go = 3
+        self.client_connection.sendMessage("BEARING$" + str(dir_go))
 
     def alarm(self):
         print("[alarm] Alarming!")
