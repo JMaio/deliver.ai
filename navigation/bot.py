@@ -10,6 +10,7 @@ from map import Map
 from tcpcom import TCPClient
 import threading
 import urllib.request
+import urllib.parse
 
 server_ip = "abomasnow.inf.ed.ac.uk"
 server_port = 5010
@@ -295,15 +296,17 @@ class DeliverAIBot():
         return shortest
 
     def update_server(self):
-        to_access = "http://" + web_server + ":" + str(web_server_port) + "/api/botinfo?"
-        to_access = to_access + "name=" + robot_name
-        to_access = to_access + "&x_loc=" + str(self.coords[0])
-        to_access = to_access + "&y_loc=" + str(self.coords[1])
-        to_access = to_access + "&state=TEMP"
-        batt_volts = ev3.PowerSupply().measured_volts
-        to_access = to_access + "&battery_volts=" + str(batt_volts)
+        to_access = "http://" + web_server + ":" + str(web_server_port) + "/api/botinfo"
+        to_provide = {
+            "name":self.robot_name,
+            "x_loc":self.coords[0],
+            "y_loc":self.coords[1],
+            "state":"TEMP",
+            "battery_volts":ev3.PowerSupply().measured_volts
+        }
+        data = urllib.parse.urlencode(to_provide)
         try:
-            urllib.request(to_access)
+            urllib.request.urlopen(to_access, bytes(data, "utf-8"))
         except:
             print("[update_server] Has failed - failed to connect to: " + to_access)
 
