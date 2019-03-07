@@ -54,12 +54,12 @@ class Toddler:
         self.detect_obstacle()
         self.accel_alarm()
         self.box_alarm()
-        time.sleep(0.5)
+        time.sleep(0.05)
 
     # VISION THREAD
     def vision(self):
         # Block vision branch for now because we don't use it
-        time.sleep(0.5)
+        time.sleep(0.05)
 
     def open_box_servo(self):
         self.sc.engage()
