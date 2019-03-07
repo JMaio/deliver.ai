@@ -24,7 +24,7 @@ class Toddler:
         # Set up servers and client
         self.server_port = 5010
         self.client_port = 5005
-        self.client_connect_address = "jacobsen.inf.ed.ac.uk"
+        self.client_connect_address = "brogdon.inf.ed.ac.uk"
 
         self.server = TCPServer(
             self.server_port,
@@ -43,6 +43,7 @@ class Toddler:
         self.mode = "READY"
         self.pick_from = (0, 0)
         self.deliver_to = (0, 0)
+        self.current_movment_bearing = 0
         self.accel = LSM303()
         self.alarm = False
         self.box_open = False
@@ -52,7 +53,7 @@ class Toddler:
     # CONTROL THREAD
     def control(self):
         self.detect_obstacle()
-        self.accel_alarm()
+        # self.accel_alarm()
         self.box_alarm()
         time.sleep(0.05)
 
@@ -101,6 +102,7 @@ class Toddler:
 
     def process_server_message(self, msg):
         print("[process_server_message] Processing Msg Received")
+        broken_msg = msg.split("$")
         if (msg == "ARRIVED"):
             print("[process_server_message] Arrived at dest requested")
             if (self.state == "GOINGHOME"):
@@ -109,6 +111,9 @@ class Toddler:
             elif (self.state == "PICKINGUP" or self.state == "DELIVERING"):
                 print("[process_server_message] Waiting for authorisation")
                 self.request_authentication()
+        if (broken_msg[0] == "BEARING"):
+            self.current_movment_bearing = int(broken_msg[1])
+
 
     def process_client_message(self, msg):
         print("[process_client_message] Processing Msg Recived")
@@ -130,7 +135,7 @@ class Toddler:
             self.server.sendMessage("ALARMSTOP")
             self.alarm = False
         elif (broken_msg[0] == "DEBUGMODEON"):
-            self.debug_mode_on = True
+            self.mode_debug_on = True
 
     def process_debug_msg(self, msg):
         broken_msg = msg.split("$")
@@ -174,12 +179,16 @@ class Toddler:
     # Dummy function for reacting according to obstacle in direction dir where
     # 0 - Front, 1 - Right, 2 - Back, 3 - Left
     def stop(self, dir):
-        print("[stop] Obstacle in %d" % dir)
-        self.not_sent_stop[dir] = False
-        self.server.sendMessage("STOP")
+        # If the dirrection is NOT (current_movment_bearing + 2 mod 4) i.e.
+        # behind us - we can send stop
+        if (dir != ((self.current_movment_bearing + 2) % 4)):
+            print("[stop] Obstacle in %d" % dir)
+            self.not_sent_stop[dir] = False
+            self.server.sendMessage("STOP")
 
     def continue_path(self, i):
         if not (self.not_sent_stop[i]):
+            print("[continue_path] Obstacle in %d cleared!" % i)
             self.not_sent_stop[i] = True
             if (reduce(operator.and_, self.not_sent_stop, True)):
                 self.server.sendMessage("CONT")
