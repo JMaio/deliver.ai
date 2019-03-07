@@ -13,17 +13,25 @@
                 <hr>
                 <form method="post" id="pickup-form">
                     <div class="form-group">
-                        <label for="pickup-time">Pickup time (your office: {{ user.coordinates }})</label>
+                        <label for="pickup-time">Pickup time (your
+                            office: {{ user.coordinates }})</label>
                         {% set pickup_time = (dt.datetime.utcnow() + dt.timedelta(minutes=5)).strftime("%H:%M") %}
-                        <input type="time" class="form-control w-auto mx-auto mb-2" name="pickup-time"
+                        <input type="time"
+                               class="form-control w-auto mx-auto mb-2"
+                               name="pickup-time"
                                title="Pickup time" value="{{ pickup_time }}"
-                               id="pickup-time" placeholder="Time of delivery" required>
-                        <input hidden type="checkbox" id="pickup-now" name="pickup-now">
-                        <div class="btn-toolbar btn-group-toggle" data-toggle="buttons" role="toolbar">
+                               id="pickup-time" placeholder="Time of delivery"
+                               required>
+                        <input hidden type="checkbox" id="pickup-now"
+                               name="pickup-now">
+                        <div class="btn-toolbar btn-group-toggle"
+                             data-toggle="buttons" role="toolbar">
                             <!-- class btn-toolbar  -->
                             <div class="btn-group mb-1 mx-auto">
-                                <label class="btn btn-outline-info" onclick="addTime(0)">
-                                    <input type="radio" name="options" id="pickup-now-btn">
+                                <label class="btn btn-outline-info"
+                                       onclick="addTime(0)">
+                                    <input type="radio" name="options"
+                                           id="pickup-now-btn">
                                     now
                                 </label>
                             </div>
@@ -34,8 +42,10 @@
                             (30, 'minutes'),
                             (1, 'hours'),
                             ] %}
-                                    <label class="btn btn-outline-info" onclick="addTime({{ d }}, '{{ scale }}')">
-                                        <input type="radio" name="options" id="pickup-{{ d }}-{{ scale[:1] }}-btn">
+                                    <label class="btn btn-outline-info {% if d == 5 %}active{% endif %}"
+                                           onclick="addTime({{ d }}, '{{ scale }}')">
+                                        <input type="radio" name="options"
+                                               id="pickup-{{ d }}-{{ scale[:1] }}-btn">
                                         {{ d }}{{ scale[:1] }}
                                     </label>
                                 {% endfor %}
@@ -43,24 +53,33 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <input type="text" hidden readonly id="form-recipient-username"
-                               value="{{ recipient.username }}" name="recipient-username">
+                        <input type="text" hidden readonly
+                               id="form-recipient-username"
+                               value="{{ recipient.username }}"
+                               name="recipient-username">
                     </div>
                     <div class="custom-control custom-switch mb-3">
-                        <input type="checkbox" class="custom-control-input" id="urgent-check" name="urgent">
+                        <input type="checkbox" class="custom-control-input"
+                               id="urgent-check" name="urgent">
                         <label class="custom-control-label" for="urgent-check">Urgent</label>
                     </div>
                     <div class="form-group">
                         <label for="delivery-message">Manifest</label>
-                        <input type="text" class="form-control w-100 mx-auto" name="delivery-message"
+                        <input type="text" class="form-control w-100 mx-auto"
+                               name="delivery-message"
                                title="Delivery message"
-                               id="delivery-message" placeholder="What are you sending?" required>
+                               id="delivery-message"
+                               autocomplete="off"
+                               placeholder="What are you sending?" required>
                     </div>
-                    <div class="btn-block">
-                        <a href="/deliver/" class="btn btn-danger btn-upper mx-2 mb-1">Cancel <i
+                    <div class="btn-block d-flex justify-content-around">
+                        <a href="{{ url_for('send') }}"
+                           class="btn btn-danger btn-upper mx-2 mb-1">Cancel <i
                                 class="fas fa-sm fa-fw fa-ban"></i></a>
-                        <button type="submit" class="btn btn-info btn-upper mx-2 mb-1">Send <i
-                                class="fas fa-sm fa-fw fa-paper-plane"></i></button>
+                        <button type="submit"
+                                class="btn btn-info btn-upper mx-2 mb-1">Send <i
+                                class="fas fa-sm fa-fw fa-paper-plane"></i>
+                        </button>
                     </div>
                 </form>
 
