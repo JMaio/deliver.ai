@@ -18,7 +18,7 @@ web_server_port = 5000
 robot_name = "lion"
 
 class DeliverAIBot():
-    def __init__(self, map, init_office):
+    def __init__(self, map = Map(), init_office):
         self.my_map = map
         self.position = init_office
         self.coords = self.position.coords
@@ -197,7 +197,6 @@ class DeliverAIBot():
         ''' Rotate the robot by a given angle from the x-axis '''
 
         sign = -1 if angle < 0 else 1
-        #sign = -sign if self.tape_side == "left" else sign
         if self.bearing == 0 or self.bearing == 180:
             self.moveMotor(0, speed=sign*speed, duration=4200*(abs(angle)/360))
             self.moveMotor(2, speed=sign*speed, duration=4200*(abs(angle)/360))
