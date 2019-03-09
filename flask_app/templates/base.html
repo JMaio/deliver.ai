@@ -17,19 +17,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>
         {% block fulltitle %}
-            {% block title %}{{ active_page|capitalize }}{% endblock %} | deliver.ai
+            {% block title %}{{ active_page|capitalize }}{% endblock %} |
+            deliver.ai
         {% endblock %}
     </title>
     {% include "styles.html" %}
 </head>
 <body>
 {% block nav %}
-    <nav class="navbar navbar-expand-md navbar-dark bg-lightblue shadow text-center sticky-top" style="z-index: 1;">
+    <nav class="navbar navbar-expand-md navbar-dark bg-lightblue shadow text-center sticky-top"
+         style="z-index: 1;">
         <div class="container">
             <a href="/" class="navbar-brand">deliver.ai</a>
 
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText"
-                    aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-toggle="collapse"
+                    data-target="#navbarText"
+                    aria-controls="navbarText" aria-expanded="false"
+                    aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
@@ -37,23 +41,27 @@
                 <ul class="navbar-nav mr-auto">
                     {% for href, id, caption in navigation_bar %}
                         <li class="nav-item {% if id == active_page %} active{% endif %}">
-                            <a class="nav-link" href={{ href }}>{{ caption|e }}</a>
+                            <a class="nav-link"
+                               href={{ href }}>{{ caption|e }}</a>
                         </li>
                     {% endfor %}
                 </ul>
 
-                {% set username = user.username|default('ash.ketchum') %}
-                {# TODO update this to match request data / cookie / session with user #}
-                <div class="btn-group" role="group" aria-label="Authentication buttons">
+                {#                {% set username = user.username|default('ash.ketchum') %}#}
+                {#                     TODO update this to match request data / cookie / session with user#}
+                <div class="btn-group" role="group"
+                     aria-label="Authentication buttons">
                     <a class="btn btn-light"
-                            {% if username %}
-                       href="/user/{{ username }}"
+                            {% if current_user.is_authenticated %}
+                       href="/user/{{ current_user.username }}"
                             {% else %}
-                       href="/login/"
-                            {% endif %}>{{ username | default('Log in') }}
+                       href="{{ url_for('user.login') }}"
+                            {% endif %}
+                    >{{ current_user.username | default('Log in') }}
                     </a>
-                    {% if username %}
-                        <a href="/logout/" class="btn btn-light border-left">
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('user.logout') }}"
+                           class="btn btn-light border-left">
                             <i class="fas fa-sign-out-alt"></i>
                         </a>
                         {# <button type="button" class="btn btn-secondary">Right</button>#}

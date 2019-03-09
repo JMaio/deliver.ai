@@ -7,7 +7,7 @@
            type="search" placeholder="Search...">
     <hr>
     <div class="row">
-        {% for recipient in recipients %}
+        {% for _, recipient in recipients.items() %}
             <div class="col-12 col-sm-6 col-lg-3">
                 {% with user = recipient %}
                     {% include 'components/user_card.html' %}

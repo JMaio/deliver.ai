@@ -2,20 +2,79 @@ import datetime
 
 from flask import Flask, render_template, request, url_for, \
     render_template_string
+from flask_sqlalchemy import SQLAlchemy
+from flask_user import login_required, UserManager, UserMixin, current_user
 
 from deliverai_utils import Person, Ticket, Bot, Map
 from server import DeliverAIServer
+
+
+# Class-based application configuration
+class ConfigClass(object):
+    """ Flask application config """
+
+    # Flask settings
+    SECRET_KEY = 'dev'
+
+    # Flask-SQLAlchemy settings
+    # File-based SQL database
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///deliver_ai.sqlite'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False  # Avoids SQLAlchemy warning
+
+    # Flask-User settings
+    # Shown in and email templates and page footers
+    USER_APP_NAME = "deliver.ai"
+    USER_ENABLE_EMAIL = False  # Disable email authentication
+    USER_ENABLE_USERNAME = True  # Enable username authentication
+    USER_REQUIRE_RETYPE_PASSWORD = False  # Simplify register form
 
 
 def create_app():
     """ Flask application factory """
     app = Flask(__name__)
 
+    app.config.from_object(__name__ + '.ConfigClass')
+
+    # Initialize Flask-SQLAlchemy
+    db = SQLAlchemy(app)
+
+    # Define the User data-model.
+    # NB: Make sure to add flask_user UserMixin !!!
+    class User(db.Model, UserMixin):
+        __tablename__ = 'users'
+        id = db.Column(db.Integer, primary_key=True)
+        active = db.Column('is_active', db.Boolean(), nullable=False,
+                           server_default='1')
+
+        # User authentication information. The collation='NOCASE' is required
+        #  to search case insensitively when USER_IFIND_MODE is
+        # 'nocase_collation'.
+        username = db.Column(db.String(100, collation='NOCASE'), nullable=False,
+                             unique=True)
+        password = db.Column(db.String(255), nullable=False, server_default='')
+        email_confirmed_at = db.Column(db.DateTime())
+
+        # User information
+        first_name = db.Column(db.String(100, collation='NOCASE'),
+                               nullable=False, server_default='')
+        last_name = db.Column(db.String(100, collation='NOCASE'),
+                              nullable=False, server_default='')
+
+    # Create all database tables
+    db.create_all()
+
+    # Setup Flask-User and specify the User data-model
+    class UserManagerNoValidation(UserManager):
+        def password_validator(self, form, field):
+            return
+
+    user_manager = UserManagerNoValidation(app, db, User)
+
     # with app.app_context():
     # users
     people = Person.from_file("people.txt")
     people_map = {person.username: person for person in people}
-    user = people_map.pop("ash.ketchum", None)
+    # user = people_map.pop("ash.ketchum", None)
 
     office_map = Map(people_map)
 
@@ -57,15 +116,21 @@ def create_app():
 
     @app.route('/send/')
     def send():
+        if current_user.is_authenticated:
+            r = office_map.get_without_me(current_user.username)
+        else:
+            r = office_map.get()
         return render_template(
             'send/index.html',
-            recipients=people_map.values(),
+            recipients=r,
         )
 
     @app.route('/send/<string:username>', methods=['GET', 'POST'])
+    @login_required
     def schedule_pickup(username):
         try:
-            recipient = people_map[username]
+            sender = office_map.get(current_user.username)
+            recipient = office_map.get(username)
         except KeyError:
             return error_page(
                 error='',
@@ -73,24 +138,24 @@ def create_app():
                 line1="Oops...",
                 line2="it looks like that person doesn't exist!",
             )
-
         if request.method == 'GET':
-            if username == user.username:
+            if username == current_user.username:
                 return error_page(
                     error='',
                     icon="far fa-check-circle",
                     line1="Hey",
                     line2="looks like you've found yourself!",
                     button_text="View inbox",
-                    button_href=url_for('send')
+                    button_href=url_for('receive')
                 )
             else:
                 return render_template(
                     'send/schedule_pickup.html',
+                    sender=sender,
                     recipient=recipient,
                 )
-        else:
-            return process_delivery(recipient)
+        elif request.method == 'POST':
+            return process_delivery(sender, recipient)
 
     def validate_delivery(form):
         assert request.method == 'POST'
@@ -103,11 +168,11 @@ def create_app():
         #     return "{}".format([k for (k, v) in form.items() if not v])
         # return True
 
-    def create_ticket(form):
+    def create_ticket(sender, recipient, form):
         return Ticket(
             form['pickup-time'],
-            user,
-            people_map[form['recipient-username']],
+            sender,
+            recipient,
             form['delivery-message'],
         )
 
@@ -121,12 +186,11 @@ def create_app():
 
         tcp_server.send_pickup(orig, dest)
 
-    def process_delivery(recipient):
+    def process_delivery(sender, recipient):
         form = {
             arg: request.form.get(arg) for arg in
             [
                 'pickup-time',
-                'recipient-username',
                 'delivery-message',
                 # 'hello',
             ]
@@ -144,13 +208,14 @@ def create_app():
         #     pass
 
         # create a record of submission
-        ticket = create_ticket(form)
+        ticket = create_ticket(sender, recipient, form)
         tickets.append(ticket)
         # TODO make delivery not instant, go to queue
         send_delivery(ticket)
 
         return render_template(
             'send/schedule_pickup_confirm.html',
+            sender=ticket.sender,
             recipient=ticket.recipient,
             ticket=ticket,
         )
@@ -193,6 +258,7 @@ def create_app():
             'debug.html',
             debug_items=debug_items,
             debug_log=debug_log,
+            vars=[people, people_map]
         )
 
     @app.route('/cmd/<string:command>', methods=['GET', 'POST'])
@@ -262,7 +328,7 @@ def create_app():
             # an html-friendly time construct to force CSS refresh
             'now': datetime.datetime.utcnow().strftime("%Y-%m-%d-%H%M%S"),
             'dt': datetime,
-            'user': user,
+            # 'user': user,
             'tcp_server': tcp_server,
         }
 

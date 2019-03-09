@@ -14,7 +14,9 @@
                 <form method="post" id="pickup-form">
                     <div class="form-group">
                         <label for="pickup-time">Pickup time (your
-                            office: {{ user.coordinates }})</label>
+                            office: {{ sender.coordinates }})</label>
+                        <p>(estimated
+                            distance: {{ sender.distance_to(recipient) }})</p>
                         {% set pickup_time = (dt.datetime.utcnow() + dt.timedelta(minutes=5)).strftime("%H:%M") %}
                         <input type="time"
                                class="form-control w-auto mx-auto mb-2"
@@ -51,12 +53,6 @@
                                 {% endfor %}
                             </div>
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <input type="text" hidden readonly
-                               id="form-recipient-username"
-                               value="{{ recipient.username }}"
-                               name="recipient-username">
                     </div>
                     <div class="custom-control custom-switch mb-3">
                         <input type="checkbox" class="custom-control-input"

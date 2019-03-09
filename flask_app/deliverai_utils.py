@@ -31,6 +31,12 @@ class Person:
             'y_coord': self.y,
         }
 
+    def distance_to(self, other):
+        if type(other) is not Person:
+            return None
+        else:
+            return abs(self.x - other.x) + abs(self.y - other.y)
+
     @classmethod
     def from_params(cls, params):
         username, name, x, y = map(str.strip, params.split(','))
@@ -120,6 +126,33 @@ class Bot:
 class Map:
     def __init__(self, offices=None):
         self.offices = offices  # type: dict[Person]
+
+    def distance(self, p1, p2):
+        if not self.in_map(p1) and self.in_map(p2):
+            return None
+        else:
+            return p1.distance_to(p2)
+
+    def in_map(self, person):
+        if type(person) is Person:
+            person = person.username
+        return person in self.offices
+
+    def get(self, person=None):
+        if person:
+            if self.in_map(person):
+                return self.offices[person]
+            else:
+                return None
+        return self.offices.copy()
+
+    def get_without_me(self, me):
+        # if me is Person:
+        #     me = me.username
+        m = self.get()
+        if self.in_map(me):
+            m.pop(me)
+        return m
 
     def to_json(self):
         return json.dumps(
