@@ -44,9 +44,12 @@ class Toddler:
         self.pick_from = (0, 0)
         self.deliver_to = (0, 0)
         self.current_movment_bearing = 0
+
         self.accel = LSM303()
         self.alarm = False
         self.box_open = False
+        self.door_mech_motor = 2
+        self.lock_motor = 1
 
         self.mode_debug_on = False
 
@@ -69,6 +72,20 @@ class Toddler:
         time.sleep(10)
         self.sc.setPosition(180)
         self.box_closed = False
+
+    def open_box_motor(self):
+        self.open_lock()
+        self.mc.setMotor(self.door_mech_motor, 100)
+        self.mc.stopMotor()
+        self.close_lock()
+
+    def open_lock(self):
+        self.box_open = True
+        self.mc.stopMotor(self.lock_motor)
+
+    def close_lock(self):
+        self.mc.setMotor(self.lock_motor, 100)
+        self.box_open = False
 
     def on_server_msg(self, state, msg):
         if state == "LISTENING":
