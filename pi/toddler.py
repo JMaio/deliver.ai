@@ -53,6 +53,11 @@ class Toddler:
 
         self.mode_debug_on = False
 
+    def __del__(self):
+        print("[__del__] Cleaning Up...")
+        self.client.disconnect()
+        threading.cleanup_stop_thread()
+
     # CONTROL THREAD
     def control(self):
         self.detect_obstacle()
@@ -76,7 +81,15 @@ class Toddler:
     def open_box_motor(self):
         self.open_lock()
         self.mc.setMotor(self.door_mech_motor, 100)
-        self.mc.stopMotor()
+        while (self.getInputs()[1] == 1):
+            time.sleep(0.01)
+        self.mc.stopMotor(self.door_mech_motor)
+
+    def close_box_motor(self):
+        self.mc.setMotor(self.door_mech_motor, -100)
+        while (self.getInputs()[2] == 1):
+            time.sleep(0.5)
+        self.mc.stopMotor(self.door_mech_motor)
         self.close_lock()
 
     def open_lock(self):
@@ -147,7 +160,9 @@ class Toddler:
             self.deliver_to = (int(broken_msg[4]), int(broken_msg[5]))
             self.send_robot_to(self.pick_from[0], self.pick_from[1])
         elif (broken_msg[0] == "OPEN"):
-            self.open_box()
+            self.open_box_motor()
+        elif (broken_msg[0] == "CLOSE"):
+            self.close_box_motor()
         elif (broken_msg[0] == "ALARMSTOP"):
             self.server.sendMessage("ALARMSTOP")
             self.alarm = False
