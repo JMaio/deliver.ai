@@ -51,12 +51,14 @@ class Person:
 
 class Ticket:
     def __init__(self, pickup_time, sender, recipient, message,
-                 created=datetime.now()):
-        self.created = created
+                 created=None):
+        self.id = datetime.now().strftime("%Y-%m-%d-%H%M%S")
         self.pickup_time = pickup_time  # type: datetime
         self.sender = sender  # type: Person
         self.recipient = recipient  # type: Person
         self.message = message  # type: str
+        if not created:
+            self.created = datetime.utcnow()
 
     def __repr__(self):
         return "Ticket[{}] {} --> {}".format(
@@ -73,6 +75,26 @@ class Ticket:
             'recipient': ('Recipient', self.recipient),
             'message': ('Message', self.message),
         }
+
+
+class TicketRegister:
+    def __init__(self):
+        self.tickets = []
+
+    def new_ticket(self, ticket):
+        self.tickets.append(ticket)
+
+    # def get_tickets(self, user):
+    #     return filter(lambda x: x.sender == user or x.recipient == user,
+    #                   self.tickets)
+        # if user in self.tickets:
+        #     return self.tickets[user]
+
+    def get_sent(self, user):
+        return filter(lambda x: x.sender == user, self.tickets)
+
+    def get_received(self, user):
+        return filter(lambda x: x.recipient == user, self.tickets)
 
 
 class Bot:
@@ -143,7 +165,7 @@ class Map:
             if self.in_map(person):
                 return self.offices[person]
             else:
-                return None
+                raise KeyError
         return self.offices.copy()
 
     def get_without_me(self, me):
@@ -151,6 +173,8 @@ class Map:
         #     me = me.username
         m = self.get()
         if self.in_map(me):
+            if type(me) is Person:
+                me = me.username
             m.pop(me)
         return m
 

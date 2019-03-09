@@ -12,11 +12,9 @@
                 <h3 class="card-title mb-0">Delivery details</h3>
                 <hr>
                 <form method="post" id="pickup-form">
-                    <div class="form-group">
+                    <div class="form-group mb-1">
                         <label for="pickup-time">Pickup time (your
                             office: {{ sender.coordinates }})</label>
-                        <p>(estimated
-                            distance: {{ sender.distance_to(recipient) }})</p>
                         {% set pickup_time = (dt.datetime.utcnow() + dt.timedelta(minutes=5)).strftime("%H:%M") %}
                         <input type="time"
                                class="form-control w-auto mx-auto mb-2"
@@ -54,13 +52,29 @@
                             </div>
                         </div>
                     </div>
-                    <div class="custom-control custom-switch mb-3">
+                    <div>
+                        <p class="mb-0">estimated transit time</p>
+                        <div class="rounded-pill border border-success mx-auto font-weight-light d-flex justify-content-center"
+                             style="font-size: 1.5rem; width: 7.5rem;">
+                            <p class="my-auto mx-2">{{ sender.distance_to(recipient) }}</p>
+                            <p class="my-auto" style="font-size: 1rem">
+                                minutes</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="custom-control custom-switch mb-0">
                         <input type="checkbox" class="custom-control-input"
                                id="urgent-check" name="urgent">
-                        <label class="custom-control-label" for="urgent-check">Urgent</label>
+                        <label class="custom-control-label"
+                               for="urgent-check">Urgent</label>
                     </div>
+                    <p class="mb-2">
+                        <small>(pickup without recipient confirmation)</small>
+                    </p>
+                    <hr>
                     <div class="form-group">
-                        <label for="delivery-message">Manifest</label>
+                        <label for="delivery-message">Manifest /
+                            contents</label>
                         <input type="text" class="form-control w-100 mx-auto"
                                name="delivery-message"
                                title="Delivery message"
@@ -73,8 +87,9 @@
                            class="btn btn-danger btn-upper mx-2 mb-1">Cancel <i
                                 class="fas fa-sm fa-fw fa-ban"></i></a>
                         <button type="submit"
-                                class="btn btn-info btn-upper mx-2 mb-1">Send <i
-                                class="fas fa-sm fa-fw fa-paper-plane"></i>
+                                class="btn btn-info btn-upper mx-2 mb-1">Send
+                            <i
+                                    class="fas fa-sm fa-fw fa-paper-plane"></i>
                         </button>
                     </div>
                 </form>

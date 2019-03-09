@@ -5,7 +5,7 @@ from flask import Flask, render_template, request, url_for, \
 from flask_sqlalchemy import SQLAlchemy
 from flask_user import login_required, UserManager, UserMixin, current_user
 
-from deliverai_utils import Person, Ticket, Bot, Map
+from deliverai_utils import Person, Ticket, Bot, Map, TicketRegister
 from server import DeliverAIServer
 
 
@@ -49,8 +49,8 @@ def create_app():
         # User authentication information. The collation='NOCASE' is required
         #  to search case insensitively when USER_IFIND_MODE is
         # 'nocase_collation'.
-        username = db.Column(db.String(100, collation='NOCASE'), nullable=False,
-                             unique=True)
+        username = db.Column(db.String(100, collation='NOCASE'),
+                             nullable=False, unique=True)
         password = db.Column(db.String(255), nullable=False, server_default='')
         email_confirmed_at = db.Column(db.DateTime())
 
@@ -78,10 +78,16 @@ def create_app():
 
     office_map = Map(people_map)
 
+    def get_current_user_as_person():
+        if current_user.is_authenticated:
+            return office_map.get(current_user.username)
+        else:
+            return None
+
     # robots
     bots = Bot.from_file("bots.txt")
 
-    tickets = []
+    tickets = TicketRegister()
 
     tcp_server = DeliverAIServer()
 
@@ -116,8 +122,9 @@ def create_app():
 
     @app.route('/send/')
     def send():
-        if current_user.is_authenticated:
-            r = office_map.get_without_me(current_user.username)
+        user = get_current_user_as_person()
+        if user:
+            r = office_map.get_without_me(user)
         else:
             r = office_map.get()
         return render_template(
@@ -125,11 +132,11 @@ def create_app():
             recipients=r,
         )
 
-    @app.route('/send/<string:username>', methods=['GET', 'POST'])
     @login_required
+    @app.route('/send/<string:username>', methods=['GET', 'POST'])
     def schedule_pickup(username):
         try:
-            sender = office_map.get(current_user.username)
+            sender = get_current_user_as_person()
             recipient = office_map.get(username)
         except KeyError:
             return error_page(
@@ -209,7 +216,7 @@ def create_app():
 
         # create a record of submission
         ticket = create_ticket(sender, recipient, form)
-        tickets.append(ticket)
+        tickets.new_ticket(ticket)
         # TODO make delivery not instant, go to queue
         send_delivery(ticket)
 
@@ -232,11 +239,33 @@ def create_app():
 
     @app.route('/history/')
     def history():
-        return render_template(
-            'history.html',
-            # username=username,
-            # offices=offices,
-        )
+        user = get_current_user_as_person()
+        sent, received = tickets.get_sent(user), tickets.get_received(user)
+        if not user:
+            return error_page(
+                error='',
+                icon="fas fa-ticket-alt",
+                line1="Nothing here!",
+                line2="Please sign in or register to view your tickets.",
+                button_text="Home page",
+                button_href=url_for('index')
+            )
+        elif not sent and not received:
+            return error_page(
+                error='',
+                icon="fas fa-ticket-alt",
+                line1="No tickets yet!",
+                line2="Your tickets will appear here.",
+                button_text="Send something!",
+                button_href=url_for('send')
+            )
+        else:
+            return render_template(
+                'history.html',
+                user=user,
+                sent=list(sent),
+                received=list(received),
+            )
 
     @app.route('/login/', methods=['GET', 'POST'])
     def login():
