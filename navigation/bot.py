@@ -1,9 +1,8 @@
-	#! /usr/bin/env python3
+#! /usr/bin/env python3
 
 import ev3dev.ev3 as ev3
 import time
 import math
-import collections
 from office import Office
 from map import Map
 
@@ -18,8 +17,9 @@ web_server = "brogdon.inf.ed.ac.uk"
 web_server_port = 5000
 robot_name = "lion"
 
+
 class DeliverAIBot():
-    def __init__(self, map = Map(), init_office):
+    def __init__(self, map, init_office):
         self.my_map = map
         self.position = init_office
         self.coords = self.position.coords
@@ -37,9 +37,9 @@ class DeliverAIBot():
         self.tape_side = "right"
 
         self.cs = ev3.ColorSensor("in1")
-        #assert self.cs.connected  # Reflectance sensor for line-following
+        # assert self.cs.connected  # Reflectance sensor for line-following
         self.rs = ev3.ColorSensor("in2")
-        #assert self.rs.connected  # Colour sensor for junction detection
+        # assert self.rs.connected  # Colour sensor for junction detection
         self.rs.MODE_COL_REFLECT
         self.cs.MODE_COL_COLOR
 
@@ -53,7 +53,7 @@ class DeliverAIBot():
 
         self.connected = False
 
-        #self.try_connect()
+        # self.try_connect()
 
         # Set up threading for non blocking line following
 
@@ -68,34 +68,38 @@ class DeliverAIBot():
         self.alarm_on = False
 
         # Import offices
-        #json_raw = urllib.request.urlopen("http://" + web_server + ":" + web_server_port + "/api/map.json"
-        #self.my_map.addJsonFile(json_raw.read().decode())
+        # json_raw = urllib.request.urlopen(
+        #     "http://" + web_server + ":" + web_server_port + "/api/map.json"
+        # )
+        # self.my_map.addJsonFile(json_raw.read().decode())
 
     def __del__(self):
         # Disconnect from the server, clean up the threads then we can exit
-        #self.client_connection.disconnect()
-        #threading.cleanup_stop_thread()
+        # self.client_connection.disconnect()
+        # threading.cleanup_stop_thread()
         print("[__del__] CleanedUp - Disconnected from Server")
 
     def goTo(self, destination):
         ''' Travel to the destination from the current position '''
 
-        route = self.route(destination) # List of coordinates to pass through
+        route = self.route(destination)  # List of coordinates to pass through
         print("Route: ", route)
         if len(route) == 1:
             print("Already here!")
             return
-        for i in range (0, len(route)-1):
+        for i in range(0, len(route)-1):
             print("Current bearing: ", self.bearing)
             self.bearing = self.getBearing(route[i], route[i+1])
             print("Going to: ", route[i+1])
             print("New bearing: ", self.bearing)
             print("TAPE SIDE: ", self.tape_side)
             self.send_bearing(self.bearing)
-            cs_port = "in1" if self.bearing == 0 or self.bearing == 90 else "in2"
+            cs_port = "in1" if self.bearing == 0 or self.bearing == 90 else "in2"  # noqa: E501
             rs_port = "in2" if cs_port == "in1" else "in1"
-            self.cs = ev3.ColorSensor(cs_port); assert self.cs.connected
-            self.rs = ev3.ColorSensor(rs_port); assert self.rs.connected
+            self.cs = ev3.ColorSensor(cs_port)
+            assert self.cs.connected
+            self.rs = ev3.ColorSensor(rs_port)
+            assert self.rs.connected
             self.cs.mode = 'COL-COLOR'
             self.rs.mode = 'COL-REFLECT'
             self.followLine(self.bearing)
@@ -107,13 +111,15 @@ class DeliverAIBot():
         self.send_arrived()
 
     def goToCoord(self, coord=(0, 0)):
-        ''' Travel to the destination from the current position based on corrds'''
+        ''' Travel to the destination from the current position
+        based on corrds'''
         destination = self.my_map.offices[coord]
-        print("Office at " + str(coord[0]) + " ," + str(coord[1]) + " is " + destination.name)
+        print("Office at " + str(coord[0]) + " ," + str(coord[1]) + " is " + destination.name)  # noqa: E501
         self.goTo(destination)
 
     def getBearing(self, a, b):
-        ''' Return the bearing (cardinal direction) to move in to get from a to b '''
+        ''' Return the bearing (cardinal direction) to move in to
+        get from a to b '''
 
         if a[0] == b[0]:
             if b[1] > a[1]:
@@ -137,10 +143,10 @@ class DeliverAIBot():
 
     def followLine(self, bearing):
         target = 9
-        #if self.tape_side == "right":
-            #b_tr = 90 if self.bearing == 0 or self.bearing == 90 else -90
-        #else:
-            #b_tr = -90 if self.bearing == 0 or self.bearing == 90 else 90
+        # if self.tape_side == "right":
+        #   b_tr = 90 if self.bearing == 0 or self.bearing == 90 else -90
+        # else:
+        #   b_tr = -90 if self.bearing == 0 or self.bearing == 90 else 90
         b_tr = 90 if self.tape_side == "right" else -90
         w_tr = -b_tr
         rot_dir = 1 if self.tape_side == "right" else -1
@@ -160,21 +166,21 @@ class DeliverAIBot():
                     print("ReRoutePlease")
                 time.sleep(5)
 
-            if error > 0: # Too far on black
-                self.rotate(rot_dir*15*(error/9)) # Rotation
+            if error > 0:  # Too far on black
+                self.rotate(rot_dir*15*(error/9))  # Rotation
                 time.sleep(0.025)
 
-                self.moveBearing(bearing+b_tr, 300) # Translation
+                self.moveBearing(bearing+b_tr, 300)  # Translation
                 time.sleep(0.025)
 
                 self.moveBearing(bearing, 300)
                 if not self.carryOn():
                     return
-            elif error < -5: # Too far on white
-                self.rotate(rot_dir*-15*(abs(error)/76)) # Rotation
+            elif error < -5:  # Too far on white
+                self.rotate(rot_dir*-15*(abs(error)/76))  # Rotation
                 time.sleep(0.025)
 
-                self.moveBearing(bearing+w_tr, 300) # Translation
+                self.moveBearing(bearing+w_tr, 300)  # Translation
                 time.sleep(0.025)
 
                 self.moveBearing(bearing, 300)
@@ -186,7 +192,7 @@ class DeliverAIBot():
                     return
 
     def carryOn(self):
-        for i in range (5):
+        for i in range(5):
             if self.cs.color == 5:
                 print("Junction reached! Stopping...")
                 self.stopMotors()
@@ -222,10 +228,10 @@ class DeliverAIBot():
 
         # the vector associated with each motor
         axes = [
-            (-1, 0),# B
-            (0, 1), # A
-            (1, 0), # D
-            (0, -1),# C
+            (-1, 0),  # B
+            (0, 1),  # A
+            (1, 0),  # D
+            (0, -1)  # C
         ]
         pairs = [(x * a, y * b) for (a, b) in axes]
 
@@ -240,7 +246,11 @@ class DeliverAIBot():
     def route(self, destination):
         ''' Search the map to find the shortest route to the destination '''
 
-        return self.findShortestRoute(self.my_map.neighbourDict(), self.coords, destination.coords)
+        return self.findShortestRoute(
+            self.my_map.neighbourDict(),
+            self.coords,
+            destination.coords
+        )
 
     def findShortestRoute(self, nbours, start, end, route=[]):
         ''' Find the shortest route from start to end '''
@@ -259,19 +269,20 @@ class DeliverAIBot():
         return shortest
 
     def update_server(self):
-        to_access = "http://" + web_server + ":" + str(web_server_port) + "/api/botinfo"
+        to_access = "http://" + web_server + ":" + str(web_server_port)
+        to_access = to_access + "/api/botinfo"
         to_provide = {
-            "name":self.robot_name,
-            "x_loc":self.coords[0],
-            "y_loc":self.coords[1],
-            "state":"TEMP",
-            "battery_volts":ev3.PowerSupply().measured_volts
+            "name": self.robot_name,
+            "x_loc": self.coords[0],
+            "y_loc": self.coords[1],
+            "state": "TEMP",
+            "battery_volts": ev3.PowerSupply().measured_volts
         }
         data = urllib.parse.urlencode(to_provide)
         try:
             urllib.request.urlopen(to_access, bytes(data, "utf-8"))
-        except:
-            print("[update_server] Has failed - failed to connect to: " + to_access)
+        except:  # noqa: E722
+            print("[update_server] Has failed - failed to connect to: " + to_access)  # noqa: E501
 
     def try_connect(self):
         connection_attempts = 0
@@ -330,7 +341,9 @@ class DeliverAIBot():
         elif (broken_msg[0] == "GETLOC"):
             # Get the current co-ordinates of the robot
             print("[process_msg] location requested")
-            self.client_connection.sendMessage(self.coords[0] + "$" + self.coords[1])
+            self.client_connection.sendMessage(
+                self.coords[0] + "$" + self.coords[1]
+            )
         elif (broken_msg[0] == "ALARM"):
             # Set the alarm off
             self.alarm_active = True
@@ -374,14 +387,15 @@ class DeliverAIBot():
         print("[alarm] Disarmed - Stopped Alarming")
         return
 
+
 if __name__ == '__main__':
-    a = Office("jimbo", (1,0))
-    b = Office("sally", (1,1))
-    c = Office("timmy", (0,1))
-    d = Office("johnny", (0,2))
-    e = Office("frank", (1,2))
-    f = Office("bobby", (2,2))
-    g = Office("craig", (3,1))
+    a = Office("jimbo", (1, 0))
+    b = Office("sally", (1, 1))
+    c = Office("timmy", (0, 1))
+    d = Office("johnny", (0, 2))
+    e = Office("frank", (1, 2))
+    f = Office("bobby", (2, 2))
+    g = Office("craig", (3, 1))
 
     m = Map()
     m.addOffices([a, b, g])

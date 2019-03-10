@@ -1,7 +1,8 @@
 #! /usr/bin/env python3
 
+
 class Office():
-    def __init__(self, name="HOME", coords=(0,0)):
+    def __init__(self, name="HOME", coords=(0, 0)):
         self.name = name
         self.coords = coords
         self.right = None
@@ -11,7 +12,7 @@ class Office():
 
     def setRightNeighbour(self, office):
         self.right = office
-    
+
     def setLeftNeighbour(self, office):
         self.left = office
 
@@ -22,7 +23,7 @@ class Office():
         self.lower = office
 
     def getNeighbours(self):
-        return {"right" : self.right,
-                "left" : self.left,
-                "upper" : self.upper,
-                "lower" : self.lower}
+        return {"right": self.right,
+                "left": self.left,
+                "upper": self.upper,
+                "lower": self.lower}

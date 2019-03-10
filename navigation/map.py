@@ -3,8 +3,9 @@
 from office import Office
 import json
 
+
 class Map():
-    def __init__(self, size=(10,10)):
+    def __init__(self, size=(10, 10)):
 
         # Store dimensions of office space (default is 10x10)
         self.xlim = size[0]
@@ -14,12 +15,17 @@ class Map():
         self.home = Office()
 
         # Offices are stored in a hash table {coordinates : office}
-        self.offices = {(0,0) : self.home}
+        self.offices = {(0, 0): self.home}
 
     def addJsonFile(self, json_file):
         json_data = json.loads(json_file)
         for office in json_data['offices']:
-            self.addOffice(Office(office['name'], (office['x_cord'], office['y_cord'])))
+            self.addOffice(
+                Office(
+                    office['name'],
+                    (office['x_cord'], office['y_cord'])
+                )
+            )
 
     def addOffices(self, new_offices):
         ''' Add a list of offices '''
@@ -105,5 +111,5 @@ class Map():
         ''' Return a dictionary of {office : [neighbours]} in coordinates '''
         ndict = {}
         for key in self.offices.keys():
-            ndict[key] = [office.coords for office in self.offices[key].getNeighbours().values() if office is not None]
+            ndict[key] = [office.coords for office in self.offices[key].getNeighbours().values() if office is not None]  # noqa: E501
         return ndict
