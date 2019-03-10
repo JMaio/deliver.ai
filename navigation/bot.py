@@ -10,6 +10,7 @@ from tcpcom import TCPClient
 import threading
 import urllib.request
 import urllib.parse
+import requests
 
 server_ip = "abomasnow.inf.ed.ac.uk"
 server_port = 5010
@@ -278,9 +279,8 @@ class DeliverAIBot():
             "state": "TEMP",
             "battery_volts": ev3.PowerSupply().measured_volts
         }
-        data = urllib.parse.urlencode(to_provide)
         try:
-            urllib.request.urlopen(to_access, bytes(data, "utf-8"))
+            requests.post(to_access, params=to_provide)
         except:  # noqa: E722
             print("[update_server] Has failed - failed to connect to: " + to_access)  # noqa: E501
 
