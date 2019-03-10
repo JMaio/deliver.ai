@@ -9,7 +9,6 @@ from map import Map
 from tcpcom import TCPClient
 import threading
 import urllib.request
-import urllib.parse
 import requests
 
 server_ip = "abomasnow.inf.ed.ac.uk"
