@@ -108,6 +108,8 @@ class Bot:
             'y_loc': 0,
             'state': 'unknown',
             'battery_volts': 5,
+            'dest': (0, 0),
+            'route': "none",
         }
 
     def __str__(self):

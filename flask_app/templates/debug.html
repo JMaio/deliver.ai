@@ -3,12 +3,12 @@
 {% block content %}
     <div class="row">
         <div class="col col-12 col-md-4">
-            <div class="text-center btn-group">
+            <div class="text-center btn-group mx-auto">
                 {% for cmd, text, type in [
                     ('OPEN', 'Open', 'success'),
                     ('CLOSE', 'Close', 'info'),
                 ] %}
-                    <button class="btn btn-{{ type }} text-center my-4 px-4 py-2" style="font-size: 1.5rem"
+                    <button class="btn btn-{{ type }} my-4 px-4 py-2" style="font-size: 1.5rem"
             onclick="console.log('sending command: {{ cmd }} ({{ text }})') ; $.ajax('/cmd/{{ cmd }}')">{{ text }}</button>
                 {% endfor %}
             </div>

@@ -91,7 +91,6 @@ def create_app():
 
     tcp_server = DeliverAIServer()
 
-
     debug_log = tcp_server.log
 
     @app.route('/')
@@ -173,12 +172,15 @@ def create_app():
 
     def send_delivery(ticket):
         # orig = ticket.sender.coordinates
-        orig = (1, 1)
+        orig = ticket.sender.coordinates
         dest = ticket.recipient.coordinates
 
         # print("sending bot for pickup @ {} \n"
         #       "  |--> to deliver @ {} !".format(orig, dest))
-
+        lion = bots.get('lion', None)
+        lion.props['dest'] = dest
+        lion.props['route'] = "{} --> {} --> {}".format(
+            (lion.props['x_loc'], lion.props['y_loc']), orig, dest)
         tcp_server.send_pickup(orig, dest)
 
     def process_delivery(sender, recipient):
