@@ -182,7 +182,7 @@ class Toddler:
 
     def process_debug_msg(self, msg):
         f=open("cmd_recved.txt", "a+")
-        f.write(msg + "\n")
+        f.write(msg)
 
     def open_box(self):
         print("[open_box] Opening Box")
