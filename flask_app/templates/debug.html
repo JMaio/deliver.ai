@@ -3,13 +3,13 @@
 {% block content %}
     <div class="row">
         <div class="col col-12 col-md-4">
-            <div class="text-center btn-group mx-auto">
+            <div class="text-center btn-group d-flex">
                 {% for cmd, text, type in [
                     ('OPEN', 'Open', 'success'),
                     ('CLOSE', 'Close', 'info'),
                 ] %}
                     <button class="btn btn-{{ type }} my-4 px-4 py-2" style="font-size: 1.5rem"
-            onclick="console.log('sending command: {{ cmd }} ({{ text }})') ; $.ajax('/cmd/{{ cmd }}')">{{ text }}</button>
+            onclick="send_cmd('{{ cmd }}')">{{ text }}</button>
                 {% endfor %}
             </div>
             {% for cmd, text, type in [
@@ -19,7 +19,7 @@
                 {% include '/components/debug_button.html' %}
             {% endfor %}
             <h2>Map changer</h2>
-            {% for i in range(1, 3) %}
+            {% for i in range(1, 4) %}
                 <button class="btn btn-outline-success"
                         onclick="$.post('/api/changemap?n={{ i }}')">{{ i }}</button>
             {% endfor %}

@@ -72,7 +72,7 @@ def create_app():
 
     # with app.app_context():
     # users
-    people = Person.from_file("people.txt")
+    people = Person.from_file("map_1.txt")
     people_map = {person.username: person for person in people}
     # user = people_map.pop("ash.ketchum", None)
     print("reading office map")

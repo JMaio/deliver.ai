@@ -57,6 +57,7 @@ class Ticket:
         self.sender = sender  # type: Person
         self.recipient = recipient  # type: Person
         self.message = message  # type: str
+        self.delivered = False
         if not created:
             self.created = datetime.utcnow()
 

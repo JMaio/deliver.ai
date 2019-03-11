@@ -4,3 +4,10 @@
 <script src="/static/js/bootstrap.min.js"></script>
 <!-- moment.js -->
 <script src="/static/js/moment.min.js"></script>
+
+<script>
+    const send_cmd = cmd => {
+        console.log(`sending command: '${cmd}'`);
+        $.ajax(`/cmd/${cmd}`);
+    }
+</script>

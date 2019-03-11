@@ -1,18 +1,11 @@
 {% extends 'base.html' %}
 
 {% block content %}
+    <h1 class="mb-3 text-center" style="font-weight: 300">Pending deliveries</h1>
+    <hr>
     <div class="text-center">
-        <button id="btn-open-box" class="btn btn-success my-5 px-5 py-3" style="font-size: 2rem">Open box</button>
+        <button id="btn-open-box" class="btn btn-success my-5 px-5 py-3"
+                style="font-size: 2rem" onclick="send_cmd('OPEN')">Open box
+        </button>
     </div>
-{% endblock %}
-
-{% block scripts %}
-    {{ super() }}
-    <script>
-        $('#btn-open-box').click(function () {
-            console.log("sending open command?");
-            $.ajax('/cmd/OPEN');
-            }
-        )
-    </script>
 {% endblock %}
