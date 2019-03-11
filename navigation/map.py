@@ -23,7 +23,7 @@ class Map():
             self.addOffice(
                 Office(
                     office['name'],
-                    (office['x_cord'], office['y_cord'])
+                    (office['x_coord'], office['y_coord'])
                 )
             )
 
