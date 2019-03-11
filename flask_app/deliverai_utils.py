@@ -185,6 +185,9 @@ class Map:
             {'offices': [o.json_dict() for o in self.offices.values()]}
         )
 
+    def update(self, offices):
+        self.offices = offices
+
     @classmethod
     def from_dict(cls, d):
         return Map(d)

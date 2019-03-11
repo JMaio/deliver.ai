@@ -75,7 +75,7 @@ def create_app():
     people = Person.from_file("people.txt")
     people_map = {person.username: person for person in people}
     # user = people_map.pop("ash.ketchum", None)
-
+    print("reading office map")
     office_map = Map(people_map)
 
     def get_current_user_as_person():
@@ -292,7 +292,7 @@ def create_app():
             'debug.html',
             debug_items=debug_items,
             debug_log=debug_log,
-            vars=[people, people_map]
+            vars=[office_map.offices]
         )
 
     @app.route('/cmd/<string:command>', methods=['GET', 'POST'])
@@ -341,14 +341,13 @@ def create_app():
             n = request.args.get('n')
             if not n:
                 return "error"
-            global people, people_map, office_map
-            people = Person.from_file("map_{}.txt".format(n))
-            people_map = {person.username: person for person in people}
-            # user = people_map.pop("ash.ketchum", None)
 
-            office_map = Map(people_map)
+            # force update office_map
+            office_map.update({person.username: person for person in
+                               Person.from_file("map_{}.txt".format(n))})
             print("loaded new map with {} offices"
                   .format(len(office_map.get())))
+            tcp_server.send_encoded_message(['UPDATEMAP'])
             return office_map.to_json()
 
     @app.errorhandler(404)
