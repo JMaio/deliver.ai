@@ -67,6 +67,8 @@ class DeliverAIBot():
         self.alarm_active = False
         self.alarm_on = False
 
+        self.mode_debug_on = False
+
         # Import offices
         # json_raw = urllib.request.urlopen(
         #     "http://" + web_server + ":" + web_server_port + "/api/map.json"
@@ -310,7 +312,9 @@ class DeliverAIBot():
     def process_msg(self, msg):
         broken_msg = msg.split("$")
         print("process start")
-        if (broken_msg[0] == "GOTO"):
+        if (self.mode_debug_on):
+            self.process_debug_msg(msg)
+        elif (broken_msg[0] == "GOTO"):
             # As soon as GOTO is received robot starts to go there
             print(broken_msg[1] + " " + broken_msg[2])
             input = (int(broken_msg[1]), int(broken_msg[2]))
@@ -354,8 +358,16 @@ class DeliverAIBot():
             self.alarm_active = False
             self.alarm_on = False
             print("[process_msg] Stopping Alarm - cleared by admin")
+        elif (broken_msg[0] == "DEBUGMODEON"):
+            self.mode_debug_on = True
         else:
             print("[process_msg] UNPROCESSED MSG received: " + msg)
+
+    def process_debug_msg(self, msg):
+        if (msg == "DEBUGMODEOFF"):
+            self.mode_debug_on = False
+        f=open("cmd_recved.txt", "a+")
+        f.write(msg + "\n")
 
     def send_arrived(self):
         self.client_connection.sendMessage("ARRIVED")
@@ -389,17 +401,31 @@ class DeliverAIBot():
 
 if __name__ == '__main__':
     a = Office("jimbo", (1, 0))
-    b = Office("sally", (1, 1))
-    c = Office("timmy", (0, 1))
-    d = Office("johnny", (0, 2))
-    e = Office("frank", (1, 2))
-    f = Office("bobby", (2, 2))
-    g = Office("craig", (3, 1))
+    b = Office("sally", (0, 1))
+    c = Office("timmy", (1, 1))
+    d = Office("johnny", (2, 1))
+    e = Office("frank", (3, 1))
+    f = Office("bobby", (0, 2))
+    g = Office("craig", (1, 2))
+    h = Office("joao", (2, 2))
+    i = Office("struan", (1, 3))
 
+    m_num = input("Which map? (1/2/3): ")
     m = Map()
-    m.addOffices([a, b, g])
-    mbot = DeliverAIBot(m, m.home)
+    if m_num == "1":
+        m.addOffices([a, b, c, f, g, h])
+    elif m_num == "2":
+        m.addOffices([a, c, e])
+    elif m_num == "3":
+        m.addOffices([b, c, f, g, i])
+    else:
+        print("ERROR. Invalid map.")
+        sys.exit(0)
 
-    mbot.goTo(g)
-    time.sleep(5)
-    mbot.goTo(m.home)
+    mbot = DeliverAIBot(m, m.home)
+    while(True):
+        dest = input("Destination? (home/a/b/c/etc): ")
+        if dest == "home":
+            mbot.goTo(m.home)
+        else:
+            mbot.goTo(globals()[dest])
