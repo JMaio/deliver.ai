@@ -270,6 +270,6 @@ class Toddler:
         self.server.sendMessage("DEBUGMODEON")
         time.sleep(2)
         file_in = open("cmds_to_send.txt", "r")
-        lines = file_cmd.readlines()
+        lines = file_in.readlines()
         for l in lines:
             server.sendMessage(l)
