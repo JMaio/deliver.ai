@@ -91,6 +91,13 @@ class Toddler:
             time.sleep(0.5)
         self.mc.stopMotor(self.door_mech_motor)
         self.close_lock()
+        time.sleep(1)
+        if (self.state == "PICKINGUP"):
+            self.state = "DELIVERING"
+            self.send_robot_to(self.deliver_to[0], self.deliver_to[1])
+        if (self.state == "DELIVERING"):
+            self.state = "READY"
+            self.client.sendMessage("READY")
 
     def open_lock(self):
         self.box_open = True
