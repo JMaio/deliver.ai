@@ -68,7 +68,7 @@ def create_app():
         def password_validator(self, form, field):
             return
 
-    user_manager = UserManagerNoValidation(app, db, User)
+    user_manager = UserManagerNoValidation(app, db, User)  # noqa
 
     # with app.app_context():
     # users
@@ -132,8 +132,8 @@ def create_app():
             recipients=r,
         )
 
-    @login_required
     @app.route('/send/<string:username>', methods=['GET', 'POST'])
+    @login_required
     def schedule_pickup(username):
         try:
             sender = get_current_user_as_person()
@@ -332,6 +332,19 @@ def create_app():
                 return bot.to_json()
             else:
                 return "error"
+        elif args == 'changemap':
+            n = request.args.get('n')
+            if not n:
+                return "error"
+            global people, people_map, office_map
+            people = Person.from_file("map_{}.txt".format(n))
+            people_map = {person.username: person for person in people}
+            # user = people_map.pop("ash.ketchum", None)
+
+            office_map = Map(people_map)
+            print("loaded new map with {} offices"
+                  .format(len(office_map.get())))
+            return office_map.to_json()
 
     @app.errorhandler(404)
     def error_page(
