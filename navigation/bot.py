@@ -367,7 +367,7 @@ class DeliverAIBot():
         if (msg == "DEBUGMODEOFF"):
             self.mode_debug_on = False
         f=open("cmd_recved.txt", "a+")
-        f.write(msg + "\n")
+        f.write(msg)
 
     def send_arrived(self):
         self.client_connection.sendMessage("ARRIVED")
