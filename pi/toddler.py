@@ -170,9 +170,10 @@ class Toddler:
             self.mode_debug_on = True
 
     def process_debug_msg(self, msg):
-        broken_msg = msg.split("$")
-        if (broken_msg[0] == "OBSTACLESENSOR"):
-            print("ObsSensor...")
+        if (msg == "DEBUGMODEOFF"):
+            self.mode_debug_on = False
+        f=open("cmd_recved.txt", "a+")
+        f.write(msg)
 
     def open_box(self):
         print("[open_box] Opening Box")
