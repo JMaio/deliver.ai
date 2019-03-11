@@ -53,7 +53,7 @@ class DeliverAIBot():
 
         self.connected = False
 
-        # self.try_connect()
+        self.try_connect()
 
         # Set up threading for non blocking line following
 
@@ -70,16 +70,21 @@ class DeliverAIBot():
         self.mode_debug_on = False
 
         # Import offices
-        # json_raw = urllib.request.urlopen(
-        #     "http://" + web_server + ":" + web_server_port + "/api/map.json"
-        # )
-        # self.my_map.addJsonFile(json_raw.read().decode())
+        self.download_json_map()
 
     def __del__(self):
         # Disconnect from the server, clean up the threads then we can exit
         # self.client_connection.disconnect()
         # threading.cleanup_stop_thread()
         print("[__del__] CleanedUp - Disconnected from Server")
+
+
+    def download_json_map(self):
+        json_raw = urllib.request.urlopen(
+            "http://{}:{}/api/map.json".format(web_server, web_server_port)
+        )
+        self.my_map.addJsonFile(json_raw.read().decode())
+
 
     def goTo(self, destination):
         ''' Travel to the destination from the current position '''
@@ -274,7 +279,7 @@ class DeliverAIBot():
         to_access = "http://" + web_server + ":" + str(web_server_port)
         to_access = to_access + "/api/botinfo"
         to_provide = {
-            "name": self.robot_name,
+            "name": robot_name,
             "x_loc": self.coords[0],
             "y_loc": self.coords[1],
             "state": "TEMP",
@@ -291,6 +296,8 @@ class DeliverAIBot():
             connection = self.client_connection.connect()
             if connection:
                 self.connected = True
+                self.update_server()
+                ev3.Sound().speak("Ready to Deliver")
             else:
                 self.connected = False
                 connection_attempts += 1
@@ -360,6 +367,9 @@ class DeliverAIBot():
             print("[process_msg] Stopping Alarm - cleared by admin")
         elif (broken_msg[0] == "DEBUGMODEON"):
             self.mode_debug_on = True
+        elif (broken_msg[0] == "UPDATEMAP"):
+            self.my_map = Map()
+            self.download_json_map()
         else:
             print("[process_msg] UNPROCESSED MSG received: " + msg)
 
@@ -410,22 +420,9 @@ if __name__ == '__main__':
     h = Office("joao", (2, 2))
     i = Office("struan", (1, 3))
 
-    m_num = input("Which map? (1/2/3): ")
+
     m = Map()
-    if m_num == "1":
-        m.addOffices([a, b, c, f, g, h])
-    elif m_num == "2":
-        m.addOffices([a, c, e])
-    elif m_num == "3":
-        m.addOffices([b, c, f, g, i])
-    else:
-        print("ERROR. Invalid map.")
-        sys.exit(0)
 
     mbot = DeliverAIBot(m, m.home)
     while(True):
-        dest = input("Destination? (home/a/b/c/etc): ")
-        if dest == "home":
-            mbot.goTo(m.home)
-        else:
-            mbot.goTo(globals()[dest])
+        pass
