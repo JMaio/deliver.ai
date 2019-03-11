@@ -1,5 +1,4 @@
-ash.ketchum, Ash Ketchum, 2, 0
-brock.rock, Brock Rock, 0, 0
-misty.water, Misty Water, 0, 1
-surge.lt, Lt. Surge, 0, 2
-giovanni.rocket, Giovanni Rocket, 1, 3
+ash.ketchum, Ash Ketchum, 1, 0
+misty.water, Misty Water, 1, 1
+sabrina.psychic, Sabrina Psychic, 2, 1
+blaine.fire, Blaine Fire, 3, 1
