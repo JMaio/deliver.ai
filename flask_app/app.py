@@ -91,19 +91,7 @@ def create_app():
 
     tcp_server = DeliverAIServer()
 
-    debug_items = {
-        'server': {
-            'server ip': tcp_server.server.getIPAddress(),
-            'connected': tcp_server.server.isConnected(),
-            'client ip': tcp_server.client_ip
-        },
-        'bot': {
-            'last location': (0, 0),
-            'status': "ready",
-            'going to': (1, 1),
-            'battery': 60,
-        }
-    }
+
     debug_log = tcp_server.log
 
     @app.route('/')
@@ -283,6 +271,21 @@ def create_app():
 
     @app.route('/debug/')
     def debug_mode():
+        lion = bots.get('lion', None)
+        debug_items = {
+            'server': {
+                'server ip': tcp_server.server.getIPAddress(),
+                'connected': tcp_server.server.isConnected(),
+                'client ip': tcp_server.client_ip
+            },
+        }
+        if lion:
+            debug_items['bot'] = {
+                'last location': (lion.props['x_loc'], lion.props['y_loc']),
+                'state': lion.props['state'],
+                'going to': lion.props['dest'],
+                'battery': lion.props['battery_volts'],
+            }
         return render_template(
             'debug.html',
             debug_items=debug_items,
