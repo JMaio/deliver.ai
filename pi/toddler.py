@@ -177,6 +177,8 @@ class Toddler:
             self.mode_debug_on = True
         elif (broken_msg[0] == "TESTCONNEV3"):
             self.test_conn_ev3()
+        elfi (broken_msg[0] == "UPDATEMAP"):
+            self.server.sendMessage("UPDATEMAP")
 
     def process_debug_msg(self, msg):
         f=open("cmd_recved.txt", "a+")
