@@ -168,12 +168,12 @@ class Toddler:
             self.alarm = False
         elif (broken_msg[0] == "DEBUGMODEON"):
             self.mode_debug_on = True
+        elif (broken_msg[0] == "TESTCONNEV3"):
+            self.test_conn_ev3()
 
     def process_debug_msg(self, msg):
-        if (msg == "DEBUGMODEOFF"):
-            self.mode_debug_on = False
         f=open("cmd_recved.txt", "a+")
-        f.write(msg)
+        f.write(msg + "\n")
 
     def open_box(self):
         print("[open_box] Opening Box")
@@ -265,3 +265,11 @@ class Toddler:
                 self.alarm = True
                 print("[accel_alarm] ALARM STATE" + str(accel_x) + " X " + str(
                     accel_y) + " Y  " + str(accel_z) + " Z")
+
+    def test_conn_ev3(self):
+        self.server.sendMessage("DEBUGMODEON")
+        time.sleep(2)
+        file_in = open("cmds_to_send.txt", "r")
+        lines = file_cmd.readlines()
+        for l in lines:
+            server.sendMessage(l)
