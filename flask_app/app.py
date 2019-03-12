@@ -1,7 +1,7 @@
 import datetime
 
 from flask import Flask, render_template, request, url_for, \
-    render_template_string
+    render_template_string, abort
 from flask_sqlalchemy import SQLAlchemy
 from flask_user import login_required, UserManager, UserMixin, current_user
 
@@ -110,10 +110,16 @@ def create_app():
     @app.route('/send/')
     def send():
         user = get_current_user_as_person()
-        if user:
-            r = office_map.get_without_me(user)
-        else:
-            r = office_map.get()
+        if not user:
+            return error_page(
+                error='',
+                icon="fas fa-paper-plane",
+                line1="Nothing here!",
+                line2="Please sign in or register to start sending.",
+                button_text="Home page",
+                button_href=url_for('index'),
+            )
+        r = office_map.get_without_me(user)
         return render_template(
             'send/index.html',
             recipients=r,
@@ -221,16 +227,25 @@ def create_app():
 
     @app.route('/receive/')
     def receive():
+        user = get_current_user_as_person()
+        if not user:
+            return error_page(
+                error='',
+                icon="fas fa-paper-plane",
+                line1="Nothing here!",
+                line2="Please sign in or register to view your deliveries.",
+                button_text="Home page",
+                button_href=url_for('index'),
+            )
         return render_template(
             'receive.html',
-            # username=username,
+            pending_tickets=tickets.get_received(user)
             # offices=offices,
         )
 
     @app.route('/history/')
     def history():
         user = get_current_user_as_person()
-        sent, received = tickets.get_sent(user), tickets.get_received(user)
         if not user:
             return error_page(
                 error='',
@@ -240,7 +255,8 @@ def create_app():
                 button_text="Home page",
                 button_href=url_for('index')
             )
-        elif not sent and not received:
+        sent, received = tickets.get_sent(user), tickets.get_received(user)
+        if not sent and not received:
             return error_page(
                 error='',
                 icon="fas fa-ticket-alt",
@@ -253,16 +269,18 @@ def create_app():
             return render_template(
                 'history.html',
                 user=user,
-                sent=list(sent),
-                received=list(received),
+                sent=sent,
+                received=received,
             )
 
-    @app.route('/login/', methods=['GET', 'POST'])
-    def login():
-        if request.method == 'POST':
-            # TODO authenticate the user
-            pass
-        return "this is a login screen"
+    @app.route('/user/<string:username>')
+    def user_page(username):
+        if not office_map.in_map(username):
+            abort(404)
+        return render_template(
+            'user_page.html',
+            user=office_map.get(username),
+        )
 
     @app.route('/tickets/')
     def show_tickets():

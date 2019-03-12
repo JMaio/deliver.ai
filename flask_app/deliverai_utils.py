@@ -92,10 +92,10 @@ class TicketRegister:
         #     return self.tickets[user]
 
     def get_sent(self, user):
-        return filter(lambda x: x.sender == user, self.tickets)
+        return list(filter(lambda x: x.sender == user, self.tickets))
 
     def get_received(self, user):
-        return filter(lambda x: x.recipient == user, self.tickets)
+        return list(filter(lambda x: x.recipient == user, self.tickets))
 
 
 class Bot:
