@@ -84,6 +84,7 @@ class DeliverAIBot():
             "http://{}:{}/api/map.json".format(web_server, web_server_port)
         )
         self.my_map.addJsonFile(json_raw.read().decode())
+        print("[download_json_map] Updated Map - Added " + str(len(self.my_map.offices)))
 
 
     def goTo(self, destination):
