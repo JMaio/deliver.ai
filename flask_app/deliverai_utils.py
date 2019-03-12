@@ -107,6 +107,7 @@ class Bot:
             'name': name,
             'x_loc': 0,
             'y_loc': 0,
+            'bearing': 0,
             'state': 'unknown',
             'battery_volts': 5,
             'dest': (0, 0),

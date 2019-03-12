@@ -349,10 +349,19 @@ def create_app():
                 bot.update_from_dict({
                     # send key, value pair only if value present
                     k: request.args.get(k, type=t) for k, t in
-                    [('x_loc', int), ('y_loc', int), ('state', str),
-                     ('battery_volts', float)]
+                    [
+                        ('x_loc', int),
+                        ('y_loc', int),
+                        ('bearing', int),
+                        ('state', str),
+                        ('battery_volts', float),
+                    ]
                     if request.args.get(k)
                 })
+                # send new robot bearing to the Pi
+                tcp_server.send_encoded_message(
+                    ['BEARING', request.args.get('bearing')]
+                )
                 return bot.to_json()
             else:
                 return "error"
