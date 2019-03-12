@@ -334,12 +334,14 @@ def create_app():
     def api_get(args):
         if args == 'map.json':
             return office_map.to_json()
-        if args == 'botinfo':
+        elif args == 'botinfo':
             bot = bots.get(request.args.get('name'), None)  # type: Bot
             if bot:
                 return bot.to_json()
             else:
                 return "error"
+        else:
+            return "Invalid api call (GET)."
 
     @app.route('/api/<string:args>', methods=['POST'])
     def api_post(args):
@@ -377,6 +379,37 @@ def create_app():
                   .format(len(office_map.get())))
             tcp_server.send_encoded_message(['UPDATEMAP'])
             return office_map.to_json()
+        elif args == 'add_office':
+            params = {
+                # send key, value pair only if value present
+                k: request.form.get(k, type=t) for k, t in
+                [
+                    ('x', int),
+                    ('y', int),
+                    ('username', str),
+                ]
+                if request.form.get(k)
+            }
+            try:
+                s = params['username'].split('.')
+                if len(s) != 2:
+                    raise ValueError
+                name = " ".join(s).title()
+            except ValueError:
+                return "error - bad username"
+            print(f' --- name = {name}')
+            new_person = Person(
+                params['username'],
+                name,
+                (params['x'], params['y'],)
+            )
+            try:
+                office_map.add_office(new_person)
+            except KeyError:
+                return "error - already in map"
+            return f'add office - {new_person}'
+        else:
+            return "Invalid api call (POST)"
 
     @app.errorhandler(404)
     def error_page(

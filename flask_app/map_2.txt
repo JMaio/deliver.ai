@@ -1,4 +1,3 @@
 ash.ketchum, Ash Ketchum, 1, 0
 misty.water, Misty Water, 1, 1
-sabrina.psychic, Sabrina Psychic, 2, 1
 blaine.fire, Blaine Fire, 3, 1

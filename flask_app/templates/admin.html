@@ -16,9 +16,23 @@
             <hr>
         </div>
         <div class="col-12 col-lg-6">
-            <h2 class="font-weight-normal">Map <a href="{{ url_for('index') }}"
-                                                  class="fas fa-plus-circle fa-xs text-success text-decoration-none"></a>
-            </h2>
+            <h2 class="font-weight-normal">Map</h2>
+            <form class="form-inline mb-2" id="add-office-form" method="post"
+                  action="/api/add_office" name="add-office-form">
+                <p class="my-auto mr-2">Add office:</p>
+                {% for var, type, w in [
+                    ('x', 'number', 70),
+                    ('y', 'number', 70),
+                    ('username', 'text', 150),
+                ] %}
+                    <input class="form-control mr-2"
+                           style="max-width: {{ w }}px;" type="{{ type }}"
+                           value="1" placeholder="{{ var }}"
+                           id="add-office-{{ var }}" name="{{ var }}">
+                {% endfor %}
+                <button type="submit"
+                        class="btn fas fa-plus-circle fa-lg text-success text-decoration-none"></button>
+            </form>
             <div class="row justify-content-start">
                 <div class="col-12 col-sm-6">
                     <ul class="list-group d-flex justify-content-center mx-auto"
@@ -31,10 +45,6 @@
                                    class="fas fa-minus-circle text-danger"></a>
                             </li>
                         {% endfor %}
-                        {#        <li class="list-group-item">Dapibus ac facilisis in</li>#}
-                        {#        <li class="list-group-item">Morbi leo risus</li>#}
-                        {#        <li class="list-group-item">Porta ac consectetur ac</li>#}
-                        {#        <li class="list-group-item">Vestibulum at eros</li>#}
                     </ul>
                 </div>
             </div>
@@ -62,11 +72,31 @@
 {% block scripts %}
     {{ super() }}
     <script>
-        const admin_refresh = () =
-        >
-        {
-            window.location.reload();
-        }
-        setTimeout(admin_refresh, 5 * 1000);
+        $(document).ready(function () {
+            const admin_refresh = function () {
+                window.location.reload();
+            };
+            // setTimeout(admin_refresh, 15 * 1000);
+
+            $('form[name=add-office-form]').submit(function (e) {
+                e.preventDefault();
+                console.log($(this).serialize());
+                $.ajax({
+                    type: 'POST',
+                    cache: false,
+                    url: '/api/add_office',
+                    data: $(this).serialize(),
+                    success: function (msg) {
+                        alert(msg);
+                    }
+                });
+            });
+        });
+        {#const add_office = form => {#}
+        {#    console.log(form);#}
+        {#    $.post('/api/add_office', form.serialize(), function (data) {#}
+        {#        alert(data);#}
+        {#    });#}
+        {# } #}
     </script>
 {% endblock %}

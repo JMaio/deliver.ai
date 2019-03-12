@@ -153,6 +153,20 @@ class Map:
     def __init__(self, offices=None):
         self.offices = offices  # type: dict[str: Person]
 
+    def add_office(self, person):
+        if self.in_map(person):
+            raise KeyError
+        if person.coordinates == (0, 0):
+            raise ValueError
+        else:
+            self.offices[person.username] = person
+
+    def remove_office(self, person):
+        if self.in_map(person):
+            self.offices.pop(person.username)
+        else:
+            raise KeyError
+
     def distance(self, p1, p2):
         if not self.in_map(p1) and self.in_map(p2):
             return None
