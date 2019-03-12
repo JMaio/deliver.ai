@@ -91,7 +91,8 @@ def create_app():
 
     tcp_server = DeliverAIServer()
 
-    debug_log = tcp_server.log
+    in_log = []
+    out_log = tcp_server.log
 
     @app.route('/')
     def index():
@@ -310,7 +311,8 @@ def create_app():
         return render_template(
             'debug.html',
             debug_items=debug_items,
-            debug_log=debug_log,
+            out_log=out_log,
+            in_log=in_log,
             vars=[office_map.offices]
         )
 
@@ -332,6 +334,7 @@ def create_app():
 
     @app.route('/api/<string:args>', methods=['GET'])
     def api_get(args):
+        in_log.append(f'[{request.method:4}] {request.url}')
         if args == 'map.json':
             return office_map.to_json()
         elif args == 'botinfo':
@@ -345,6 +348,7 @@ def create_app():
 
     @app.route('/api/<string:args>', methods=['POST'])
     def api_post(args):
+        in_log.append(f'[{request.method:4}] {request.url}')
         if args == 'botinfo':
             bot = bots.get(request.args.get('name'), None)  # type: Bot
             if bot:
