@@ -409,8 +409,11 @@ def create_app():
             )
             try:
                 office_map.add_office(new_person)
+                tcp_server.send_encoded_message(['UPDATEMAP'])
             except KeyError:
                 return "error - already in map"
+            except ValueError:
+                return "cannot add (0, 0) !"
             return f'add office - {new_person}'
         else:
             return "Invalid api call (POST)"

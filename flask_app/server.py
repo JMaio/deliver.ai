@@ -55,6 +55,5 @@ class DeliverAIServer:
         t = datetime.datetime.utcnow().strftime("%H:%M:%S")
         self.log.append("[{}] {}".format(t, m))
 
-
 # if __name__ == '__main__':
 #     main()

@@ -88,8 +88,8 @@ class TicketRegister:
     # def get_tickets(self, user):
     #     return filter(lambda x: x.sender == user or x.recipient == user,
     #                   self.tickets)
-        # if user in self.tickets:
-        #     return self.tickets[user]
+    # if user in self.tickets:
+    #     return self.tickets[user]
 
     def get_sent(self, user):
         return list(filter(lambda x: x.sender == user, self.tickets))
@@ -154,7 +154,7 @@ class Map:
         self.offices = offices  # type: dict[str: Person]
 
     def add_office(self, person):
-        if self.in_map(person):
+        if self.in_map(person) or self.in_coords(person.coordinates):
             raise KeyError
         if person.coordinates == (0, 0):
             raise ValueError
@@ -177,6 +177,9 @@ class Map:
         if type(person) is Person:
             person = person.username
         return person in self.offices
+
+    def in_coords(self, coords):
+        return filter(lambda x: x.coords == coords, self.offices)
 
     def get(self, person=None):
         if person:
