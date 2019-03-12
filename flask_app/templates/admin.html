@@ -16,13 +16,39 @@
             <hr>
         </div>
         <div class="col-12 col-lg-6">
+            <h2 class="font-weight-normal">Map <a href="{{ url_for('index') }}"
+                                                  class="fas fa-plus-circle fa-xs text-success text-decoration-none"></a>
+            </h2>
+            <div class="row justify-content-start">
+                <div class="col-12 col-sm-6">
+                    <ul class="list-group d-flex justify-content-center mx-auto"
+                        style="max-width: 400px">
+                        {% for username, person in map.get().items() %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>{{ person.coordinates }}</span>
+                                <span class="text-monospace">{{ person.name }}</span>
+                                <a href=""
+                                   class="fas fa-minus-circle text-danger"></a>
+                            </li>
+                        {% endfor %}
+                        {#        <li class="list-group-item">Dapibus ac facilisis in</li>#}
+                        {#        <li class="list-group-item">Morbi leo risus</li>#}
+                        {#        <li class="list-group-item">Porta ac consectetur ac</li>#}
+                        {#        <li class="list-group-item">Vestibulum at eros</li>#}
+                    </ul>
+                </div>
+            </div>
+            <hr>
+        </div>
+        <div class="col-12 col-lg-6">
             <h2 class="text-center font-weight-normal">Admin tools</h2>
             <div>
                 {% for f, url in [
                     ('api', 'api_help'),
                     ('debug', 'debug_mode'),
                 ] %}
-                    <a class="btn btn-info" href="{{ url_for(url) }}">{{ f }}</a>
+                    <a class="btn btn-info"
+                       href="{{ url_for(url) }}">{{ f }}</a>
                 {% endfor %}
 
             </div>
@@ -31,4 +57,16 @@
     </div>
     <hr>
 
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        const admin_refresh = () =
+        >
+        {
+            window.location.reload();
+        }
+        setTimeout(admin_refresh, 5 * 1000);
+    </script>
 {% endblock %}

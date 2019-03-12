@@ -105,6 +105,7 @@ def create_app():
         return render_template(
             'admin.html',
             bots=bots,
+            map=office_map,
         )
 
     @app.route('/send/')

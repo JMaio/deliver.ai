@@ -150,7 +150,7 @@ class Bot:
 
 class Map:
     def __init__(self, offices=None):
-        self.offices = offices  # type: dict[Person]
+        self.offices = offices  # type: dict[str: Person]
 
     def distance(self, p1, p2):
         if not self.in_map(p1) and self.in_map(p2):
