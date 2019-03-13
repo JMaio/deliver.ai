@@ -115,7 +115,7 @@
             $('#pickup-now').prop("checked", amount === 0);
 
             console.log(`adding ${amount} ${scale}`);
-            picker.val(moment().add(amount, scale).format('H:mm'))
+            picker.val(moment().add(amount, scale).format('HH:mm'))
         }
 
         function validatePickup() {
