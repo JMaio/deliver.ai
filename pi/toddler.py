@@ -5,6 +5,7 @@ from tcpcom import TCPServer, TCPClient
 from functools import reduce
 import operator
 from adafruit_lsm303 import LSM303
+from collections import deque
 
 
 class Toddler:
@@ -28,7 +29,8 @@ class Toddler:
 
         self.server = TCPServer(
             self.server_port,
-            stateChanged=self.on_server_msg
+            stateChanged=self.on_server_msg,
+            isVerbose=False
         )
         self.client = TCPClient(
             self.client_connect_address,
@@ -46,11 +48,12 @@ class Toddler:
         self.current_movment_bearing = 0
 
         self.accel = LSM303()
+        self.accel_data = deque(
+            [[0, 0, 0]] * 10)  # 10 empty accelerometer entries
         self.alarm = False
         self.box_open = False
         self.door_mech_motor = 2
         self.lock_motor = 1
-
         self.mode_debug_on = False
 
     def __del__(self):
@@ -61,8 +64,9 @@ class Toddler:
     # CONTROL THREAD
     def control(self):
         self.detect_obstacle()
-        # self.accel_alarm()
+        #	self.accel_alarm()
         self.box_alarm()
+        #        print(self.getInputs())
         time.sleep(0.05)
 
     # VISION THREAD
@@ -115,6 +119,7 @@ class Toddler:
         elif state == "MESSAGE":
             print("[on_server_msg] Server:-- Message received:" + msg)
             self.process_server_message(msg)
+            self.server.sendMessage("OK")
 
     def on_client_msg(self, state, msg):
         if (state == "CONNECTED"):
@@ -140,7 +145,7 @@ class Toddler:
     def process_server_message(self, msg):
         print("[process_server_message] Processing Msg Received")
         broken_msg = msg.split("$")
-        if (msg == "ARRIVED"):
+        if (broken_msg[0] == "ARRIVED"):
             print("[process_server_message] Arrived at dest requested")
             if (self.state == "GOINGHOME"):
                 print("[process_server_message] At home awaiting command...")
@@ -148,9 +153,9 @@ class Toddler:
             elif (self.state == "PICKINGUP" or self.state == "DELIVERING"):
                 print("[process_server_message] Waiting for authorisation")
                 self.request_authentication()
-        if (broken_msg[0] == "BEARING"):
+        elif (broken_msg[0] == "BEARING"):
+            print("bearing recved " + broken_msg[1])
             self.current_movment_bearing = int(broken_msg[1])
-
 
     def process_client_message(self, msg):
         print("[process_client_message] Processing Msg Recived")
@@ -179,10 +184,14 @@ class Toddler:
             self.test_conn_ev3()
         elif (broken_msg[0] == "UPDATEMAP"):
             self.server.sendMessage("UPDATEMAP")
+        elif (broken_msg[0] == "BEARING"):
+            self.current_movment_bearing = int(broken_msg[1])
 
     def process_debug_msg(self, msg):
-        f=open("cmd_recved.txt", "a+")
-        f.write(msg)
+        if (msg == "DEBUGMODEOFF"):
+            self.mode_debug_on = False
+        f = open("cmd_recved.txt", "a+")
+        f.write(msg + "\n")
 
     def open_box(self):
         print("[open_box] Opening Box")
@@ -224,7 +233,8 @@ class Toddler:
         # If the dirrection is NOT (current_movment_bearing + 2 mod 4) i.e.
         # behind us - we can send stop
         if (dir != ((self.current_movment_bearing + 2) % 4)):
-            print("[stop] Obstacle in %d" % dir)
+            #           print("[stop] Obstacle in %d" % dir)
+            #            print("facing " + str(self.current_movment_bearing))
             self.not_sent_stop[dir] = False
             self.server.sendMessage("STOP")
 
@@ -253,7 +263,7 @@ class Toddler:
     # Checks for unauthorized opening of the box - using bump sensor
     def box_alarm(self):
         box_alarm = self.getInputs()[
-            0]  # Get the sensor value from bump switch
+            2]  # Get the sensor value from bump switch
         if (box_alarm == 1 and not (self.box_open)):
             self.send_alarm()
             print("[box_alarm] Box Open - Not Due to be")
@@ -263,17 +273,44 @@ class Toddler:
 
     # Checks for unexpected movement/robot being stolen - using accelerometer
     def accel_alarm(self):
-        accel_all, mag = self.accel.read()
-        accel_x, accel_y, accel_z = accel_all
+        cur_accel = self.read_smooth_accel()
+        #        print(accel_all)
+        accel_x, accel_y, accel_z = cur_accel
+        base_x, base_y, base_z = (
+            -32, 31, 1075)  # values when robot is not moving
         # Basic detection method - needs more complexity to achieve higher
         # accuracy
-        if abs(accel_x) > 400 or abs(accel_y) > 200 or (
-                abs(accel_z) > 1200 and abs(accel_z) < 1500):
-            if (not (self.alarm)):
-                self.send_alarm()
-                self.alarm = True
-                print("[accel_alarm] ALARM STATE" + str(accel_x) + " X " + str(
-                    accel_y) + " Y  " + str(accel_z) + " Z")
+        with open("alarm_states", "a+") as f:
+            f.write("Av: {} - Reading: {} \n".format(cur_accel,
+                                                     self.accel.read()[0]))
+            if abs(accel_x - base_x) > 350 or abs(
+                    accel_y - base_y) > 350 or abs(accel_z - base_z) > 350:
+                if not (self.alarm):
+                    self.send_alarm()
+                    self.alarm = True
+                    f.write("[accel_alarm] ALARM STATE " + str(
+                        accel_x) + " X " + str(
+                        accel_y) + " Y  " + str(accel_z) + " Z \n")
+                    print("[accel_alarm] ALARM STATE " + str(
+                        accel_x) + " X " + str(
+                        accel_y) + " Y  " + str(accel_z) + " Z")
+
+    # Smooth accelerometer output by taking the average of the last len(
+    # accel_data) values
+    def read_smooth_accel(self):
+        cur_accel, _ = self.accel.read()
+        # For the first len(accel_data) values the average is not
+        # representative
+        #        print(self.accel_data)
+        self.accel_data.pop()
+        self.accel_data.appendleft(cur_accel)
+        if [0, 0, 0] in self.accel_data:
+            return cur_accel
+
+        av_accel = [sum(i) / float(len(i)) for i in zip(*self.accel_data)]
+        # print(av_accel)
+        #	print("-------------------")
+        return av_accel
 
     def test_conn_ev3(self):
         self.server.sendMessage("DEBUGMODEON")
@@ -281,4 +318,4 @@ class Toddler:
         file_in = open("cmds_to_send.txt", "r")
         lines = file_in.readlines()
         for l in lines:
-            server.sendMessage(l)
+            self.server.sendMessage(l)
