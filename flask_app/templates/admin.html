@@ -17,21 +17,21 @@
         </div>
         <div class="col-12 col-lg-6">
             <h2 class="font-weight-normal">Map</h2>
+            <p class="my-auto mr-2">Add office:</p>
             <form class="form-inline mb-2" id="add-office-form" method="post"
                   action="/api/add_office" name="add-office-form">
-                <p class="my-auto mr-2">Add office:</p>
-                {% for var, type, w in [
-                    ('x', 'number', 70),
-                    ('y', 'number', 70),
-                    ('username', 'text', 150),
+                {% for var, type, val, w in [
+                    ('x', 'number', 2, 50),
+                    ('y', 'number', 1, 50),
+                    ('username', 'text', 'brock.rock', 160),
                 ] %}
-                    <input class="form-control mr-2"
+                    <input class="form-control mr-1"
                            style="max-width: {{ w }}px;" type="{{ type }}"
-                           value="1" placeholder="{{ var }}"
+                           value="{{ val }}" placeholder="{{ var }}"
                            id="add-office-{{ var }}" name="{{ var }}">
                 {% endfor %}
                 <button type="submit"
-                        class="btn fas fa-plus-circle fa-lg text-success text-decoration-none"></button>
+                        class="btn fas fa-plus-circle fa-lg text-success text-decoration-none my-auto"></button>
             </form>
             <div class="row justify-content-start">
                 <div class="col-12 col-sm-6">
@@ -87,7 +87,8 @@
                     url: '/api/add_office',
                     data: $(this).serialize(),
                     success: function (msg) {
-                        alert(msg);
+                        {#alert(msg);#}
+                        window.location.reload()
                     }
                 });
             });

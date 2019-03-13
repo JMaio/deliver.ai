@@ -154,7 +154,8 @@ class Map:
         self.offices = offices  # type: dict[str: Person]
 
     def add_office(self, person):
-        if self.in_map(person) or self.in_coords(person.coordinates):
+        print(self.in_coordinates(person.coordinates))
+        if self.in_map(person) or self.in_coordinates(person.coordinates):
             raise KeyError
         if person.coordinates == (0, 0):
             raise ValueError
@@ -178,8 +179,9 @@ class Map:
             person = person.username
         return person in self.offices
 
-    def in_coords(self, coords):
-        return filter(lambda x: x.coords == coords, self.offices)
+    def in_coordinates(self, coordinates):
+        return list(filter(lambda x: x.coordinates == coordinates,
+                           self.offices.values()))
 
     def get(self, person=None):
         if person:
