@@ -47,15 +47,16 @@ class Toddler:
         self.pick_from = (0, 0)
         self.deliver_to = (0, 0)
         self.current_movment_bearing = 0
-
-        self.accel = LSM303()
-        self.accel_data = deque(
-            [[0, 0, 0]] * 10)  # 10 empty accelerometer entries
         self.alarm = False
         self.box_open = False
+        self.mode_debug_on = False
+
+        # Set up sensor + motor values
+        self.accel = LSM303()
+        self.accel_data = deque(
+            [[0, 0, 0]] * 10)  # accelerometer array used for smoothing
         self.door_mech_motor = 2
         self.lock_motor = 1
-        self.mode_debug_on = False
 
     def __del__(self):
         print("[__del__] Cleaning Up...")
@@ -65,9 +66,8 @@ class Toddler:
     # CONTROL THREAD
     def control(self):
         self.detect_obstacle()
-        # self.accel_alarm()
+        # self.accel_alarm()    # needs improvement to be used again
         self.box_alarm()
-        # print(self.getInputs())
         time.sleep(0.05)
 
     # VISION THREAD
@@ -86,12 +86,14 @@ class Toddler:
     def open_box_motor(self):
         self.open_lock()
         self.mc.setMotor(self.door_mech_motor, 100)
+        # Open lid until bump switched is pressed
         while (self.getInputs()[1] == 1):
             time.sleep(0.01)
         self.mc.stopMotor(self.door_mech_motor)
 
     def close_box_motor(self):
         self.mc.setMotor(self.door_mech_motor, -100)
+        # Close lid until bump switched is pressed
         while (self.getInputs()[2] == 1):
             time.sleep(0.5)
         self.mc.stopMotor(self.door_mech_motor)
@@ -228,7 +230,7 @@ class Toddler:
             else:
                 self.continue_path(i)
 
-    # Dummy function for reacting according to obstacle in direction dir where
+    # Function for reacting according to obstacle in direction dir where dir=
     # 0 - Front, 1 - Right, 2 - Back, 3 - Left
     def stop(self, dir):
         # If the dirrection is NOT (current_movment_bearing + 2 mod 4) i.e.
@@ -263,9 +265,8 @@ class Toddler:
 
     # Checks for unauthorized opening of the box - using bump sensor
     def box_alarm(self):
-        box_alarm = self.getInputs()[
-            2]  # Get the sensor value from bump switch
-        if (box_alarm == 1 and not (self.box_open)):
+        box_alarm = self.getInputs()[2]  # Get sensor value from bump switch
+        if box_alarm == 1 and not (self.box_open):
             self.send_alarm()
             print("[box_alarm] Box Open - Not Due to be")
 
@@ -275,42 +276,29 @@ class Toddler:
     # Checks for unexpected movement/robot being stolen - using accelerometer
     def accel_alarm(self):
         cur_accel = self.read_smooth_accel()
-        #        print(accel_all)
         accel_x, accel_y, accel_z = cur_accel
-        base_x, base_y, base_z = (
-            -32, 31, 1075)  # values when robot is not moving
-        # Basic detection method - needs more complexity to achieve higher
-        # accuracy
-        with open("alarm_states", "a+") as f:
-            f.write("Av: {} - Reading: {} \n".format(cur_accel,
-                                                     self.accel.read()[0]))
-            if abs(accel_x - base_x) > 350 or abs(
-                    accel_y - base_y) > 350 or abs(accel_z - base_z) > 350:
-                if not (self.alarm):
-                    self.send_alarm()
-                    self.alarm = True
-                    f.write("[accel_alarm] ALARM STATE " + str(
-                        accel_x) + " X " + str(
-                        accel_y) + " Y  " + str(accel_z) + " Z \n")
-                    print("[accel_alarm] ALARM STATE " + str(
-                        accel_x) + " X " + str(
+        base_x, base_y, base_z = (-32, 31, 1075)  # values when robot is static
+        if abs(accel_x - base_x) > 350 or abs(
+                accel_y - base_y) > 350 or abs(accel_z - base_z) > 350:
+            if not (self.alarm):
+                self.send_alarm()
+                self.alarm = True
+                print(
+                    "[accel_alarm] ALARM STATE " + str(accel_x) + " X " + str(
                         accel_y) + " Y  " + str(accel_z) + " Z")
 
-    # Smooth accelerometer output by taking the average of the last len(
-    # accel_data) values
+    # Smooth accelerometer output by taking the average of the last n values
+    # where n = len(self.accel_data)
     def read_smooth_accel(self):
         cur_accel, _ = self.accel.read()
-        # For the first len(accel_data) values the average is not
-        # representative
-        # print(self.accel_data)
         self.accel_data.pop()
         self.accel_data.appendleft(cur_accel)
+        # For the first len(accel_data) values the average is not
+        # representative - just return current value
         if [0, 0, 0] in self.accel_data:
             return cur_accel
 
         av_accel = [sum(i) / float(len(i)) for i in zip(*self.accel_data)]
-        # print(av_accel)
-        # print("-------------------")
         return av_accel
 
     def test_conn_ev3(self):
