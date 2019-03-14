@@ -6,6 +6,7 @@ from functools import reduce
 import operator
 from adafruit_lsm303 import LSM303
 from collections import deque
+import threading
 
 
 class Toddler:
@@ -64,9 +65,9 @@ class Toddler:
     # CONTROL THREAD
     def control(self):
         self.detect_obstacle()
-        #	self.accel_alarm()
+        # self.accel_alarm()
         self.box_alarm()
-        #        print(self.getInputs())
+        # print(self.getInputs())
         time.sleep(0.05)
 
     # VISION THREAD
@@ -301,7 +302,7 @@ class Toddler:
         cur_accel, _ = self.accel.read()
         # For the first len(accel_data) values the average is not
         # representative
-        #        print(self.accel_data)
+        # print(self.accel_data)
         self.accel_data.pop()
         self.accel_data.appendleft(cur_accel)
         if [0, 0, 0] in self.accel_data:
@@ -309,7 +310,7 @@ class Toddler:
 
         av_accel = [sum(i) / float(len(i)) for i in zip(*self.accel_data)]
         # print(av_accel)
-        #	print("-------------------")
+        # print("-------------------")
         return av_accel
 
     def test_conn_ev3(self):
