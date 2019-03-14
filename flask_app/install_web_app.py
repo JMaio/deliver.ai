@@ -5,9 +5,9 @@ import venv
 import os
 
 def main():
-    PRE = '[deliver.ai] --> '
+    PRE = '\n[deliver.ai] --> '
 
-    print(" --- ##   deliver.ai web app intaller   ## ---\n")
+    print(" --- ##   deliver.ai web app intaller   ## --- ")
 
     # # create the virtual enviroment
     print(PRE + "Creating the virtual enviroment...")
