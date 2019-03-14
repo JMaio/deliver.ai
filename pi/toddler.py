@@ -75,14 +75,6 @@ class Toddler:
         # Block vision branch for now because we don't use it
         time.sleep(0.05)
 
-    def open_box_servo(self):
-        self.sc.engage()
-        self.sc.setPosition(0)
-        self.box_open = True
-        time.sleep(10)
-        self.sc.setPosition(180)
-        self.box_closed = False
-
     def open_box_motor(self):
         self.open_lock()
         self.mc.setMotor(self.door_mech_motor, 100)
@@ -195,21 +187,6 @@ class Toddler:
             self.mode_debug_on = False
         f = open("cmd_recved.txt", "a+")
         f.write(msg + "\n")
-
-    def open_box(self):
-        print("[open_box] Opening Box")
-        # opening box code
-        self.box_open = True
-        self.open_box_servo()
-        time.sleep(10)
-        self.box_open = False
-        time.sleep(1)
-        if (self.state == "PICKINGUP"):
-            self.state = "DELIVERING"
-            self.send_robot_to(self.deliver_to[0], self.deliver_to[1])
-        if (self.state == "DELIVERING"):
-            self.state = "READY"
-            self.client.sendMessage("READY")
 
     def send_robot_to(self, x, y):
         print("[send_robot_to] Sending Robot to " + str(x) + ", " + str(y))
