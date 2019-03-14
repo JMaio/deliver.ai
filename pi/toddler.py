@@ -87,7 +87,7 @@ class Toddler:
         self.mc.setMotor(self.door_mech_motor, -100)
         # Close lid until bump switched is pressed
         while (self.getInputs()[2] == 1):
-            time.sleep(0.5)
+            time.sleep(0.01)
         self.mc.stopMotor(self.door_mech_motor)
         self.close_lock()
         time.sleep(1)
@@ -213,8 +213,7 @@ class Toddler:
         # If the dirrection is NOT (current_movment_bearing + 2 mod 4) i.e.
         # behind us - we can send stop
         if (dir != ((self.current_movment_bearing + 2) % 4)):
-            #           print("[stop] Obstacle in %d" % dir)
-            #            print("facing " + str(self.current_movment_bearing))
+            # print("[stop] Obstacle in {} - currently facing {}".format(dir, self.current_movment_bearing))  # noqa: E501
             self.not_sent_stop[dir] = False
             self.server.sendMessage("STOP")
 
