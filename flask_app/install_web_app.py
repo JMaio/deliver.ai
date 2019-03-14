@@ -4,6 +4,7 @@ import subprocess
 import venv
 import os
 
+
 def main():
     PRE = '\n[deliver.ai] --> '
 
@@ -14,9 +15,8 @@ def main():
 
     class ExtendedEnvBuilder(venv.EnvBuilder):
         def post_setup(self, context):
-            os.environ['VIRTUAL_ENV'] = context.env_dir
+            os.environ['VIRTUAL_ENV'] = context.bin_path
             super().post_setup(context)
-
 
     v = ExtendedEnvBuilder(with_pip=True)
     v.create('venv')
@@ -24,12 +24,15 @@ def main():
     path = os.getenv('VIRTUAL_ENV', None)
     if not path:
         raise Exception("Could not create virtual environment!")
-    
-    py_path = os.path.join(path, 'bin', 'python')
+
+    print(PRE + "Virtual environment created at: {}".format(path))
+
+    py_path = os.path.join(path, 'python')
 
     # upgrade pip
     print(PRE + "Upgrading pip:")
-    upgrade_pip = subprocess.run([py_path, '-m', 'pip', 'install', '--upgrade', 'pip'])
+    upgrade_pip = subprocess.run(
+        [py_path, '-m', 'pip', 'install', '--upgrade', 'pip'])
 
     # install using pip (https://stackoverflow.com/questions/12332975/installing-python-module-within-code)
     req = 'requirements.txt'
@@ -41,4 +44,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
