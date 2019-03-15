@@ -1,4 +1,4 @@
 <div class="text-center">
-    <button class="btn btn-{{ type }} my-4 px-4 py-2" style="font-size: 2rem"
-            onclick="console.log('sending command: {{ cmd }} ({{ text }})') ; $.ajax('/cmd/{{ cmd }}')">{{ text }}</button>
+    <button class="btn btn-{{ type }} my-4 px-4 py-2" style="font-size: 1.5rem"
+            onclick="send_cmd('{{ cmd }}')">{{ text }}</button>
 </div>

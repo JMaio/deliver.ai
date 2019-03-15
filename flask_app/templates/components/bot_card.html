@@ -1,0 +1,29 @@
+<div class="card border-light mb-3 shadow-hover text-decoration-none text-center">
+    <div class="card-body">
+        <div class="card-title">
+            <div class="d-flex mx-auto justify-content-center">
+                <div class="mx-2 my-auto">
+                    <div class="robot-status-light {% if not tcp_server.server.isConnected() %}dis{% endif %}connected"></div>
+                </div>
+                <p class="mb-0 mx-3 card-name">{{ bot.name }}</p>
+            </div>
+            <code class="text-info">{{ bot.uid }}</code>
+        </div>
+        <div>
+            {% with batt = bot.battery() %}
+                <code>{{ batt }}%
+                    ({{ bot.props['battery_volts'] | round(2) }}V)</code>
+                <div class="progress" style="height: 4px;">
+                    <div class="progress-bar"
+                         role="progressbar"
+                         style="width: {{ batt }}%;"
+                         aria-valuenow="{{ batt }}"
+                         aria-valuemin="0"
+                         aria-valuemax="100"></div>
+                </div>
+                <p class="m-0">Battery level</p>
+            {% endwith %}
+        </div>
+
+    </div>
+</div>

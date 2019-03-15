@@ -1,18 +1,41 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <div class="text-center">
-        <button id="btn-open-box" class="btn btn-success my-5 px-5 py-3" style="font-size: 2rem">Open box</button>
-    </div>
-{% endblock %}
+    <h1 class="mb-3 text-center" style="font-weight: 300">Pending
+        deliveries</h1>
+    <hr>
+    {% if pending_tickets | length == 0 %}
+        <div class="container text-center d-flex flex-column justify-content-center my-5"
+             id="error">
+            <div>
+                <i class="fas fa-coffee fa-5x text-muted mb-3"></i>
+                <h1 class="font-weight-light mb-3"
+                    style="font-size: 52pt">All done!</h1>
+                <h2 class="font-weight-normal mb-4">No pending deliveries.
+                    Hooray!</h2>
+            </div>
+        </div>
+    {% else %}
+        <ul class="list-group d-flex justify-content-center mx-auto"
+            style="max-width: 400px">
 
-{% block scripts %}
-    {{ super() }}
-    <script>
-        $('#btn-open-box').click(function () {
-            console.log("sending open command?");
-            $.ajax('/cmd/OPEN');
-            }
-        )
-    </script>
+            {% for ticket in pending_tickets %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span class="text-monospace">[{{ ticket.created.strftime("%H:%M") }}]</span>
+                    <span>{{ ticket.sender.name }}</span>
+                    <span>{{ ticket.message }}</span>
+                    <span class="badge badge-primary badge-pill">14</span>
+                </li>
+            {% endfor %}
+            {#        <li class="list-group-item">Dapibus ac facilisis in</li>#}
+            {#        <li class="list-group-item">Morbi leo risus</li>#}
+            {#        <li class="list-group-item">Porta ac consectetur ac</li>#}
+            {#        <li class="list-group-item">Vestibulum at eros</li>#}
+        </ul>
+        <div class="text-center">
+            <button id="btn-open-box" class="btn btn-success my-5 px-5 py-3"
+                    style="font-size: 2rem" onclick="send_cmd('OPEN')">Confirm
+            </button>
+        </div>
+    {% endif %}
 {% endblock %}

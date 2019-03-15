@@ -1,25 +1,103 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1 class="mb-3 text-center" style="font-weight: 300">Admin dashboard</h1>
-<hr>
-<div class="row justify-content-center">
-    {% for bot in bots %}
-    <div class="col-12 col-sm-6 col-lg-3">
-        <div class="card border-light mb-3 shadow-hover text-decoration-none text-center">
-            <div class="card-body">
-                <div class="card-title">
-                    <p class="mb-0 card-name">{{ bot.name }}</p>
-                    <code class="text-info">{{ bot.uid }}</code>
-                </div>
-
-                <div class="progress" style="height: 4px;">
-                    <div class="progress-bar" role="progressbar" style="width: {{ bot.battery }}%;" aria-valuenow="25"
-                        aria-valuemin="0" aria-valuemax="100"></div>
+    <h1 class="mb-3 text-center" style="font-weight: 300">Admin dashboard</h1>
+    <hr>
+    <div class="row">
+        <div class="col-12 col-lg-6">
+            <h2 class="font-weight-normal">Robots</h2>
+            <div class="row justify-content-start">
+                {% for _, bot in bots.items() %}
+                    <div class="col-12 col-sm-6">
+                        {% include 'components/bot_card.html' %}
+                    </div>
+                {% endfor %}
+            </div>
+            <hr>
+        </div>
+        <div class="col-12 col-lg-6">
+            <h2 class="font-weight-normal">Map</h2>
+            <p class="my-auto mr-2">Add office:</p>
+            <form class="form-inline mb-2" id="add-office-form" method="post"
+                  action="/api/add_office" name="add-office-form">
+                {% for var, type, val, w in [
+                    ('x', 'number', 2, 50),
+                    ('y', 'number', 1, 50),
+                    ('username', 'text', 'brock.rock', 160),
+                ] %}
+                    <input class="form-control mr-1"
+                           style="max-width: {{ w }}px;" type="{{ type }}"
+                           value="{{ val }}" placeholder="{{ var }}"
+                           id="add-office-{{ var }}" name="{{ var }}">
+                {% endfor %}
+                <button type="submit"
+                        class="btn fas fa-plus-circle fa-lg text-success text-decoration-none my-auto"></button>
+            </form>
+            <div class="row justify-content-start">
+                <div class="col-12 col-sm-6">
+                    <ul class="list-group d-flex justify-content-center mx-auto"
+                        style="max-width: 400px">
+                        {% for username, person in map.get().items() %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>{{ person.coordinates }}</span>
+                                <span class="text-monospace">{{ person.name }}</span>
+                                <a href=""
+                                   class="fas fa-minus-circle text-danger"></a>
+                            </li>
+                        {% endfor %}
+                    </ul>
                 </div>
             </div>
+            <hr>
+        </div>
+        <div class="col-12 col-lg-6">
+            <h2 class="text-center font-weight-normal">Admin tools</h2>
+            <div>
+                {% for f, url in [
+                    ('api', 'api_help'),
+                    ('debug', 'debug_mode'),
+                ] %}
+                    <a class="btn btn-info"
+                       href="{{ url_for(url) }}">{{ f }}</a>
+                {% endfor %}
+
+            </div>
+            <hr>
         </div>
     </div>
-    {% endfor %}
-</div>
+    <hr>
+
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        $(document).ready(function () {
+            const admin_refresh = function () {
+                window.location.reload();
+            };
+            // setTimeout(admin_refresh, 15 * 1000);
+
+            $('form[name=add-office-form]').submit(function (e) {
+                e.preventDefault();
+                console.log($(this).serialize());
+                $.ajax({
+                    type: 'POST',
+                    cache: false,
+                    url: '/api/add_office',
+                    data: $(this).serialize(),
+                    success: function (msg) {
+                        {#alert(msg);#}
+                        window.location.reload()
+                    }
+                });
+            });
+        });
+        {#const add_office = form => {#}
+        {#    console.log(form);#}
+        {#    $.post('/api/add_office', form.serialize(), function (data) {#}
+        {#        alert(data);#}
+        {#    });#}
+        {# } #}
+    </script>
 {% endblock %}

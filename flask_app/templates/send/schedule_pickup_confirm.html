@@ -1,10 +1,12 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1 class="text-center font-weight-light">Your delivery is scheduled!</h1>
+    <h1 class="text-center font-weight-light">Your pickup is scheduled!</h1>
 
     <div class="row justify-content-center">
-        {% include "components/user_info_card.html" %}
+        {% with user = sender %}
+            {% include "components/user_info_card.html" %}
+        {% endwith %}
 
         <div class="col-lg-auto col-md-12 my-auto my-3 text-center">
             <i class="fas fa-3x fa-fw mx-2 my-4 text-secondary align-middle fa-angle-right"></i>

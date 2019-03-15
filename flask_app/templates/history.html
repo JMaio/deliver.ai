@@ -1,36 +1,41 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1 class="text-center font-weight-light font-italic">Your details</h1>
-    {% include "components/user_info_card.html" %}
+    <h1 class="text-center font-weight-light font-italic">Your tickets</h1>
     <hr>
     <div class="container">
-        <h2 class="text-center font-italic">Past tickets</h2>
         <div class="row">
             <div class="col col-12 col-sm-6">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="my-0">Delivered</h3>
+                        <p class="my-0">Sent ({{ sent | length }})</p>
                     </div>
-                    <div class="card-body">
-
-                        <hr>
-                    </div>
+                    <ul class="list-group list-group-flush">
+                        {% for ticket in sent %}
+                            <li class="list-group-item">
+                                <div class="d-flex flex-column">
+                                    <h4>{{ ticket.pickup_time }}</h4>
+                                    <h5></h5>
+                                </div>
+                                <p>{{ ticket.recipient }}</p>
+                            </li>
+                        {% endfor %}
+                    </ul>
                 </div>
             </div>
             <div class="col col-12 col-sm-6">
                 <div class="card">
                     <div class="card-header">
-                        <p class="my-0">Received</p>
+                        <p class="my-0">Received ({{ received | length }})</p>
                     </div>
                     <ul class="list-group list-group-flush">
-                        {% for i in range(6) %}
+                        {% for ticket in received %}
                             <li class="list-group-item">
                                 <div class="d-flex flex-column">
-                                    <h4>01/02</h4>
-                                    <h5>12:34</h5>
+                                    <h4>{{ ticket.pickup_time }}</h4>
+                                    <h5></h5>
                                 </div>
-                                <p>Lt. Sarge</p>
+                                <p>{{ ticket.sender }}</p>
                             </li>
                         {% endfor %}
                     </ul>
