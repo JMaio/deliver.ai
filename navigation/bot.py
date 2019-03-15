@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 import ev3dev.ev3 as ev3
+import sys
 import time
 import math
 from office import Office
@@ -9,7 +10,8 @@ from map import Map
 from tcpcom import TCPClient
 import threading
 import urllib.request
-import requests
+import urllib.parse
+#import requests
 
 server_ip = "abomasnow.inf.ed.ac.uk"
 server_port = 5010
@@ -48,7 +50,8 @@ class DeliverAIBot():
         self.client_connection = TCPClient(
             server_ip,
             server_port,
-            stateChanged=self.onMsgRecv
+            stateChanged=self.onMsgRecv,
+            isVerbose=False
         )
 
         self.connected = False
@@ -74,8 +77,8 @@ class DeliverAIBot():
 
     def __del__(self):
         # Disconnect from the server, clean up the threads then we can exit
-        # self.client_connection.disconnect()
-        # threading.cleanup_stop_thread()
+        self.client_connection.disconnect()
+        threading.cleanup_stop_thread()
         print("[__del__] CleanedUp - Disconnected from Server")
 
 
@@ -96,11 +99,12 @@ class DeliverAIBot():
             print("Already here!")
             return
         for i in range(0, len(route)-1):
-            print("Current bearing: ", self.bearing)
+            #print("Current bearing: ", self.bearing)
             self.bearing = self.getBearing(route[i], route[i+1])
-            print("Going to: ", route[i+1])
-            print("New bearing: ", self.bearing)
-            print("TAPE SIDE: ", self.tape_side)
+            self.update_server()
+            #print("Going to: ", route[i+1])
+            #print("New bearing: ", self.bearing)
+            #print("TAPE SIDE: ", self.tape_side)
             self.send_bearing(self.bearing)
             cs_port = "in1" if self.bearing == 0 or self.bearing == 90 else "in2"  # noqa: E501
             rs_port = "in2" if cs_port == "in1" else "in1"
@@ -175,8 +179,8 @@ class DeliverAIBot():
                 time.sleep(5)
 
             if error > 0:  # Too far on black
-                self.rotate(rot_dir*15*(error/9))  # Rotation
-                time.sleep(0.025)
+                self.rotate(rot_dir*25*(error/9))  # Rotation
+                time.sleep(0.05)
 
                 self.moveBearing(bearing+b_tr, 300)  # Translation
                 time.sleep(0.025)
@@ -185,8 +189,8 @@ class DeliverAIBot():
                 if not self.carryOn():
                     return
             elif error < -5:  # Too far on white
-                self.rotate(rot_dir*-15*(abs(error)/76))  # Rotation
-                time.sleep(0.025)
+                self.rotate(rot_dir*-25*(abs(error)/76))  # Rotation
+                time.sleep(0.05)
 
                 self.moveBearing(bearing+w_tr, 300)  # Translation
                 time.sleep(0.025)
@@ -284,10 +288,13 @@ class DeliverAIBot():
             "x_loc": self.coords[0],
             "y_loc": self.coords[1],
             "state": "TEMP",
-            "battery_volts": ev3.PowerSupply().measured_volts
+            "battery_volts": ev3.PowerSupply().measured_volts,
+            "bearing": self.send_bearing(self.bearing)
         }
+        post_data = urllib.parse.urlencode(to_provide)
         try:
-            requests.post(to_access, params=to_provide)
+            urllib.request.urlopen(url='{}?{}'.format(to_access, post_data), data="TEMP=TEMP".encode())
+#            requests.post(to_access, params=to_provide)
         except:  # noqa: E722
             print("[update_server] Has failed - failed to connect to: " + to_access)  # noqa: E501
 
@@ -385,6 +392,7 @@ class DeliverAIBot():
 
     def send_bearing(self, bearing):
         dir_go = -1
+  #      self.client_connection.sendMessage("test")
         if (bearing == 0):
             dir_go = 0
         elif (bearing == 90):
@@ -393,7 +401,9 @@ class DeliverAIBot():
             dir_go = 2
         elif (bearing == 270):
             dir_go = 3
-        self.client_connection.sendMessage("BEARING$" + str(dir_go))
+        # print("Sentbearing " + str(dir_go))
+        # temp = self.client_connection.sendMessage("BEARING$" + str(dir_go))
+        return dir_go
 
     def alarm(self):
         print("[alarm] Alarming!")
@@ -423,7 +433,29 @@ if __name__ == '__main__':
 
 
     m = Map()
+#    m.addOffices([a, c, e])
+    #map_choice = input("Which map? (1/2/3): ")
+    #if map_choice == "1":
+     #   m.addOffices([a, b, c, f, g, h])
+    #elif map_choice == "2":
+     #   m.addOffices([a, c, e])
+    #elif map_choice == "3":
+    #    m.addOffices([b, c, f, g, i])
+   # else:
+       # print("ERROR. Invalid map.")
+       # sys.exit(0)
 
     mbot = DeliverAIBot(m, m.home)
+    
+#    for i in range (0, 10):
+#        mbot.goTo(e)
+#        time.sleep(3)
+#        mbot.goTo(m.home)
+#        time.sleep(3)
     while(True):
-        pass
+        pass 
+#      dest = input("Enter destination (home/a/b/c/etc): ")
+ #       if dest == "home":
+#            mbot.goTo(m.home)
+  #      else:
+#            mbot.goTo(globals()[dest])
