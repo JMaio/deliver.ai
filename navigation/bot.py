@@ -1,17 +1,17 @@
 #! /usr/bin/env python3
 
 import ev3dev.ev3 as ev3
-import sys
+import sys  # noqa: F401
 import time
 import math
-from office import Office
+from office import Office  # noqa: F401
 from map import Map
 
 from tcpcom import TCPClient
 import threading
 import urllib.request
 import urllib.parse
-#import requests
+# import requests
 
 server_ip = "abomasnow.inf.ed.ac.uk"
 server_port = 5010
@@ -81,14 +81,12 @@ class DeliverAIBot():
         threading.cleanup_stop_thread()
         print("[__del__] CleanedUp - Disconnected from Server")
 
-
     def download_json_map(self):
         json_raw = urllib.request.urlopen(
             "http://{}:{}/api/map.json".format(web_server, web_server_port)
         )
         self.my_map.addJsonFile(json_raw.read().decode())
-        print("[download_json_map] Updated Map - Added " + str(len(self.my_map.offices)))
-
+        print("[download_json_map] Updated Map - Added " + str(len(self.my_map.offices)))  # noqa: E501
 
     def goTo(self, destination):
         ''' Travel to the destination from the current position '''
@@ -99,12 +97,12 @@ class DeliverAIBot():
             print("Already here!")
             return
         for i in range(0, len(route)-1):
-            #print("Current bearing: ", self.bearing)
+            # print("Current bearing: ", self.bearing)
             self.bearing = self.getBearing(route[i], route[i+1])
             self.update_server()
-            #print("Going to: ", route[i+1])
-            #print("New bearing: ", self.bearing)
-            #print("TAPE SIDE: ", self.tape_side)
+            # print("Going to: ", route[i+1])
+            # print("New bearing: ", self.bearing)
+            # print("TAPE SIDE: ", self.tape_side)
             self.send_bearing(self.bearing)
             cs_port = "in1" if self.bearing == 0 or self.bearing == 90 else "in2"  # noqa: E501
             rs_port = "in2" if cs_port == "in1" else "in1"
@@ -293,8 +291,10 @@ class DeliverAIBot():
         }
         post_data = urllib.parse.urlencode(to_provide)
         try:
-            urllib.request.urlopen(url='{}?{}'.format(to_access, post_data), data="TEMP=TEMP".encode())
-#            requests.post(to_access, params=to_provide)
+            urllib.request.urlopen(
+                url='{}?{}'.format(to_access, post_data),
+                data="TEMP=TEMP".encode()
+            )
         except:  # noqa: E722
             print("[update_server] Has failed - failed to connect to: " + to_access)  # noqa: E501
 
@@ -384,7 +384,7 @@ class DeliverAIBot():
     def process_debug_msg(self, msg):
         if (msg == "DEBUGMODEOFF"):
             self.mode_debug_on = False
-        f=open("cmd_recved.txt", "a+")
+        f = open("cmd_recved.txt", "a+")
         f.write(msg)
 
     def send_arrived(self):
@@ -392,7 +392,7 @@ class DeliverAIBot():
 
     def send_bearing(self, bearing):
         dir_go = -1
-  #      self.client_connection.sendMessage("test")
+        # self.client_connection.sendMessage("test")
         if (bearing == 0):
             dir_go = 0
         elif (bearing == 90):
@@ -421,41 +421,7 @@ class DeliverAIBot():
 
 
 if __name__ == '__main__':
-    a = Office("jimbo", (1, 0))
-    b = Office("sally", (0, 1))
-    c = Office("timmy", (1, 1))
-    d = Office("johnny", (2, 1))
-    e = Office("frank", (3, 1))
-    f = Office("bobby", (0, 2))
-    g = Office("craig", (1, 2))
-    h = Office("joao", (2, 2))
-    i = Office("struan", (1, 3))
-
-
     m = Map()
-#    m.addOffices([a, c, e])
-    #map_choice = input("Which map? (1/2/3): ")
-    #if map_choice == "1":
-     #   m.addOffices([a, b, c, f, g, h])
-    #elif map_choice == "2":
-     #   m.addOffices([a, c, e])
-    #elif map_choice == "3":
-    #    m.addOffices([b, c, f, g, i])
-   # else:
-       # print("ERROR. Invalid map.")
-       # sys.exit(0)
-
     mbot = DeliverAIBot(m, m.home)
-    
-#    for i in range (0, 10):
-#        mbot.goTo(e)
-#        time.sleep(3)
-#        mbot.goTo(m.home)
-#        time.sleep(3)
     while(True):
-        pass 
-#      dest = input("Enter destination (home/a/b/c/etc): ")
- #       if dest == "home":
-#            mbot.goTo(m.home)
-  #      else:
-#            mbot.goTo(globals()[dest])
+        pass
