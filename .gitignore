@@ -111,3 +111,4 @@ venv.bak/
 
 # vscode
 .vscode
+flask_app/path.py
