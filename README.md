@@ -6,6 +6,12 @@
 </p>
 
 # Setup
+
+## EV3 Usage 
+
+We first initialise a `Map` which always has a `HOME` at (0,0). We then initialise and `Office` giving it a name and coordinates (e.g. `o = Office("barbara", (1,1))`).
+We can then add (and afterwards delete) an office from our map. A robot is initialised with a map and a starting position (e.g. `bot = DeliverAIBot(my_map, my_map.home)`) after which it can be called to any other office on the map using the `goTo` function.
+
 ## Raspberry Pi
 Our Pi is `abomasnow` and can be accessed from within the Informatics network via  
 ```
