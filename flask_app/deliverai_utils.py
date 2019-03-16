@@ -49,6 +49,29 @@ class Person:
                     for person in f.readlines()]
 
 
+class Progress:
+    def __init__(self):
+        self.stage = 0
+        self.order_rank = (
+            ('created', "created"),
+            ('pickup', "pickup"),
+            ('transit', "in transit"),
+            ('delivered', "delivered"),
+        )
+
+    def next_stage(self):
+        if 0 <= self.stage < 3:
+            self.stage += 1
+        else:
+            raise Exception
+
+    def get_stage(self):
+        return self.order_rank[self.stage]
+
+    def __repr__(self):
+        return self.get_stage()
+
+
 class Ticket:
     def __init__(self, pickup_time, sender, recipient, message,
                  created=None):
@@ -57,6 +80,7 @@ class Ticket:
         self.sender = sender  # type: Person
         self.recipient = recipient  # type: Person
         self.message = message  # type: str
+        self.status = Progress()
         self.delivered = False
         if not created:
             self.created = datetime.utcnow()
@@ -68,6 +92,12 @@ class Ticket:
             self.recipient,
         )
 
+    def progress(self):
+        self.status.next_stage()
+
+    def stage_text(self):
+        return self.status.get_stage()[1]
+
     def to_params(self):
         return {
             'created': ('Created on', self.created),
@@ -75,6 +105,7 @@ class Ticket:
             'sender': ('Sender', self.sender),
             'recipient': ('Recipient', self.recipient),
             'message': ('Message', self.message),
+            'status': ('Status', self.stage_text())
         }
 
 

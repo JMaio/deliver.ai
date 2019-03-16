@@ -9,6 +9,9 @@
 .card-name {
     font-weight: 300;
     font-size: 1.8rem;
+}
+
+.text-ellipsis {
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;

@@ -5,7 +5,7 @@
                 <div class="mx-2 my-auto">
                     <div class="robot-status-light {% if not tcp_server.server.isConnected() %}dis{% endif %}connected"></div>
                 </div>
-                <p class="mb-0 mx-3 card-name">{{ bot.name }}</p>
+                <p class="mb-0 mx-3 card-name text-ellipsis">{{ bot.name }}</p>
             </div>
             <code class="text-info">{{ bot.uid }}</code>
         </div>
