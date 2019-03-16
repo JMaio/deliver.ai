@@ -73,10 +73,44 @@
     {{ super() }}
     <script>
         $(document).ready(function () {
-            const admin_refresh = function () {
-                window.location.reload();
+            const botRefresh = () => {
+                $.ajax({
+                    url: '/api/botinfo',
+                    data: $.param({'name': 'lion'}),
+                    success: function (msg) {
+                        let m = JSON.parse(msg);
+                        let card = $('#bot-card-lion');
+
+                        card.find('span.bot-coords-x').text(m['x_loc']);
+                        card.find('span.bot-coords-y').text(m['y_loc']);
+
+                        // battery
+                        let volts = Number.parseFloat(m['battery_volts']).toFixed(2);
+                        card.find('span.battery-volts').text(volts);
+
+                        let percent = m['battery_percent'];
+                        card.find('span.battery-percent').text(percent);
+                        card.find('div.battery-indicator')
+                            .css({
+                                'width': `${percent}%`,
+                            })
+                            .prop({'aria-valuenow': percent});
+                    }
+                });
             };
-            // setTimeout(admin_refresh, 15 * 1000);
+            const piRefresh = () => {
+                $.ajax({
+                    url: '/api/tcp_server',
+                    success: function (msg) {
+                        let m = JSON.parse(msg);
+                        let card = $('#bot-card-lion');
+                        card.find('div.robot-status-light')
+                            .attr('data-connected', m['connected']);
+                    }
+                })
+            };
+            setInterval(botRefresh, 5 * 1000);
+            setInterval(piRefresh, 15 * 1000);
 
             $('form[name=add-office-form]').submit(function (e) {
                 e.preventDefault();
@@ -87,8 +121,12 @@
                     url: '/api/add_office',
                     data: $(this).serialize(),
                     success: function (msg) {
-                        {#alert(msg);#}
-                        window.location.reload()
+                        console.log(msg);
+                        if (msg) {
+                            alert(msg);
+                        } else {
+                            window.location.reload()
+                        }
                     }
                 });
             });

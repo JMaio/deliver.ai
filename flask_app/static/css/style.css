@@ -30,11 +30,11 @@
     animation: blink 3s cubic-bezier(0, 0, 0.1, 1) 0s infinite;
 }
 
-.robot-status-light.connected {
+.robot-status-light[data-connected="true"] {
     background-color: #28a745;
 }
 
-.robot-status-light.disconnected {
+.robot-status-light[data-connected="false"] {
     background-color: #dc3545;
 }
 

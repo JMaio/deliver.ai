@@ -1,4 +1,5 @@
 import datetime
+import json
 
 from flask import Flask, render_template, request, url_for, \
     render_template_string, abort
@@ -343,6 +344,16 @@ def create_app():
                 return bot.to_json()
             else:
                 return "error"
+        elif args == 'tcp_server':
+            return json.dumps({
+                'connected': tcp_server.server.isConnected(),
+                'serverIP': tcp_server.server.getIPAddress(),
+                'clientIP': tcp_server.client_ip,
+            })
+        elif args == 'log_get':
+            pass
+        elif args == 'log_post':
+            pass
         else:
             return "Invalid api call (GET)."
 
@@ -411,10 +422,10 @@ def create_app():
                 office_map.add_office(new_person)
                 tcp_server.send_encoded_message(['UPDATEMAP'])
             except KeyError:
-                return "error - already in map"
+                return "Error - user or office already present on the map."
             except ValueError:
-                return "cannot add (0, 0) !"
-            return f'add office - {new_person}'
+                return "Cannot add office at (0, 0)!"
+            return ''
         else:
             return "Invalid api call (POST)"
 

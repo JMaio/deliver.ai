@@ -140,7 +140,8 @@ class Bot:
             'y_loc': 0,
             'bearing': 0,
             'state': 'unknown',
-            'battery_volts': 5,
+            'battery_volts': 0.00,
+            'battery_percent': 0,
             'dest': (0, 0),
             'route': "none",
         }
@@ -155,15 +156,19 @@ class Bot:
     def __repr__(self):
         return str(self)
 
+    def battery(self):
+        # estimate battery % - between 5 and 7.5 Volt
+        return max(0,
+                   min(
+                       round(100 * (self.props['battery_volts'] - 5) /
+                             (7.5 - 5)),
+                       100)
+                   )
+
     def update_from_dict(self, props):
         for prop, val in props.items():
             self.props[prop] = val
-
-    def battery(self):
-        # estimate battery % - between 5 and 7.5 Volt
-        return max(0, min(
-            round(100 * (self.props['battery_volts'] - 5) / 2.5),
-            100))
+        self.props['battery_percent'] = self.battery()
 
     def to_json(self):
         return json.dumps(self.props)
@@ -186,6 +191,7 @@ class Map:
 
     def add_office(self, person):
         print(self.in_coordinates(person.coordinates))
+        print(self.in_map(person))
         if self.in_map(person) or self.in_coordinates(person.coordinates):
             raise KeyError
         if person.coordinates == (0, 0):

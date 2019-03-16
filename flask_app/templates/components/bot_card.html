@@ -1,20 +1,32 @@
-<div class="card border-light mb-3 shadow-hover text-decoration-none text-center">
+<div class="card border-light mb-3 shadow-hover text-decoration-none text-center"
+     id="bot-card-{{ bot.name }}">
     <div class="card-body">
         <div class="card-title">
             <div class="d-flex mx-auto justify-content-center">
                 <div class="mx-2 my-auto">
-                    <div class="robot-status-light {% if not tcp_server.server.isConnected() %}dis{% endif %}connected"></div>
+                    <div class="robot-status-light"
+                         data-connected="{{ tcp_server.server.isConnected() | lower }}"></div>
                 </div>
                 <p class="mb-0 mx-3 card-name text-ellipsis">{{ bot.name }}</p>
             </div>
             <code class="text-info">{{ bot.uid }}</code>
         </div>
         <div>
+            <p class="mb-0 text-monospace align-middle">(
+                <span class="bot-coords-x align-middle mx-1" style="font-size: 1.3rem">{{ bot.props.x_loc }}</span> ,
+                <span class="bot-coords-y align-middle mx-1" style="font-size: 1.3rem">{{ bot.props.y_loc }}</span>
+                )</p>
+            <p>Current location</p>
+        </div>
+        <div>
             {% with batt = bot.battery() %}
-                <code>{{ batt }}%
-                    ({{ bot.props['battery_volts'] | round(2) }}V)</code>
+                <code>
+                    <span class="battery-percent">{{ batt }}</span>% (<span
+                        class="battery-volts">{{ '%0.2f'| format(bot.props['battery_volts']) }}</span>
+                    V)
+                </code>
                 <div class="progress" style="height: 4px;">
-                    <div class="progress-bar"
+                    <div class="progress-bar battery-indicator"
                          role="progressbar"
                          style="width: {{ batt }}%;"
                          aria-valuenow="{{ batt }}"
