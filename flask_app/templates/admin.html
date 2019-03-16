@@ -20,34 +20,33 @@
             <p class="my-auto mr-2">Add office:</p>
             <form class="form-inline mb-2" id="add-office-form" method="post"
                   action="/api/add_office" name="add-office-form">
-                {% for var, type, val, w in [
-                    ('x', 'number', 2, 50),
-                    ('y', 'number', 1, 50),
-                    ('username', 'text', 'brock.rock', 160),
+                {% for var, type, w in [
+                    ('x', 'number', 50),
+                    ('y', 'number', 50),
+                    ('username', 'text', 160),
                 ] %}
                     <input class="form-control mr-1"
                            style="max-width: {{ w }}px;" type="{{ type }}"
-                           value="{{ val }}" placeholder="{{ var }}"
+                           required placeholder="{{ var }}"
                            id="add-office-{{ var }}" name="{{ var }}">
                 {% endfor %}
                 <button type="submit"
                         class="btn fas fa-plus-circle fa-lg text-success text-decoration-none my-auto"></button>
             </form>
-            <div class="row justify-content-start">
-                <div class="col-12 col-sm-6">
-                    <ul class="list-group d-flex justify-content-center mx-auto"
-                        style="max-width: 400px">
-                        {% for username, person in map.get().items() %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span>{{ person.coordinates }}</span>
-                                <span class="text-monospace">{{ person.name }}</span>
-                                <a href=""
-                                   class="fas fa-minus-circle text-danger"></a>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
+            <hr>
+            <ul class="list-group d-flex justify-content-center mx-auto">
+                {% for username, person in map.get().items() %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>{{ person.coordinates }}</span>
+                        <span class="text-monospace">{{ person.name }}</span>
+                        <div class="btn btn-outline-light rounded-pill"
+                             data-action="remove-office"
+                             data-username="{{ person.username }}">
+                            <i class="fas fa-minus-circle text-danger"></i>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
             <hr>
         </div>
         <div class="col-12 col-lg-6">
@@ -73,21 +72,19 @@
     {{ super() }}
     <script>
         $(document).ready(function () {
-            const botRefresh = () => {
-                $.ajax({
+            let botRefresh = () => {
+                $.get({
                     url: '/api/botinfo',
                     data: $.param({'name': 'lion'}),
                     success: function (msg) {
                         let m = JSON.parse(msg);
                         let card = $('#bot-card-lion');
-
+                        // coordinates
                         card.find('span.bot-coords-x').text(m['x_loc']);
                         card.find('span.bot-coords-y').text(m['y_loc']);
-
                         // battery
                         let volts = Number.parseFloat(m['battery_volts']).toFixed(2);
                         card.find('span.battery-volts').text(volts);
-
                         let percent = m['battery_percent'];
                         card.find('span.battery-percent').text(percent);
                         card.find('div.battery-indicator')
@@ -98,8 +95,8 @@
                     }
                 });
             };
-            const piRefresh = () => {
-                $.ajax({
+            let piRefresh = () => {
+                $.get({
                     url: '/api/tcp_server',
                     success: function (msg) {
                         let m = JSON.parse(msg);
@@ -115,9 +112,7 @@
             $('form[name=add-office-form]').submit(function (e) {
                 e.preventDefault();
                 console.log($(this).serialize());
-                $.ajax({
-                    type: 'POST',
-                    cache: false,
+                $.post({
                     url: '/api/add_office',
                     data: $(this).serialize(),
                     success: function (msg) {
@@ -130,12 +125,21 @@
                     }
                 });
             });
+
+            $('div.btn[data-action=remove-office]').click(function (e) {
+                let username = $(this).attr('data-username');
+                if (confirm(`Are you sure you want to remove ${username} from the map?`)) {
+                    $.post({
+                        url: '/api/remove_office',
+                        data: {
+                            'username': username,
+                        },
+                        success: function (msg) {
+                            window.location.reload()
+                        }
+                    });
+                }
+            });
         });
-        {#const add_office = form => {#}
-        {#    console.log(form);#}
-        {#    $.post('/api/add_office', form.serialize(), function (data) {#}
-        {#        alert(data);#}
-        {#    });#}
-        {# } #}
     </script>
 {% endblock %}

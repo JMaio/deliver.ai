@@ -112,7 +112,18 @@ def create_app():
 
     @app.route('/send/')
     def send():
-        user = get_current_user_as_person()
+        try:
+            user = get_current_user_as_person()
+        except KeyError:
+            return error_page(
+                error='',
+                icon="fas fa-paper-plane",
+                line1="You're not on this map!",
+                line2="Please contact an administrator "
+                      "to register your office.",
+                button_text="Home page",
+                button_href=url_for('index'),
+            )
         if not user:
             return error_page(
                 error='',
@@ -230,7 +241,18 @@ def create_app():
 
     @app.route('/receive/')
     def receive():
-        user = get_current_user_as_person()
+        try:
+            user = get_current_user_as_person()
+        except KeyError:
+            return error_page(
+                error='',
+                icon="fas fa-paper-plane",
+                line1="You're not on this map!",
+                line2="Please contact an administrator "
+                      "to register your office.",
+                button_text="Home page",
+                button_href=url_for('index'),
+            )
         if not user:
             return error_page(
                 error='',
@@ -248,7 +270,18 @@ def create_app():
 
     @app.route('/history/')
     def history():
-        user = get_current_user_as_person()
+        try:
+            user = get_current_user_as_person()
+        except KeyError:
+            return error_page(
+                error='',
+                icon="fas fa-ticket-alt",
+                line1="You're not on this map!",
+                line2="Please contact an administrator "
+                      "to register your office.",
+                button_text="Home page",
+                button_href=url_for('index'),
+            )
         if not user:
             return error_page(
                 error='',
@@ -411,7 +444,8 @@ def create_app():
                     raise ValueError
                 name = " ".join(s).title()
             except ValueError:
-                return "error - bad username"
+                return "Error - incorrect username. " \
+                       "Please use the 'first.last' format"
             print(f' --- name = {name}')
             new_person = Person(
                 params['username'],
@@ -426,6 +460,10 @@ def create_app():
             except ValueError:
                 return "Cannot add office at (0, 0)!"
             return ''
+        elif args == 'remove_office':
+            username = request.form.get('username')
+            office_map.remove_office(username)
+            return f'Office removed: {username}'
         else:
             return "Invalid api call (POST)"
 

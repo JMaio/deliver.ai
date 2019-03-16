@@ -201,7 +201,9 @@ class Map:
 
     def remove_office(self, person):
         if self.in_map(person):
-            self.offices.pop(person.username)
+            if type(person) is Person:
+                person = person.username
+            self.offices.pop(person)
         else:
             raise KeyError
 
