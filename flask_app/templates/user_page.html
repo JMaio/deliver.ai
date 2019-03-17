@@ -1,8 +1,66 @@
 {% extends 'base.html' %}
 
+{% set bot_here = bot.props.x_loc == user.x and bot.props.y_loc == user.y %}
+
 {% block content %}
     <h1 class="text-center font-weight-light">User profile</h1>
     <hr>
     {% include "components/user_info_card.html" %}
+    <hr>
+    <div class="text-center">
+        {% if bot_here %}
+            <h2 class="font-weight-light">A deliver.ai assistant has arrived
+                for pickup!</h2>
+        {% else %}
+            <p class="font-italic">(Robot door control is enabled once a robot
+                reaches your office...)</p>
+        {% endif %}
+    </div>
+    <div class="text-center btn-group d-flex mx-auto"
+         style="max-width: 500px;">
+        {% for cmd, text, type in [
+            ('OPEN', 'Open', 'success'),
+            ('CLOSE', 'Close', 'outline-danger'),
+        ] %}
+            {% set t = type if bot_here else 'outline-secondary' %}
+            <button class="btn my-4 px-4 py-3 btn-{{ t }}"
+                    {% if not bot_here or cmd == 'CLOSE' %}disabled{% endif %}
+                    style="font-size: 1.5rem"
+                    data-cmd="{{ cmd }}">{{ text }}</button>
+        {% endfor %}
+    </div>
 
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        $(document).ready(function () {
+            $('button[data-cmd]').click(function (e) {
+                if (!$(this).prop('disabled')) {
+                    let cmd = $(this).attr('data-cmd');
+                    // toggle state on open
+                    if (cmd === 'OPEN') {
+                        $(this)
+                            .prop('disabled', true)
+                            .toggleClass('btn-success')
+                            .toggleClass('btn-outline-secondary');
+                        setTimeout(function () {
+                            $('button[data-cmd=CLOSE]')
+                                .prop('disabled', false)
+                                .toggleClass('btn-danger')
+                                .toggleClass('btn-outline-danger')
+                        }, 3000)
+                    } else if (cmd === 'CLOSE') {
+                        // wait a little before engaging 'close' button
+                        $(this)
+                            .prop('disabled', true)
+                            .toggleClass('btn-danger')
+                            .toggleClass('btn-outline-secondary');
+                    }
+                    send_cmd(cmd);
+                }
+            });
+        });
+    </script>
 {% endblock %}

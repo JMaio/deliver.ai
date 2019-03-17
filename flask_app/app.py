@@ -316,6 +316,7 @@ def create_app():
         return render_template(
             'user_page.html',
             user=office_map.get(username),
+            bot=bots.get('lion'),
         )
 
     @app.route('/tickets/')
