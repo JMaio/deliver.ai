@@ -1,4 +1,4 @@
-from tcpcom import TCPClient, TCPServer
+from tcpcom import TCPClient
 import time
 
 
