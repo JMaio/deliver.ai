@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
 
+{% set bot_here = bot.props.x_loc == user.x and bot.props.y_loc == user.y %}
+
 {% block content %}
     <h1 class="mb-3 text-center" style="font-weight: 300">Pending
         deliveries</h1>
@@ -16,6 +18,8 @@
             </div>
         </div>
     {% else %}
+        {% include 'components/user_door_control.html' %}
+        <hr>
         <div class="card mx-auto" style="max-width: 800px">
             <div class="card-header align-items-center">
                 <div class="row">
@@ -43,16 +47,7 @@
                         </li>
                     {% endif %}
                 {% endfor %}
-                {#        <li class="list-group-item">Dapibus ac facilisis in</li>#}
-                {#        <li class="list-group-item">Morbi leo risus</li>#}
-                {#        <li class="list-group-item">Porta ac consectetur ac</li>#}
-                {#        <li class="list-group-item">Vestibulum at eros</li>#}
             </ul>
-        </div>
-        <div class="text-center">
-            <button id="btn-open-box" class="btn btn-success my-5 px-5 py-3"
-                    style="font-size: 2rem" onclick="send_cmd('OPEN')">Confirm
-            </button>
         </div>
     {% endif %}
 {% endblock %}

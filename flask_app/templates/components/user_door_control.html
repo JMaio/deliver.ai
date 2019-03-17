@@ -1,0 +1,22 @@
+<div class="text-center">
+    {% if bot_here %}
+        <h2 class="font-weight-light">A deliver.ai robot has arrived
+            at your office!</h2>
+    {% else %}
+        <p class="font-italic">(Robot door control is enabled once a robot
+            reaches your office...)</p>
+    {% endif %}
+</div>
+<div class="text-center btn-group d-flex mx-auto"
+     style="max-width: 500px;">
+    {% for cmd, text, type in [
+            ('OPEN', 'Open', 'success'),
+            ('CLOSE', 'Close', 'outline-danger'),
+        ] %}
+        {% set t = type if bot_here else 'outline-secondary' %}
+        <button class="btn my-4 px-4 py-3 btn-{{ t }}"
+                {% if not bot_here or cmd == 'CLOSE' %}disabled{% endif %}
+                style="font-size: 1.5rem"
+                data-cmd="{{ cmd }}">{{ text }}</button>
+    {% endfor %}
+</div>

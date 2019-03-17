@@ -130,8 +130,8 @@ def create_app():
                 icon="fas fa-paper-plane",
                 line1="Nothing here!",
                 line2="Please sign in or register to start sending.",
-                button_text="Home page",
-                button_href=url_for('index'),
+                button_text="Log in",
+                button_href=url_for('user.login'),
             )
         r = office_map.get_without_me(user)
         return render_template(
@@ -151,6 +151,7 @@ def create_app():
                 icon="fas fa-robot",
                 line1="Oops...",
                 line2="it looks like that person doesn't exist!",
+                button_href=url_for('send'),
             )
         if request.method == 'GET':
             if username == current_user.username:
@@ -259,12 +260,14 @@ def create_app():
                 icon="fas fa-paper-plane",
                 line1="Nothing here!",
                 line2="Please sign in or register to view your deliveries.",
-                button_text="Home page",
-                button_href=url_for('index'),
+                button_text="Log in",
+                button_href=url_for('user.login'),
             )
         return render_template(
             'receive.html',
-            pending_tickets=tickets.get_received(user)
+            pending_tickets=tickets.get_received(user),
+            user=office_map.get(user.username),
+            bot=bots.get('lion'),
             # offices=offices,
         )
 
@@ -288,8 +291,8 @@ def create_app():
                 icon="fas fa-ticket-alt",
                 line1="Nothing here!",
                 line2="Please sign in or register to view your tickets.",
-                button_text="Home page",
-                button_href=url_for('index')
+                button_text="Log in",
+                button_href=url_for('user.login'),
             )
         sent, received = tickets.get_sent(user), tickets.get_received(user)
         if not sent and not received:
