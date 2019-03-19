@@ -7,6 +7,7 @@ import operator
 from adafruit_lsm303 import LSM303
 from collections import deque
 import threading
+import os
 
 
 class Toddler:
@@ -181,6 +182,10 @@ class Toddler:
             self.server.sendMessage("UPDATEMAP")
         elif (broken_msg[0] == "BEARING"):
             self.current_movment_bearing = int(broken_msg[1])
+        elif (broken_msg[0] == "SHUTDOWN"):
+            self.server.sendMessage("SHUTDOWN")
+            time.sleep(5)
+            os.system("sudo poweroff")
 
     def process_debug_msg(self, msg):
         if (msg == "DEBUGMODEOFF"):

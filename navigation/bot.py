@@ -6,6 +6,7 @@ import time
 import math
 from office import Office  # noqa: F401
 from map import Map
+import os
 
 from tcpcom import TCPClient
 import threading
@@ -378,6 +379,8 @@ class DeliverAIBot():
         elif (broken_msg[0] == "UPDATEMAP"):
             self.my_map = Map()
             self.download_json_map()
+        elif (broken_msg[0] == "POWEROFF"):
+            os.system("sudo poweroff")
         else:
             print("[process_msg] UNPROCESSED MSG received: " + msg)
 
