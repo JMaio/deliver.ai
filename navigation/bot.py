@@ -46,7 +46,7 @@ class DeliverAIBot():
 
         # Add Config Parsing
         self.config = configparser.ConfigParser()
-        self.config.read('../config.txt')
+        self.config.read('/home/robot/config.txt')
 
         self.web_server_ip = self.config['DELIVERAI']['WEB_SERVER_IP']
         self.web_server_port = int(self.config['DELIVERAI']['WEB_SERVER_PORT'])

@@ -27,7 +27,7 @@ class Toddler:
 
         # Get the config from the file
         self.config = configparser.ConfigParser()
-        self.config.read('config.txt')
+        self.config.read('/home/student/config.txt')
 
         # Set up servers and client
         self.server_port = 5010
