@@ -8,6 +8,7 @@ from adafruit_lsm303 import LSM303
 from collections import deque
 import threading
 import os
+import configparser
 
 
 class Toddler:
@@ -24,10 +25,15 @@ class Toddler:
         self.mc = IO.motor_control
         self.sc = IO.servo_control
 
+        # Get the config from the file
+        self.config = configparser.ConfigParser()
+        self.config.read('config.txt')
+
         # Set up servers and client
         self.server_port = 5010
-        self.client_port = 5005
-        self.client_connect_address = "brogdon.inf.ed.ac.uk"
+        self.client_port = int(
+            self.config["DELIVERAI"]['WEB_SERVER_COMM_PORT'])
+        self.client_connect_address = self.config["DELIVERAI"]['WEB_SERVER_IP']
 
         self.server = TCPServer(
             self.server_port,
