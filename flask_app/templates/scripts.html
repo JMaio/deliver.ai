@@ -10,6 +10,28 @@
         console.log(`sending command: '${cmd}'`);
         $.ajax(`/cmd/${cmd}`);
     };
+    let user = null;
+    $.get({
+        url: '/api/current_user',
+        success: function (msg) {
+            console.log(`user (msg) = ${msg}`);
+            user = msg
+        }
+    });
+
+    let alert_checker = () => {
+        let user = current_user();
+        console.log(`user = ${user}`);
+        $.get({
+            url: '/api/confirm',
+            params: {
+                user: user,
+            },
+            success: function (msg) {
+                alert(msg);
+            }
+        })
+    };
 
     $(document).ready(function () {
         // door open / close user controls

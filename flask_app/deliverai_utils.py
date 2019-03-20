@@ -81,9 +81,10 @@ class Ticket:
         self.recipient = recipient  # type: Person
         self.message = message  # type: str
         self.status = Progress()
+        self.pending = True
         self.delivered = False
         if not created:
-            self.created = datetime.utcnow()
+            self.created = datetime.utcnow()  # type: datetime
 
     def __repr__(self):
         return "Ticket[{}] {} --> {}".format(
@@ -108,6 +109,16 @@ class Ticket:
             'status': ('Status', self.stage_text())
         }
 
+    def to_json(self):
+        return {
+            'created': self.created.isoformat(),
+            'pickup_time': self.pickup_time,
+            'sender': self.sender.username,
+            'recipient': self.recipient.username,
+            'message': self.message,
+            'status': self.stage_text(),
+        }
+
 
 class TicketRegister:
     def __init__(self):
@@ -127,6 +138,9 @@ class TicketRegister:
 
     def get_received(self, user):
         return list(filter(lambda x: x.recipient == user, self.tickets))
+
+    def get_all_pending(self, user):
+        return [ticket for ticket in self.get_received(user) if ticket.pending]
 
 
 class Bot:

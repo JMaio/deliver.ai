@@ -375,6 +375,17 @@ def create_app():
         in_log.append(f'[{request.method:4}] {request.url}')
         if args == 'map.json':
             return office_map.to_json()
+        elif args == 'current_user':
+            p = get_current_user_as_person()  # type: Person
+            return p.username if p else ""
+        elif args == 'confirm':
+            user = request.args.get('user', None)
+            try:
+                person = people_map[user]
+            except KeyError:
+                return "[]"
+            pending = tickets.get_all_pending(person)
+            return json.dumps([t.to_json() for t in pending])
         elif args == 'botinfo':
             bot = bots.get(request.args.get('name'), None)  # type: Bot
             if bot:
@@ -419,6 +430,10 @@ def create_app():
                 return bot.to_json()
             else:
                 return "error"
+        elif args == 'confirm':
+            user = request.args.get('user', None)
+            pending = tickets.get_latest_pending(user)
+            return pending[:1]
         elif args == 'changemap':
             n = request.args.get('n')
             if not n:
