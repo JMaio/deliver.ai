@@ -431,9 +431,24 @@ def create_app():
             else:
                 return "error"
         elif args == 'confirm':
-            user = request.args.get('user', None)
-            pending = tickets.get_latest_pending(user)
-            return pending[:1]
+            user = request.form.get('user', None)
+            ticket = request.form.get('ticket', None)
+            accepted = request.form.get('accepted', None)
+            print(f"confirming with ${user} ${ticket} ${accepted}")
+            if not user or not ticket:
+                return "[]"
+            try:
+                pending = tickets.get_all_pending(people_map[user])
+            except KeyError:
+                return "[]"
+            t = [t for t in pending if t.id == ticket]
+            print(f"matched t = {t}")
+
+            if len(t) != 1:
+                return "[]"
+            t[0].pending = False
+            t[0].accepted = accepted == "true"
+            return json.dumps(t[0].to_json())
         elif args == 'changemap':
             n = request.args.get('n')
             if not n:

@@ -75,13 +75,15 @@ class Progress:
 class Ticket:
     def __init__(self, pickup_time, sender, recipient, message,
                  created=None):
-        self.id = datetime.now().strftime("%Y-%m-%d-%H%M%S")
+        self.id = \
+            f'{datetime.now().strftime("%Y-%m-%d-%H%M%S")}_{sender.username}'
         self.pickup_time = pickup_time  # type: datetime
         self.sender = sender  # type: Person
         self.recipient = recipient  # type: Person
         self.message = message  # type: str
         self.status = Progress()
         self.pending = True
+        self.accepted = None
         self.delivered = False
         if not created:
             self.created = datetime.utcnow()  # type: datetime
@@ -117,6 +119,7 @@ class Ticket:
             'recipient': self.recipient.username,
             'message': self.message,
             'status': self.stage_text(),
+            'id': self.id,
         }
 
 
