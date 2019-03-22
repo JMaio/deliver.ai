@@ -52,6 +52,15 @@ $(document).ready(function () {
             let cmd = $(this).attr('data-cmd');
             // toggle state on open
             if (cmd === 'OPEN') {
+                // show the alert dialog here
+                alert("message");
+                prompt("what's the pass?");
+                // take return value and create request to costum url like /api/password
+                // input the User and entered pincode
+
+                // Response will be JSON
+                // parse this response and then if it's something like "accepted"==true, open the box
+                // o/w possibly asked to reenter for a certain number of times
                 $(this)
                     .prop('disabled', true)
                     .toggleClass('btn-success')
