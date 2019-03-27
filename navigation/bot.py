@@ -316,6 +316,7 @@ class DeliverAIBot():
             # If we haven't reached a junction move forward
             if self.cs.color == 5:
                 print("Office reached! Stopping...")
+                self.stopMotors()
                 return "success"
             else:
                 self.moveBearing(bearing, speed)
@@ -348,7 +349,7 @@ class DeliverAIBot():
 
         # the vector associated with each motor
         axes = [
-            (-1, 0),  # B
+            (-1, 0), # B
             (0, 1),  # A
             (1, 0),  # D
             (0, -1)  # C
