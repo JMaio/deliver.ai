@@ -146,6 +146,8 @@ class DeliverAIBot():
         # Add edge back
         self.addPath(temp, next_stop, side)
 
+        #TODO: Send a message to the admin here?
+
     def delPath(self, o1, o2):
         ''' Delete an edge between the two given offices '''
         # Find which neighbour we want
@@ -240,6 +242,7 @@ class DeliverAIBot():
                 count += 1
                 if (count > 10):
                     print("ReRoutePlease")
+                    return "obstacle"
                 time.sleep(5)
 
             if error > 0:  # Too far on black
@@ -251,7 +254,7 @@ class DeliverAIBot():
 
                 self.moveBearing(bearing, 300)
                 if not self.carryOn():
-                    return
+                    return "success"
             elif error < -5:  # Too far on white
                 self.rotate(rot_dir*-25*(abs(error)/76))  # Rotation
                 time.sleep(0.05)
@@ -261,11 +264,11 @@ class DeliverAIBot():
 
                 self.moveBearing(bearing, 300)
                 if not self.carryOn():
-                    return
+                    return "success"
             else:
                 self.moveBearing(bearing, 300)
                 if not self.carryOn():
-                    return
+                    return "success"
 
     def carryOn(self):
         for i in range(5):
