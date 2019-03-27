@@ -278,6 +278,47 @@ class DeliverAIBot():
                 return False
             time.sleep(0.1)
         return True
+    
+    def followLineAlt(self,bearing):
+
+        target = 9 # Reflectance value we aim to maintain by following the black line
+
+        # We begin on a junction, we must move off it
+        while self.cs.color == 5:
+            self.moveBearing(bearing, 350)
+
+        # Line-following
+        while True:
+            error = target - self.rs.value() # Read the reflectance sensor
+
+            # Obstacle-detection
+            while self.stop_event.is_set():
+                count = 0
+                print("Stopping. Obstacle in the way.")
+                self.stopMotors()
+                count += 1
+                if count > 10: # If we have been stuck for > 10 seconds reroute
+                    print("Rerouting...")
+                    return "obstacle"
+                time.sleep(1) # Wait one second before rechecking the obstacle has moved
+
+            # Continue with regular line-following
+            speed = 350
+            if error > 0: # Too far on black
+                # Move front wheel to adjust
+                # TODO: Figure out which motor to move and by how much
+                speed = 200 # Slow down while correcting
+            elif error < -5: # Too far on white
+                # Move front wheel to adjust
+                # TODO: Figure out which motor to move and by how much
+                speed = 200 # Slow down while correcting
+            
+            # If we haven't reached a junction move forward
+            if self.cs.color == 5:
+                print("Office reached! Stopping...")
+                return "success"
+            else:
+                self.moveBearing(bearing, speed)
 
     def rotate(self, angle=90, speed=350):
         ''' Rotate the robot by a given angle from the x-axis '''
