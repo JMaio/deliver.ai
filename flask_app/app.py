@@ -6,8 +6,8 @@ from flask import Flask, render_template, request, url_for, \
 from flask_sqlalchemy import SQLAlchemy
 from flask_user import login_required, UserManager, UserMixin, current_user
 
-from deliverai_utils import Person, Ticket, Bot, Map, TicketRegister
-from server import DeliverAIServer
+from .deliverai_utils import Person, Ticket, Bot, Map, TicketRegister
+from .server import DeliverAIServer
 
 
 # Class-based application configuration
