@@ -11,7 +11,7 @@ $.get({
 let send_cmd = cmd => {
     console.log(`sending command: '${cmd}'`);
     $.get(`/cmd/${cmd}`);
-};
+}
 
 let alert_checker = () => {
     console.log(`user = ${user}`);
@@ -23,8 +23,7 @@ let alert_checker = () => {
         success: function (msg) {
             let pending = JSON.parse(msg);
             for (let ticket of pending) {
-                let text =
-                    `Delivery from: ${ticket.sender} (${ticket.message}) arriving in 2 minutes. Accept?`;
+                let text = `Delivery from: ${ticket.sender} (${ticket.message}) arriving in 2 minutes. Accept?`;
                 console.log(ticket.id);
                 let accept = confirm(text);
                 console.log(accept);
@@ -52,6 +51,23 @@ $(document).ready(function () {
             let cmd = $(this).attr('data-cmd');
             // toggle state on open
             if (cmd === 'OPEN') {
+                let code = input({
+                    message: "Please confirm your pin number!",
+                    length: 4,
+                });
+                $.get({
+                    url: '/api/user_pin',
+                    data: {
+                        user: user,
+                        code: code,
+                    },
+                    success: function (msg) {
+                        // auth successful
+                        alert(`auth success: ${msg}`);
+                        if (msg) {
+                        } else {}
+                    }
+                });
                 $(this)
                     .prop('disabled', true)
                     .toggleClass('btn-success')

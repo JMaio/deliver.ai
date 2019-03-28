@@ -398,6 +398,14 @@ def create_app():
                 'serverIP': tcp_server.server.getIPAddress(),
                 'clientIP': tcp_server.client_ip,
             })
+        elif args == 'user_pin':
+            user = request.args.get('user')
+            try:
+                person = office_map.get(user)
+                code = request.args.get('code')
+                return json.dumps(code == '{}0{}0'.format(person.x, person.y))
+            except KeyError:
+                return "false"
         elif args == 'log_get':
             pass
         elif args == 'log_post':
