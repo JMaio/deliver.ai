@@ -39,7 +39,8 @@ class Person:
 
     @classmethod
     def from_params(cls, params):
-        username, name, x, y = map(str.strip, params.split(','))
+        username, x, y = map(str.strip, params.split(','))
+        name = " ".join(username.split('.')).title()
         return cls(username, name, (int(x), int(y)))
 
     @classmethod

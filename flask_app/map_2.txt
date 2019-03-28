@@ -1,3 +1,8 @@
-ash.ketchum, Ash Ketchum, 1, 0
-misty.water, Misty Water, 1, 1
-blaine.fire, Blaine Fire, 3, 1
+winona.fortree, 0, 4
+ash.ketchum, 2, 0
+misty.water, 4, 0
+blaine.fire, 4, 4
+norman.petalburg, 0, 6
+tate.mossdeep, 2, 2
+liza.mossdeep, 2, 4
+wallace.sootopolis, 2, 4
