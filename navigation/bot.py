@@ -6,17 +6,16 @@ import time
 import math
 from office import Office  # noqa: F401
 from map import Map
+import os
 
 from tcpcom import TCPClient
 import threading
 import urllib.request
 import urllib.parse
+import configparser
 # import requests
 
-server_ip = "abomasnow.inf.ed.ac.uk"
 server_port = 5010
-web_server = "brogdon.inf.ed.ac.uk"
-web_server_port = 5000
 robot_name = "lion"
 
 
@@ -45,10 +44,17 @@ class DeliverAIBot():
         self.rs.MODE_COL_REFLECT
         self.cs.MODE_COL_COLOR
 
+        # Add Config Parsing
+        self.config = configparser.ConfigParser()
+        self.config.read('/home/robot/config.txt')
+
+        self.web_server_ip = self.config['DELIVERAI']['WEB_SERVER_IP']
+        self.web_server_port = int(self.config['DELIVERAI']['WEB_SERVER_PORT'])
+
         # Add Client Connection
 
         self.client_connection = TCPClient(
-            server_ip,
+            self.config['DELIVERAI']['PI_IP'],
             server_port,
             stateChanged=self.onMsgRecv,
             isVerbose=False
@@ -83,7 +89,10 @@ class DeliverAIBot():
 
     def download_json_map(self):
         json_raw = urllib.request.urlopen(
-            "http://{}:{}/api/map.json".format(web_server, web_server_port)
+            "http://{}:{}/api/map.json".format(
+                self.web_server_ip,
+                self.web_server_port
+            )
         )
         self.my_map.addJsonFile(json_raw.read().decode())
         print("[download_json_map] Updated Map - Added " + str(len(self.my_map.offices)))  # noqa: E501
@@ -279,7 +288,8 @@ class DeliverAIBot():
         return shortest
 
     def update_server(self):
-        to_access = "http://" + web_server + ":" + str(web_server_port)
+        to_access = "http://" + self.web_server_ip
+        to_access = to_access + ":" + str(self.web_server_port)
         to_access = to_access + "/api/botinfo"
         to_provide = {
             "name": robot_name,
@@ -378,6 +388,8 @@ class DeliverAIBot():
         elif (broken_msg[0] == "UPDATEMAP"):
             self.my_map = Map()
             self.download_json_map()
+        elif (broken_msg[0] == "POWEROFF"):
+            os.system("sudo poweroff")
         else:
             print("[process_msg] UNPROCESSED MSG received: " + msg)
 

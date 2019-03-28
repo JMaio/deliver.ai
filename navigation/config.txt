@@ -1,0 +1,4 @@
+[DELIVERAI]
+WEB_SERVER_IP = brogdon.inf.ed.ac.uk
+WEB_SERVER_PORT = 5000
+PI_IP = abomasnow.inf.ed.ac.uk
