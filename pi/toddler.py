@@ -200,8 +200,9 @@ class Toddler:
             self.server.sendMessage("UPDATEMAP")
         elif (broken_msg[0] == "BEARING"):
             self.current_movment_bearing = int(broken_msg[1])
-        elif (broken_msg[0] == "SHUTDOWN"):
-            self.server.sendMessage("SHUTDOWN")
+        elif (broken_msg[0] == "POWEROFF"):
+            self.server.sendMessage("POWEROFF")
+            self.client.disconnect()
             time.sleep(5)
             os.system("sudo poweroff")
 
