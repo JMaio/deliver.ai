@@ -39,11 +39,11 @@
                     <li class="list-group-item d-flex justify-content-between align-items-center">
                         <span>{{ person.coordinates }}</span>
                         <span class="text-monospace">{{ person.name }}</span>
-                        <div class="btn btn-outline-light rounded-pill"
+                        <button class="btn btn-outline-light rounded-pill"
                              data-action="remove-office"
                              data-username="{{ person.username }}">
                             <i class="fas fa-minus-circle text-danger"></i>
-                        </div>
+                        </button>
                     </li>
                 {% endfor %}
             </ul>
@@ -72,6 +72,7 @@
     {{ super() }}
     <script>
         $(document).ready(function () {
+            // refresh EV3 status periodically
             let botRefresh = () => {
                 $.get({
                     url: '/api/botinfo',
@@ -95,6 +96,7 @@
                     }
                 });
             };
+            // refresh Pi status periodically
             let piRefresh = () => {
                 $.get({
                     url: '/api/tcp_server',
@@ -108,6 +110,14 @@
             };
             setInterval(botRefresh, 5 * 1000);
             setInterval(piRefresh, 15 * 1000);
+
+            $('button.btn[data-action="power-off"]').click(function (e) {
+                send_cmd("POWEROFF");
+                $(this)
+                    .prop('disabled', true)
+                    .toggleClass('btn-danger')
+                    .toggleClass('btn-outline-secondary');
+            });
 
             $('form[name=add-office-form]').submit(function (e) {
                 e.preventDefault();
@@ -126,7 +136,7 @@
                 });
             });
 
-            $('div.btn[data-action=remove-office]').click(function (e) {
+            $('button.btn[data-action=remove-office]').click(function (e) {
                 let username = $(this).attr('data-username');
                 if (confirm(`Are you sure you want to remove ${username} from the map?`)) {
                     $.post({
