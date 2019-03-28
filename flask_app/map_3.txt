@@ -1,5 +1,8 @@
-ash.ketchum, Ash Ketchum, 0, 1
-misty.water, Misty Water, 1, 1
-sabrina.psychic, Sabrina Psychic, 0, 2
-blaine.fire, Blaine Fire, 1, 2
-giovanni.rocket, Giovanni Rocket, 1, 3
+ash.ketchum, 1, 0
+misty.water, 2, 0
+blaine.fire, 4, 0
+sabrina.psychic, 2, 2
+falkner.violet, 2, 4
+giovanni.rocket, 4, 2
+bugsy.azalea, 4, 4
+jasmine.olivine, 6, 4
