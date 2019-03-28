@@ -57,6 +57,7 @@ class Toddler:
         self.alarm = False
         self.box_open = False
         self.mode_debug_on = False
+        self.box_timeout = None
 
         # Set up sensor + motor values
         self.accel = LSM303()
@@ -89,6 +90,10 @@ class Toddler:
         while (self.getInputs()[1] == 1):
             time.sleep(0.01)
         self.mc.stopMotor(self.door_mech_motor)
+        # If the close command does not get sent after 60 seconds the box will
+        # close its self
+        self.box_timeout = threading.Timer(60.0, self.close_box_motor)
+        self.box_timeout.start()
 
     def close_box_motor(self):
         self.mc.setMotor(self.door_mech_motor, -100)
@@ -176,6 +181,7 @@ class Toddler:
         elif (broken_msg[0] == "OPEN"):
             self.open_box_motor()
         elif (broken_msg[0] == "CLOSE"):
+            self.box_timeout.cancel()  # Cancel the auto-close
             self.close_box_motor()
         elif (broken_msg[0] == "ALARMSTOP"):
             self.server.sendMessage("ALARMSTOP")
