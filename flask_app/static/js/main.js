@@ -51,23 +51,6 @@ $(document).ready(function () {
             let cmd = $(this).attr('data-cmd');
             // toggle state on open
             if (cmd === 'OPEN') {
-                let code = input({
-                    message: "Please confirm your pin number!",
-                    length: 4,
-                });
-                $.get({
-                    url: '/api/user_pin',
-                    data: {
-                        user: user,
-                        code: code,
-                    },
-                    success: function (msg) {
-                        // auth successful
-                        alert(`auth success: ${msg}`);
-                        if (msg) {
-                        } else {}
-                    }
-                });
                 $(this)
                     .prop('disabled', true)
                     .toggleClass('btn-success')
@@ -88,4 +71,22 @@ $(document).ready(function () {
             send_cmd(cmd);
         }
     });
+    // allow only digits in the pin
+    // $("input[type=number]").bind({
+    //     keydown: function(e) {
+    //         if (e.shiftKey === true ) {
+    //             if (e.which == 9) {
+    //                 return true;
+    //             }
+    //             return false;
+    //         }
+    //         if (e.which > 57) {
+    //             return false;
+    //         }
+    //         if (e.which==32) {
+    //             return false;
+    //         }
+    //         return true;
+    //     }
+    // });
 });

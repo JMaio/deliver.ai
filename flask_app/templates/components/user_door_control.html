@@ -7,16 +7,42 @@
             reaches your office...)</p>
     {% endif %}
 </div>
+{% if bot_here %}
+    <div class="text-center">
+        <button class="btn btn-warning" data-target="#open-door-modal"
+                data-toggle="modal">Verify PIN Code
+        </button>
+    </div>
+{% endif %}
 <div class="text-center btn-group d-flex mx-auto"
      style="max-width: 500px;">
     {% for cmd, text, type in [
-            ('OPEN', 'Open', 'success'),
+            ('OPEN', 'Open', 'outline-success'),
             ('CLOSE', 'Close', 'outline-danger'),
         ] %}
         {% set t = type if bot_here else 'outline-secondary' %}
-        <button class="btn my-4 px-4 py-3 btn-{{ t }}"
-                {% if not bot_here or cmd == 'CLOSE' %}disabled{% endif %}
+        <button class="btn my-4 px-4 py-3 btn-{{ t }}" disabled
                 style="font-size: 1.5rem"
                 data-cmd="{{ cmd }}">{{ text }}</button>
     {% endfor %}
+</div>
+<div class="modal fade" id="open-door-modal" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Verify PIN</h5>
+                <button type="button" class="close" data-dismiss="modal"
+                        aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center">
+                <input class="form-control bg-light w-auto mx-auto text-center"
+                       type="number" min="0" max="4" pattern="\d{4}">
+            </div>
+            <div class="modal-footer text-center">
+                <button type="button" class="btn btn-primary">Submit</button>
+            </div>
+        </div>
+    </div>
 </div>
