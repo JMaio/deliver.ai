@@ -110,7 +110,7 @@ class DeliverAIBot():
 
             if bonvoyage == "success":
                 # If successful we update our position
-                self.position = self.my_map.offices[route[i+1]] 
+                self.position = self.my_map.offices[route[i+1]]
                 self.coords = self.position.coords
                 self.update_server()
             elif bonvoyage == "obstacle":
@@ -123,7 +123,7 @@ class DeliverAIBot():
 
         print("Arrived at " + self.position.name + "\'s office.")
         self.send_arrived()
-    
+
     def updateColourSensors(self):
         ''' Update colour/reflectance sensor depending on the bearing
             so colour sensor is in front '''
@@ -179,7 +179,7 @@ class DeliverAIBot():
             print("ERROR. Offices are not neighbours")
             return
         return side # Return the side so we can add the edge back later (when carrying out a reroute)
-    
+
     def addPath(self, o1, o2, side):
         ''' Add an edge between the two given offices '''
         if side == "right":
@@ -287,7 +287,7 @@ class DeliverAIBot():
                 return False
             time.sleep(0.1)
         return True
-    
+
     def followLineAlt(self,bearing):
 
         target = 9 # Reflectance value we aim to maintain by following the black line
@@ -321,7 +321,7 @@ class DeliverAIBot():
                 # Move front wheel to adjust
                 # TODO: Figure out which motor to move and by how much
                 speed = 200 # Slow down while correcting
-            
+
             # If we haven't reached a junction move forward
             if self.cs.color == 5:
                 print("Office reached! Stopping...")
@@ -501,8 +501,15 @@ class DeliverAIBot():
             self.download_json_map()
         elif (broken_msg[0] == "POWEROFF"):
             os.system("sudo poweroff")
+        elif (broken_msg[0] == "AUTOCLOSE"):
+            self.auto_close_announce()
         else:
             print("[process_msg] UNPROCESSED MSG received: " + msg)
+
+    def auto_close_announce(self):
+        ev3.Sound.speak("ALERT, ALERT, the door is about the close!")
+        time.sleep(5)
+        ev3.Sound.beep("-f 350 -d 10 -r 10")
 
     def process_debug_msg(self, msg):
         if (msg == "DEBUGMODEOFF"):

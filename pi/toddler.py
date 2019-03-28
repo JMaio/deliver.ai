@@ -26,7 +26,7 @@ class Toddler:
         self.sc = IO.servo_control
 
         # Get the config from the file
-        self.config = configparser.ConfigParser()
+        self.config = ConfigParser.ConfigParser()
         self.config.read('/home/student/config.txt')
 
         # Set up servers and client
@@ -98,8 +98,13 @@ class Toddler:
         self.mc.stopMotor(self.door_mech_motor)
         # If the close command does not get sent after 60 seconds the box will
         # close its self
-        self.box_timeout = threading.Timer(60.0, self.close_box_motor)
+        self.box_timeout = threading.Timer(60.0, self.auto_close_box)
         self.box_timeout.start()
+
+    def auto_close_box(self):
+        self.server.sendMessage("AUTOCLOSE")
+        time.sleep(10)
+        self.close_box_motor()
 
     def close_box_motor(self):
         self.mc.setMotor(self.door_mech_motor, -100)
