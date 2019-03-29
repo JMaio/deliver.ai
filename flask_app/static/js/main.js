@@ -41,7 +41,8 @@ let alert_checker = () => {
             }
         }
     })
-};
+}
+;
 setInterval(alert_checker, 5 * 1000);
 
 $(document).ready(function () {
@@ -53,24 +54,58 @@ $(document).ready(function () {
             if (cmd === 'OPEN') {
                 $(this)
                     .prop('disabled', true)
-                    .toggleClass('btn-success')
-                    .toggleClass('btn-outline-secondary');
+                    .removeClass('btn-success')
+                    .removeClass('btn-outline-secondary')
+                    .addClass('btn-outline-secondary');
                 setTimeout(function () {
                     $('button[data-cmd=CLOSE]')
                         .prop('disabled', false)
-                        .toggleClass('btn-danger')
-                        .toggleClass('btn-outline-danger')
+                        .removeClass('btn-outline-danger')
+                        .addClass('btn-danger')
                 }, 3000)
             } else if (cmd === 'CLOSE') {
                 // wait a little before engaging 'close' button
                 $(this)
                     .prop('disabled', true)
-                    .toggleClass('btn-danger')
-                    .toggleClass('btn-outline-secondary');
+                    .removeClass('btn-danger')
+                    .addClass('btn-outline-secondary');
             }
             send_cmd(cmd);
         }
     });
+
+    $('form[name=user-pin-code-form]').submit(function (e) {
+        e.preventDefault();
+        $.get({
+            url: '/api/user_pin',
+            data: {
+                user: user,
+                code: $(this).find('#code-box').val(),
+            },
+            success: function (msg) {
+                if (JSON.parse(msg)) {
+                    $('#code-box-feedback')
+                        .text("Correct PIN entered!")
+                        .removeClass('text-danger')
+                        .addClass('text-success');
+                    $('#verify-pin-button').prop('disabled', true);
+                    setTimeout(function () {
+                        $('#open-door-modal').modal('hide')
+                    }, 1500);
+                    $('button[data-cmd=OPEN]')
+                        .prop('disabled', false)
+                        .removeClass('btn-outline-success')
+                        .addClass('btn-success');
+                } else {
+                    // verify failed!
+                    console.log(msg);
+                    $('#code-box-feedback')
+                        .text("PIN code incorrect!")
+                        .addClass('text-danger');
+                }
+            },
+        });
+    })
     // allow only digits in the pin
     // $("input[type=number]").bind({
     //     keydown: function(e) {
