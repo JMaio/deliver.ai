@@ -94,6 +94,7 @@ class DeliverAIBot():
         ''' Travel to the destination from the current position '''
 
         route = self.route(destination)  # List of coordinates to pass through
+        print("Route: ", route)
 
         if len(route) == 1:
             print("Already here!")
@@ -114,7 +115,9 @@ class DeliverAIBot():
                 self.coords = self.position.coords
                 self.update_server()
             elif bonvoyage == "obstacle":
+                print("REROUTING....")
                 self.rerouteMe(destination, self.my_map.offices[route[i+1]])
+                return
             else:
                 print("UNKNOWN ERROR.")
                 return
@@ -147,6 +150,8 @@ class DeliverAIBot():
         self.bearing = (self.bearing + 180) % 360
         self.update_server() # Probably don't need this to be honest
         self.send_bearing(self.bearing) # Or this
+        self.stop_event.clear()
+        self.stop_it_pls = False
         self.updateColourSensors()
         self.followLine(self.bearing)
 
@@ -165,7 +170,7 @@ class DeliverAIBot():
     def delPath(self, o1, o2):
         ''' Delete an edge between the two given offices '''
         # Find which neighbour we want
-        side = [k for (k,v) in o1.getNeighbours().items() if v == o2]
+        side = [k for (k,v) in o1.getNeighbours().items() if v == o2][0]
 
         # Remove the two edges in question
         if side == "right":
@@ -207,7 +212,7 @@ class DeliverAIBot():
         ''' Travel to the given coords from the current position'''
         destination = self.my_map.offices[coord]
         print("Office at (" + str(coord[0]) + "," + str(coord[1]) + ") is " + destination.name)  # noqa: E501
-        print("Heading to " + destination.name + "\'s office at (" + str(coords[0]) + "," + str(coords[1]) + ").")
+        print("Heading to " + destination.name + "\'s office at (" + str(coord[0]) + "," + str(coord[1]) + ").")
         self.goTo(destination)
 
     def getBearing(self, a, b):
@@ -256,14 +261,15 @@ class DeliverAIBot():
 
             error = target - self.rs.value() # Read the reflectance sensor
 
+            count = 0
             # Obstacle-detection
             while self.stop_event.is_set():
-                count = 0
                 print("Stopping. Obstacle in the way.")
                 self.stopMotors()
                 count += 1
                 if count > 10: # If we have been stuck for > 10 seconds reroute
                     print("Rerouting...")
+                    self.stop_event.clear()
                     return "obstacle"
                 time.sleep(1) # Wait one second before rechecking the obstacle has moved
 
@@ -302,11 +308,11 @@ class DeliverAIBot():
 
         # Then rotation
         if self.tape_side == "right":
-            self.moveMotor(motors[0], speed=-175, duration=500)
+            self.moveMotor(motors[0], speed=-250, duration=500)
             self.moveMotor(motors[1], 300, 500)
         else:
             self.moveMotor(motors[0], speed=-300, duration=500)
-            self.moveMotor(motors[1], 175, 500)
+            self.moveMotor(motors[1], 250, 500)
 
     def correctWhite(self, motors):
         ''' Correct the robot's position if we are on white '''
@@ -316,9 +322,9 @@ class DeliverAIBot():
         # Then rotation
         if self.tape_side == "right":
             self.moveMotor(motors[0], speed=-300, duration=500)
-            self.moveMotor(motors[1], 175, 500)
+            self.moveMotor(motors[1], 250, 500)
         else:
-            self.moveMotor(motors[0], speed=-175, duration=500)
+            self.moveMotor(motors[0], speed=-250, duration=500)
             self.moveMotor(motors[1], 300, 500)
     
     def translate(self, fmotors, colour):
@@ -327,11 +333,11 @@ class DeliverAIBot():
         motors = self.whichMotors((self.bearing+90)%360) if colour == "black" else self.whichMotors((self.bearing-90)%360) # Choose the side motors to move
 
         if self.tape_side == "right":
-            self.moveMotor(motors[0], speed=-50, duration=50) 
-            self.moveMotor(motors[1], 50, 50)
+            self.moveMotor(motors[0], speed=-100, duration=50) 
+            self.moveMotor(motors[1], 100, 50)
         else:
-            self.moveMotor(motors[0], speed=50, duration=50) 
-            self.moveMotor(motors[1], -50, 50)
+            self.moveMotor(motors[0], speed=100, duration=50) 
+            self.moveMotor(motors[1], -100, 50)
 
     def moveMotor(self, motor=0, speed=100, duration=500, wait=False):
         ''' Move a specific motor (given speed and duration of movement) '''
@@ -437,7 +443,7 @@ class DeliverAIBot():
             self.status = "STOPPED"
             self.stop_event.set()
             self.stop_it_pls = True
-            print("[process_msg] STOP EVENT MSG RECEIVED")
+            # print("[process_msg] STOP EVENT MSG RECEIVED")
         elif (broken_msg[0] == "CONT"):
             # Start moving again
             self.status = "MOVING"
