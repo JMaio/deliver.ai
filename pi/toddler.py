@@ -9,6 +9,7 @@ from collections import deque
 import threading
 import os
 import ConfigParser
+from motor_mover import MotorMover
 
 
 class Toddler:
@@ -24,6 +25,7 @@ class Toddler:
         self.getSensors = IO.interface_kit.getSensors
         self.mc = IO.motor_control
         self.sc = IO.servo_control
+        self.motor_control = MotorMover()
 
         # Get the config from the file
         self.config = ConfigParser.ConfigParser()
@@ -91,7 +93,7 @@ class Toddler:
 
     def open_box_motor(self):
         self.open_lock()
-        self.mc.setMotor(self.door_mech_motor, 100)
+        self.motor_control.motor_move(self.door_mech_motor, 35)
         # Open lid until bump switched is pressed
         while (self.getInputs()[1] == 1):
             time.sleep(0.01)
@@ -107,7 +109,7 @@ class Toddler:
         self.close_box_motor()
 
     def close_box_motor(self):
-        self.mc.setMotor(self.door_mech_motor, -100)
+        self.motor_control.motor_move(self.door_mech_motor, -35)
         # Close lid until bump switched is pressed
         while (self.getInputs()[2] == 1):
             time.sleep(0.01)
