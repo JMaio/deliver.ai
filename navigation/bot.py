@@ -128,8 +128,13 @@ class DeliverAIBot():
         ''' Update colour/reflectance sensor depending on the bearing
             so colour sensor is in front '''
 
-        cs_port = "in1" if self.bearing == 0 or self.bearing == 90 else "in2"  # noqa: E501
+        if self.bearing == 0 or (self.bearing == 90 and self.tape_side == "right") or (self.bearing == 270 and self.tape_side == "left"):
+            cs_port = "in1"
+        else:
+            cs_port = "in2"
         rs_port = "in2" if cs_port == "in1" else "in1"
+
+
         self.cs = ev3.ColorSensor(cs_port); assert self.cs.connected
         self.rs = ev3.ColorSensor(rs_port); assert self.rs.connected
         self.cs.mode = 'COL-COLOR'
@@ -232,72 +237,23 @@ class DeliverAIBot():
         return new_bearing
 
     def followLine(self, bearing):
-        target = 9
 
-        b_tr = 90 if self.tape_side == "right" else -90
-        w_tr = -b_tr
-        rot_dir = 1 if self.tape_side == "right" else -1
-
-        while self.cs.color == 5:
-            self.moveBearing(bearing, 300)
-            time.sleep(0.5)
-        while True:
-            error = target - self.rs.value()
-
-            while (self.stop_event.is_set()):
-                count = 0
-                print("[follow_line] STOP - Object in Way!")
-                self.stopMotors()
-                count += 1
-                if (count > 10):
-                    print("ReRoutePlease")
-                    return "obstacle"
-                time.sleep(5)
-
-            if error > 0:  # Too far on black
-                self.rotate(rot_dir*25*(error/9))  # Rotation
-                time.sleep(0.05)
-
-                self.moveBearing(bearing+b_tr, 300)  # Translation
-                time.sleep(0.025)
-
-                self.moveBearing(bearing, 300)
-                if not self.carryOn():
-                    return "success"
-            elif error < -5:  # Too far on white
-                self.rotate(rot_dir*-25*(abs(error)/76))  # Rotation
-                time.sleep(0.05)
-
-                self.moveBearing(bearing+w_tr, 300)  # Translation
-                time.sleep(0.025)
-
-                self.moveBearing(bearing, 300)
-                if not self.carryOn():
-                    return "success"
-            else:
-                self.moveBearing(bearing, 300)
-                if not self.carryOn():
-                    return "success"
-
-    def carryOn(self):
-        for i in range(5):
-            if self.cs.color == 5:
-                print("Junction reached! Stopping...")
-                self.stopMotors()
-                return False
-            time.sleep(0.1)
-        return True
-
-    def followLineAlt(self,bearing):
-
-        target = 9 # Reflectance value we aim to maintain by following the black line
+        target = 20 # Reflectance value we aim to maintain by following the black line
+        fmotors = self.whichMotors(bearing) # Motors to move forward on this bearing
 
         # We begin on a junction, we must move off it
         while self.cs.color == 5:
-            self.moveBearing(bearing, 350)
+            self.moveMotor(fmotors[0], speed=-300, duration=500)
+            self.moveMotor(fmotors[1], 300, 500)
 
         # Line-following
         while True:
+            # If we have reached a junction we must stop
+            if self.cs.color == 5:
+                print("Reached an office! Stopping...")
+                self.stopMotors()
+                return "success"
+
             error = target - self.rs.value() # Read the reflectance sensor
 
             # Obstacle-detection
@@ -312,34 +268,70 @@ class DeliverAIBot():
                 time.sleep(1) # Wait one second before rechecking the obstacle has moved
 
             # Continue with regular line-following
-            speed = 350
-            if error > 0: # Too far on black
-                # Move front wheel to adjust
-                # TODO: Figure out which motor to move and by how much
-                speed = 200 # Slow down while correcting
-            elif error < -5: # Too far on white
-                # Move front wheel to adjust
-                # TODO: Figure out which motor to move and by how much
-                speed = 200 # Slow down while correcting
+            
+            if error > 2: # Too far on black
+                self.correctBlack(fmotors)
+                continue
+            elif error < -2: # Too far on white
+                self.correctWhite(fmotors)
+                continue
 
-            # If we haven't reached a junction move forward
-            if self.cs.color == 5:
-                print("Office reached! Stopping...")
-                self.stopMotors()
-                return "success"
-            else:
-                self.moveBearing(bearing, speed)
+            # Otherwise just move forward
+            self.moveMotor(fmotors[0], speed=-300, duration=500)
+            self.moveMotor(fmotors[1], 300, 500)
 
-    def rotate(self, angle=90, speed=350):
-        ''' Rotate the robot by a given angle from the x-axis '''
+    def whichMotors(self, bearing):
+        ''' Return (left,right) motors to turn when moving on bearing '''
 
-        sign = -1 if angle < 0 else 1
-        if self.bearing == 0 or self.bearing == 180:
-            self.moveMotor(0, speed=sign*speed, duration=4200*(abs(angle)/360))
-            self.moveMotor(2, speed=sign*speed, duration=4200*(abs(angle)/360))
+        if bearing == 0:
+            return (0, 2)
+        elif bearing == 90:
+            return (3, 1)
+        elif bearing == 180:
+            return (2, 0)
+        elif bearing == 270:
+            return (1, 3)
         else:
-            self.moveMotor(1, speed=sign*speed, duration=4200*(abs(angle)/360))
-            self.moveMotor(3, speed=sign*speed, duration=4200*(abs(angle)/360))
+            print("ERROR. Illegal bearing.")
+            return None
+
+    def correctBlack(self, motors):
+        ''' Correct the robot's position if we are on black '''
+
+        self.translate(motors, "black") # Translation
+
+        # Then rotation
+        if self.tape_side == "right":
+            self.moveMotor(motors[0], speed=-175, duration=500)
+            self.moveMotor(motors[1], 300, 500)
+        else:
+            self.moveMotor(motors[0], speed=-300, duration=500)
+            self.moveMotor(motors[1], 175, 500)
+
+    def correctWhite(self, motors):
+        ''' Correct the robot's position if we are on white '''
+
+        self.translate(motors, "white") # Translation
+
+        # Then rotation
+        if self.tape_side == "right":
+            self.moveMotor(motors[0], speed=-300, duration=500)
+            self.moveMotor(motors[1], 175, 500)
+        else:
+            self.moveMotor(motors[0], speed=-175, duration=500)
+            self.moveMotor(motors[1], 300, 500)
+    
+    def translate(self, fmotors, colour):
+        ''' Translate the robot to correct its bearing while line-following '''
+
+        motors = self.whichMotors((self.bearing+90)%360) if colour == "black" else self.whichMotors((self.bearing-90)%360) # Choose the side motors to move
+
+        if self.tape_side == "right":
+            self.moveMotor(motors[0], speed=-50, duration=50) 
+            self.moveMotor(motors[1], 50, 50)
+        else:
+            self.moveMotor(motors[0], speed=50, duration=50) 
+            self.moveMotor(motors[1], -50, 50)
 
     def moveMotor(self, motor=0, speed=100, duration=500, wait=False):
         ''' Move a specific motor (given speed and duration of movement) '''
@@ -347,27 +339,6 @@ class DeliverAIBot():
         motor = self.motors[motor]
         assert motor.connected
         motor.run_timed(speed_sp=speed, time_sp=duration)
-
-    def moveBearing(self, direction=0, speed=100):
-        ''' Move the robot on the desired bearing (zeroed on the x-axis) '''
-
-        # 2x4 matrix of vectors of each motor
-        r = math.radians(direction % 360)
-        x = speed * math.cos(r)
-        y = speed * math.sin(r)
-
-        # the vector associated with each motor
-        axes = [
-            (-1, 0), # B
-            (0, 1),  # A
-            (1, 0),  # D
-            (0, -1)  # C
-        ]
-        pairs = [(x * a, y * b) for (a, b) in axes]
-
-        for (m, p) in enumerate(pairs):
-            #  Speed of each motor is sum of its vector components
-            self.moveMotor(m, speed=sum(p), duration=1000)
 
     def stopMotors(self):
         for motor in self.motors:
@@ -548,7 +519,25 @@ class DeliverAIBot():
 
 
 if __name__ == '__main__':
+    # m = Map()
+    # a = Office("a", (1,0))
+    # b = Office("b", (0,1))
+    # c = Office("c", (1,1))
+    # d = Office("d", (0,2))
+    # e = Office("e", (1,2))
+    # f = Office("f", (0,3))
+    # g = Office("g", (1,3))
+    # h = Office("h", (0,4))
+    # i = Office("i", (1,4))
+    # m.addOffices([a,b,c,d,e,f,g,h,i])
+    # mbot = DeliverAIBot(m, m.home)
+    # while(True):
+    #     dest = input("Where shall we go?: ")
+    #     if dest == "home":
+    #         mbot.goTo(m.home)
+    #     else:
+    #         mbot.goTo(globals()[dest])
     m = Map()
-    mbot = DeliverAIBot(m, m.home)
-    while(True):
+    b = DeliverAIBot(m, m.home)
+    while True:
         pass
