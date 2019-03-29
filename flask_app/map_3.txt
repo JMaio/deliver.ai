@@ -2,7 +2,7 @@ ash.ketchum, 1, 0
 misty.water, 2, 0
 blaine.fire, 4, 0
 sabrina.psychic, 2, 2
-falkner.violet, 2, 4
 giovanni.rocket, 4, 2
+falkner.violet, 2, 4
 bugsy.azalea, 4, 4
 jasmine.olivine, 6, 4

@@ -4,6 +4,4 @@ wattson.mauville, 0, 6
 ash.ketchum, 2, 0
 misty.water, 2, 2
 erika.grass, 2, 4
-roxanne.rust, 4, 4
-brawly.dew, 4, 6
-flannery.lavaridge, 4, 6
+roxanne.rust, 2, 6
