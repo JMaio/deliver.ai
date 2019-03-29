@@ -71,17 +71,20 @@
         </div>
     </nav>
 {% endblock %}
-<div class="container align-content-center align-items-center mt-4">
-    {% block content %}
-
-    {% endblock %}
-    <section id="footer">
-        <footer class="align-middle mt-5 mb-3">
-            <hr>
-            <p class="text-dark m-0">&copy; 2019 deliver.ai</p>
-        </footer>
-    </section>
-</div>
+{% block pre_content %}{% endblock %}
+{% block main_container %}
+    <div class="container align-content-center align-items-center mt-4">
+        {% block content %}{% endblock %}
+        {% block footer %}
+            <section id="footer">
+                <footer class="align-middle mt-5 mb-3">
+                    <hr>
+                    <p class="text-dark m-0">&copy; 2019 deliver.ai</p>
+                </footer>
+            </section>
+        {% endblock %}
+    </div>
+{% endblock %}
 
 
 
