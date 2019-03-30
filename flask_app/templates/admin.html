@@ -4,6 +4,7 @@
     <h1 class="mb-3 text-center" style="font-weight: 300">Admin dashboard</h1>
     <hr>
     <div class="row">
+        <!-- Robots -->
         <div class="col-12 col-lg-6">
             <h2 class="font-weight-normal">Robots</h2>
             <div class="row justify-content-start">
@@ -15,6 +16,21 @@
             </div>
             <hr>
         </div>
+        <!-- Map preview -->
+        <div class="col-12 col-lg-6">
+            {% if True %}
+                <div>
+                    <div style="height: 100%; width: 100%;"
+                         class="position-relative">
+                        <img src="{{ url_for('static', filename="img/robot.png") }}"
+                             class="position-absolute col-3"
+                             style="top: calc(20px); left: calc(5%);"/>
+                        <img src="{{ url_for('static', filename="img/office-maps_map1.svg") }}">
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+        <!-- Map -->
         <div class="col-12 col-lg-6">
             <h2 class="font-weight-normal">Map</h2>
             <p class="my-auto mr-2">Add office:</p>
@@ -40,8 +56,8 @@
                         <span>{{ person.coordinates }}</span>
                         <span class="text-monospace">{{ person.name }}</span>
                         <button class="btn btn-outline-light rounded-pill"
-                             data-action="remove-office"
-                             data-username="{{ person.username }}">
+                                data-action="remove-office"
+                                data-username="{{ person.username }}">
                             <i class="fas fa-minus-circle text-danger"></i>
                         </button>
                     </li>
