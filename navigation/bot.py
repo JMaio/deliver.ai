@@ -1,9 +1,7 @@
 #! /usr/bin/env python3
 
 import ev3dev.ev3 as ev3
-import sys  # noqa: F401
 import time
-import math
 from office import Office  # noqa: F401
 from map import Map
 import os
@@ -21,9 +19,9 @@ robot_name = "lion"
 
 class DeliverAIBot():
     def __init__(self, map, init_office):
-        self.my_map = map # Map for this robot
-        self.position = init_office # Starting position
-        self.coords = self.position.coords # Current coordinates of the robot
+        self.my_map = map  # Map for this robot
+        self.position = init_office  # Starting position
+        self.coords = self.position.coords  # Current coordinates of the robot
 
         # Motors which are attached to the EV3
         self.motors = [
@@ -37,8 +35,8 @@ class DeliverAIBot():
         self.bearing = 0
         self.tape_side = "right"
 
-        self.cs = ev3.ColorSensor("in1") # Colour sensor for junction detection
-        self.rs = ev3.ColorSensor("in2") # Reflectance sensor for line-following
+        self.cs = ev3.ColorSensor("in1")  # Colour sensor for junction detection  # noqa: E501
+        self.rs = ev3.ColorSensor("in2")  # Reflectance sensor for line-following  # noqa: E501
         self.rs.MODE_COL_REFLECT
         self.cs.MODE_COL_COLOR
 
@@ -101,13 +99,16 @@ class DeliverAIBot():
             return
 
         for i in range(0, len(route)-1):
-            self.bearing = self.getBearing(route[i], route[i+1]) # Get new bearing to travel on
+            # Get new bearing to travel on
+            self.bearing = self.getBearing(route[i], route[i+1])
 
             self.update_server()
             self.send_bearing(self.bearing)
 
-            self.updateColourSensors() # Update colour/reflectance sensors
-            bonvoyage = self.followLine(self.bearing) # Travel to the next stop on the route
+            # Update colour/reflectance sensors & Travel to the next stop on
+            # the route
+            self.updateColourSensors()
+            bonvoyage = self.followLine(self.bearing)
 
             if bonvoyage == "success":
                 # If successful we update our position
@@ -131,15 +132,20 @@ class DeliverAIBot():
         ''' Update colour/reflectance sensor depending on the bearing
             so colour sensor is in front '''
 
-        if self.bearing == 0 or (self.bearing == 90 and self.tape_side == "right") or (self.bearing == 270 and self.tape_side == "left"):
+        if (
+            self.bearing == 0 or
+            (self.bearing == 90 and self.tape_side == "right") or
+            (self.bearing == 270 and self.tape_side == "left")
+        ):
             cs_port = "in1"
         else:
             cs_port = "in2"
         rs_port = "in2" if cs_port == "in1" else "in1"
 
-
-        self.cs = ev3.ColorSensor(cs_port); assert self.cs.connected
-        self.rs = ev3.ColorSensor(rs_port); assert self.rs.connected
+        self.cs = ev3.ColorSensor(cs_port)
+        assert self.cs.connected
+        self.rs = ev3.ColorSensor(rs_port)
+        assert self.rs.connected
         self.cs.mode = 'COL-COLOR'
         self.rs.mode = 'COL-REFLECT'
 
@@ -148,8 +154,8 @@ class DeliverAIBot():
 
         # Reverse until we hit a junction
         self.bearing = (self.bearing + 180) % 360
-        self.update_server() # Probably don't need this to be honest
-        self.send_bearing(self.bearing) # Or this
+        self.update_server()  # Probably don't need this to be honest
+        self.send_bearing(self.bearing)  # Or this
         self.stop_event.clear()
         self.stop_it_pls = False
         self.updateColourSensors()
@@ -165,12 +171,12 @@ class DeliverAIBot():
         # Add edge back
         self.addPath(temp, next_stop, side)
 
-        #TODO: Send a message to the admin here?
+        # TODO: Send a message to the admin here?
 
     def delPath(self, o1, o2):
         ''' Delete an edge between the two given offices '''
         # Find which neighbour we want
-        side = [k for (k,v) in o1.getNeighbours().items() if v == o2][0]
+        side = [k for (k, v) in o1.getNeighbours().items() if v == o2][0]
 
         # Remove the two edges in question
         if side == "right":
@@ -188,7 +194,9 @@ class DeliverAIBot():
         else:
             print("ERROR. Offices are not neighbours")
             return
-        return side # Return the side so we can add the edge back later (when carrying out a reroute)
+        # Return the side so we can add the edge back later
+        # (when carrying out a reroute)
+        return side
 
     def addPath(self, o1, o2, side):
         ''' Add an edge between the two given offices '''
@@ -212,7 +220,7 @@ class DeliverAIBot():
         ''' Travel to the given coords from the current position'''
         destination = self.my_map.offices[coord]
         print("Office at (" + str(coord[0]) + "," + str(coord[1]) + ") is " + destination.name)  # noqa: E501
-        print("Heading to " + destination.name + "\'s office at (" + str(coord[0]) + "," + str(coord[1]) + ").")
+        print("Heading to " + destination.name + "\'s office at (" + str(coord[0]) + "," + str(coord[1]) + ").")  # noqa: E501
         self.goTo(destination)
 
     def getBearing(self, a, b):
@@ -242,9 +250,10 @@ class DeliverAIBot():
         return new_bearing
 
     def followLine(self, bearing):
-
-        target = 20 # Reflectance value we aim to maintain by following the black line
-        fmotors = self.whichMotors(bearing) # Motors to move forward on this bearing
+        # Reflectance value we aim to maintain by following the black line
+        target = 20
+        # Motors to move forward on this bearing
+        fmotors = self.whichMotors(bearing)
 
         # We begin on a junction, we must move off it
         while self.cs.color == 5:
@@ -259,7 +268,7 @@ class DeliverAIBot():
                 self.stopMotors()
                 return "success"
 
-            error = target - self.rs.value() # Read the reflectance sensor
+            error = target - self.rs.value()  # Read the reflectance sensor
 
             count = 0
             # Obstacle-detection
@@ -267,18 +276,19 @@ class DeliverAIBot():
                 print("Stopping. Obstacle in the way.")
                 self.stopMotors()
                 count += 1
-                if count > 10: # If we have been stuck for > 10 seconds reroute
+                if count > 10:  # If we have been stuck for >10 seconds reroute
                     print("Rerouting...")
                     self.stop_event.clear()
                     return "obstacle"
-                time.sleep(1) # Wait one second before rechecking the obstacle has moved
+                # Wait one second before rechecking the obstacle has moved
+                time.sleep(1)
 
             # Continue with regular line-following
-            
-            if error > 2: # Too far on black
+
+            if error > 2:  # Too far on black
                 self.correctBlack(fmotors)
                 continue
-            elif error < -2: # Too far on white
+            elif error < -2:  # Too far on white
                 self.correctWhite(fmotors)
                 continue
 
@@ -304,7 +314,7 @@ class DeliverAIBot():
     def correctBlack(self, motors):
         ''' Correct the robot's position if we are on black '''
 
-        self.translate(motors, "black") # Translation
+        self.translate(motors, "black")  # Translation
 
         # Then rotation
         if self.tape_side == "right":
@@ -317,7 +327,7 @@ class DeliverAIBot():
     def correctWhite(self, motors):
         ''' Correct the robot's position if we are on white '''
 
-        self.translate(motors, "white") # Translation
+        self.translate(motors, "white")  # Translation
 
         # Then rotation
         if self.tape_side == "right":
@@ -326,17 +336,18 @@ class DeliverAIBot():
         else:
             self.moveMotor(motors[0], speed=-250, duration=500)
             self.moveMotor(motors[1], 300, 500)
-    
+
     def translate(self, fmotors, colour):
         ''' Translate the robot to correct its bearing while line-following '''
 
-        motors = self.whichMotors((self.bearing+90)%360) if colour == "black" else self.whichMotors((self.bearing-90)%360) # Choose the side motors to move
+        # Choose the side motors to move
+        motors = self.whichMotors((self.bearing+90) % 360) if colour == "black" else self.whichMotors((self.bearing-90) % 360)  # noqa: E501
 
         if self.tape_side == "right":
-            self.moveMotor(motors[0], speed=-100, duration=50) 
+            self.moveMotor(motors[0], speed=-100, duration=50)
             self.moveMotor(motors[1], 100, 50)
         else:
-            self.moveMotor(motors[0], speed=100, duration=50) 
+            self.moveMotor(motors[0], speed=100, duration=50)
             self.moveMotor(motors[1], -100, 50)
 
     def moveMotor(self, motor=0, speed=100, duration=500, wait=False):
