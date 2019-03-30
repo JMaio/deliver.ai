@@ -2,6 +2,7 @@ import datetime
 import json
 import os
 
+import requests
 from flask import Flask, render_template, request, url_for, \
     render_template_string, abort
 from flask_sqlalchemy import SQLAlchemy
@@ -78,6 +79,17 @@ def create_app():
 
     def get_map_file(map_no):
         return os.path.join(MAP_DIR, 'map{}.json'.format(map_no))
+
+    def load_json_map(mapfile):
+        # check map exists
+        if not os.path.isfile(mapfile):
+            return False
+        # force update office_map
+        office_map.update({
+            person.username: person for person in
+            Person.from_json_file(mapfile)
+        })
+        return True
 
     people = Person.from_json_file(get_map_file(1))
     people_map = {person.username: person for person in people}
@@ -481,12 +493,8 @@ def create_app():
                 return "error"
             # check map exists
             m = get_map_file(n)
-            if not os.path.isfile(m):
+            if not load_json_map(m):
                 return "error"
-            # force update office_map
-            office_map.update({
-                person.username: person for person in Person.from_json_file(m)
-            })
             print("loaded new map with {} offices"
                   .format(len(office_map.get())))
             tcp_server.send_encoded_message(['UPDATEMAP'])
@@ -501,8 +509,25 @@ def create_app():
             office_map.update({})
             return office_map.to_json()
         elif args == 'savemap':
-            with open(get_map_file(maps['n']), "w+") as f:
-                f.write(office_map.to_json())
+            try:
+                with open(get_map_file(maps['n']), "w+") as f:
+                    f.write(office_map.to_json())
+                return "Map saved successfully!"
+            except Exception as e:
+                return "Save failed! {}".format(e)
+        elif args == 'delete_map':
+            try:
+                n = maps['n']
+                os.remove(get_map_file(n))
+                maps['available'].remove(n)
+
+                maps['n'] = 1
+                m = get_map_file(maps['n'])
+                if not load_json_map(m):
+                    return "error"
+                return "Map deleted!"
+            except Exception as e:
+                return "Delete failed! {}".format(e)
         elif args == 'add_office':
             params = {
                 # send key, value pair only if value present
