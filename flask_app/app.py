@@ -1,5 +1,6 @@
 import datetime
 import json
+import os
 
 from flask import Flask, render_template, request, url_for, \
     render_template_string, abort
@@ -73,7 +74,12 @@ def create_app():
 
     # with app.app_context():
     # users
-    people = Person.from_file("map_1.txt")
+    MAP_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'maps')
+
+    def get_map_file(map_no):
+        return os.path.join(MAP_DIR, 'map_{}.txt'.format(map_no))
+
+    people = Person.from_file(get_map_file(1))
     people_map = {person.username: person for person in people}
     # user = people_map.pop("ash.ketchum", None)
     print("reading office map")
@@ -461,14 +467,19 @@ def create_app():
             n = request.args.get('n')
             if not n:
                 return "error"
-
+            # check map exists
+            m = get_map_file(n)
+            if not os.path.isfile(m):
+                return "error"
             # force update office_map
             office_map.update({person.username: person for person in
-                               Person.from_file("map_{}.txt".format(n))})
+                               Person.from_file(m)})
             print("loaded new map with {} offices"
                   .format(len(office_map.get())))
             tcp_server.send_encoded_message(['UPDATEMAP'])
             return office_map.to_json()
+        elif args == 'newmap':
+            pass
         elif args == 'add_office':
             params = {
                 # send key, value pair only if value present
