@@ -152,6 +152,9 @@ class DeliverAIBot():
     def rerouteMe(self, destination, next_stop):
         ''' Find a different route to the destination '''
 
+        # Notify admin of issue
+        self.notify_server_of_obs(next_stop.coords[0], next_stop.coords[1])
+
         # Reverse until we hit a junction
         self.bearing = (self.bearing + 180) % 360
         self.update_server()  # Probably don't need this to be honest
@@ -170,8 +173,6 @@ class DeliverAIBot():
 
         # Add edge back
         self.addPath(temp, next_stop, side)
-
-        # TODO: Send a message to the admin here?
 
     def delPath(self, o1, o2):
         ''' Delete an edge between the two given offices '''
@@ -385,6 +386,29 @@ class DeliverAIBot():
                     if not shortest or len(newroute) < len(shortest):
                         shortest = newroute
         return shortest
+
+    def notify_server_of_obs(self, x, y):
+        to_access = "http://" + self.web_server_ip
+        to_access = to_access + ":" + str(self.web_server_port)
+        to_access = to_access + "/api/botinfo"
+        to_provide = {
+            "name": robot_name,
+            "x_loc": self.coords[0],
+            "y_loc": self.coords[1],
+            "x_issue": x,
+            "y_issue": y,
+            "state": "OBSTACLEINWAY",
+            "battery_volts": ev3.PowerSupply().measured_volts,
+            "bearing": self.send_bearing(self.bearing)
+        }
+        post_data = urllib.parse.urlencode(to_provide)
+        try:
+            urllib.request.urlopen(
+                url='{}?{}'.format(to_access, post_data),
+                data="TEMP=TEMP".encode()
+            )
+        except:  # noqa: E722
+            print("[notify_server_of_obs] Has failed - failed to connect to: " + to_access)  # noqa: E501
 
     def update_server(self):
         to_access = "http://" + self.web_server_ip
