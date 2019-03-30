@@ -17,19 +17,23 @@
             <hr>
         </div>
         <!-- Map preview -->
-        <div class="col-12 col-lg-6">
-            {% if True %}
-                <div>
-                    <div style="height: 100%; width: 100%;"
-                         class="position-relative">
-                        <img src="{{ url_for('static', filename="img/robot.png") }}"
-                             class="position-absolute col-3"
-                             style="top: calc(20px); left: calc(5%);"/>
-                        <img src="{{ url_for('static', filename="img/office-maps_map1.svg") }}">
-                    </div>
-                </div>
-            {% endif %}
-        </div>
+        {% set bot = bots['lion'] %}
+{#        <div class="col-12 col-lg-6">#}
+{#            {% if True %}#}
+{#                <div>#}
+{#                    <div style="height: 100%; width: 100%;"#}
+{#                         class="position-relative">#}
+{#                        <img src="{{ url_for('static', filename="img/robot.png") }}"#}
+{#                             class="position-absolute col-3"#}
+{#                             style="#}
+{#                                     top: calc(28px + {{ bot.props['y_loc'] }}*25%);#}
+{#                                     left: calc(28px + {{ bot.props['x_loc'] }}*68%);#}
+{#                                     "/>#}
+{#                        <img src="{{ url_for('static', filename="img/office-maps_map1.svg") }}">#}
+{#                    </div>#}
+{#                </div>#}
+{#            {% endif %}#}
+{#        </div>#}
         <!-- Map -->
         <div class="col-12 col-lg-6">
             <h2 class="font-weight-normal">Map</h2>
