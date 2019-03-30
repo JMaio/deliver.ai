@@ -200,11 +200,11 @@ class Bot:
         return str(self)
 
     def battery(self):
-        # estimate battery % - between 5 and 7.5 Volt
+        # estimate battery % - between 5 and 8.21 Volt
         return max(0,
                    min(
                        round(100 * (self.props['battery_volts'] - 5) /
-                             (7.5 - 5)),
+                             (8.21 - 5)),
                        100)
                    )
 
