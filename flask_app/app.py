@@ -86,9 +86,10 @@ def create_app():
     office_map = Map(people_map)
     maps = {
         'n': 1,
-        'available': [int(f[len('map'):f.index('.')]) for f in
-                      os.listdir(MAP_DIR) if
-                      os.path.isfile(os.path.join(MAP_DIR, f)) and 'map' in f],
+        'available': sorted([
+            int(f[len('map'):f.index('.')]) for f in
+            os.listdir(MAP_DIR) if
+            os.path.isfile(os.path.join(MAP_DIR, f)) and 'map' in f]),
     }
 
     def get_current_user_as_person():
@@ -491,7 +492,17 @@ def create_app():
             tcp_server.send_encoded_message(['UPDATEMAP'])
             return office_map.to_json()
         elif args == 'newmap':
-            pass
+            n = len(maps['available']) + 1
+            with open(get_map_file(n), "w+") as f:
+                f.write(json.dumps({'offices': [{}]}))
+            maps['n'] = n
+            maps['available'].append(n)
+            tcp_server.send_encoded_message(['UPDATEMAP'])
+            office_map.update({})
+            return office_map.to_json()
+        elif args == 'savemap':
+            with open(get_map_file(maps['n']), "w+") as f:
+                f.write(office_map.to_json())
         elif args == 'add_office':
             params = {
                 # send key, value pair only if value present

@@ -49,12 +49,16 @@
                         </label>
                     {% endfor %}
                 </div>
-                <button class="btn btn-outline-light rounded-pill">
+                <button class="btn btn-outline-light rounded-pill" onclick="
+                $.post({
+                    url: '/api/newmap',
+                    success: function (msg) {
+                        window.location.reload();
+                    }
+                });">
                     <i class="fas fa-plus-circle fa-lg text-success"></i>
                 </button>
             </div>
-            <p>{{ maps }}</p>
-
             <hr>
             <h2 class="font-weight-normal">Offices</h2>
             <p class="my-auto mr-2">Add office:</p>
@@ -197,7 +201,8 @@
                 console.log(n);
                 $.post({
                     url: '/api/changemap',
-                    data: {n: n}
+                    data: {n: n},
+                    success: window.location.reload(),
                 })
             })
         });

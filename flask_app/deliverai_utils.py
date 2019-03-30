@@ -72,7 +72,7 @@ class Person:
             p['username'],
             p['name'],
             (p['x_coord'], p['y_coord'])
-        ) for p in json.loads(j)['offices']]
+        ) for p in json.loads(j)['offices'] if p]
 
 
 class Progress:
