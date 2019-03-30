@@ -5,7 +5,10 @@ import json
 class Person:
     def __init__(self, username, name, coordinates):
         self.name = name  # type: str
-        self.first, self.last = name.split()
+        try:
+            self.first, self.last = name.split()
+        except ValueError:
+            self.first, self.last = "", ""
         self.username = username  # type: str
         self.coordinates = coordinates  # type: (int, int)
         self.x, self.y = coordinates
@@ -27,6 +30,7 @@ class Person:
     def json_dict(self):
         return {
             'name': self.name,
+            'username': self.username,
             'x_coord': self.x,
             'y_coord': self.y,
         }
@@ -46,8 +50,29 @@ class Person:
     @classmethod
     def from_file(cls, filename):
         with open(filename) as f:
-            return [Person.from_params(person)
+            # return [Person.from_params(person) for person in json.load(f)]
+            return [cls.from_params(person)
                     for person in f.readlines()]
+
+    @classmethod
+    def from_json(cls, json_str):
+        j = json.loads(json_str)
+        name = " ".join(j.username.split('.')).title()
+        return cls(
+            j.username,
+            name,
+            (int(j.x), int(j.y)),
+        )
+
+    @classmethod
+    def from_json_file(cls, file):
+        with open(file) as f:
+            j = f.read()
+        return [cls(
+            p['username'],
+            p['name'],
+            (p['x_coord'], p['y_coord'])
+        ) for p in json.loads(j)['offices']]
 
 
 class Progress:

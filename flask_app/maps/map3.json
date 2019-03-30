@@ -1,0 +1,52 @@
+{
+  "offices": [
+    {
+      "name": "Ash Ketchum",
+      "username": "ash.ketchum",
+      "x_coord": 1,
+      "y_coord": 0
+    },
+    {
+      "name": "Misty Water",
+      "username": "misty.water",
+      "x_coord": 2,
+      "y_coord": 0
+    },
+    {
+      "name": "Blaine Fire",
+      "username": "blaine.fire",
+      "x_coord": 4,
+      "y_coord": 0
+    },
+    {
+      "name": "Sabrina Psychic",
+      "username": "sabrina.psychic",
+      "x_coord": 2,
+      "y_coord": 2
+    },
+    {
+      "name": "Giovanni Rocket",
+      "username": "giovanni.rocket",
+      "x_coord": 4,
+      "y_coord": 2
+    },
+    {
+      "name": "Falkner Violet",
+      "username": "falkner.violet",
+      "x_coord": 2,
+      "y_coord": 4
+    },
+    {
+      "name": "Bugsy Azalea",
+      "username": "bugsy.azalea",
+      "x_coord": 4,
+      "y_coord": 4
+    },
+    {
+      "name": "Jasmine Olivine",
+      "username": "jasmine.olivine",
+      "x_coord": 6,
+      "y_coord": 4
+    }
+  ]
+}
