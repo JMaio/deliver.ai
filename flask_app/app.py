@@ -2,7 +2,6 @@ import datetime
 import json
 import os
 
-import requests
 from flask import Flask, render_template, request, url_for, \
     render_template_string, abort
 from flask_sqlalchemy import SQLAlchemy
