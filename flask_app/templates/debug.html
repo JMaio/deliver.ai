@@ -19,11 +19,11 @@
             ] %}
                 {% include '/components/debug_button.html' %}
             {% endfor %}
-            <h2>Map changer</h2>
-            {% for i in range(1, 4) %}
-                <button class="btn btn-outline-success"
-                        onclick="$.post('/api/changemap?n={{ i }}')">{{ i }}</button>
-            {% endfor %}
+{#            <h2>Map changer</h2>#}
+{#            {% for i in range(1, 4) %}#}
+{#                <button class="btn btn-outline-success"#}
+{#                        onclick="$.post('/api/changemap?n={{ i }}')">{{ i }}</button>#}
+{#            {% endfor %}#}
         </div>
         <div class="col col-12 col-md-8">
             {% for name, props in debug_items.items() %}

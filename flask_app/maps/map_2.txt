@@ -1,7 +1,0 @@
-winona.fortree, 0, 4
-norman.petalburg, 0, 6
-ash.ketchum, 2, 0
-tate.mossdeep, 2, 2
-liza.mossdeep, 2, 4
-misty.water, 4, 0
-blaine.fire, 4, 4

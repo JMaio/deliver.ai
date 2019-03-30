@@ -1,7 +1,0 @@
-brock.rock, 0, 2
-surge.lt, 0, 4
-wattson.mauville, 0, 6
-ash.ketchum, 2, 0
-misty.water, 2, 2
-erika.grass, 2, 4
-roxanne.rust, 2, 6

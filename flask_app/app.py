@@ -84,6 +84,12 @@ def create_app():
     # user = people_map.pop("ash.ketchum", None)
     print("reading office map")
     office_map = Map(people_map)
+    maps = {
+        'n': 1,
+        'available': [int(f[len('map'):f.index('.')]) for f in
+                      os.listdir(MAP_DIR) if
+                      os.path.isfile(os.path.join(MAP_DIR, f)) and 'map' in f],
+    }
 
     def get_current_user_as_person():
         if current_user.is_authenticated:
@@ -114,6 +120,7 @@ def create_app():
             'admin.html',
             bots=bots,
             map=office_map,
+            maps=maps,
         )
 
     @app.route('/send/')
@@ -412,6 +419,8 @@ def create_app():
                 return json.dumps(code == '{}0{}0'.format(person.x, person.y))
             except KeyError:
                 return "false"
+        elif args == 'current_map':
+            return maps['n']
         elif args == 'log_get':
             pass
         elif args == 'log_post':
@@ -421,7 +430,8 @@ def create_app():
 
     @app.route('/api/<string:args>', methods=['POST'])
     def api_post(args):
-        in_log.append(f'[{request.method:4}] {request.url}')
+        in_log.append(
+            f'[{request.method:4}] {request.url} - {dict(request.form)}')
         if args == 'botinfo':
             bot = bots.get(request.args.get('name'), None)  # type: Bot
             if bot:
@@ -464,7 +474,8 @@ def create_app():
             t[0].accepted = accepted == "true"
             return json.dumps(t[0].to_json())
         elif args == 'changemap':
-            n = request.args.get('n')
+            n = request.form.get('n')
+            maps['n'] = int(n)
             if not n:
                 return "error"
             # check map exists

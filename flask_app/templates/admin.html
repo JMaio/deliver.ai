@@ -18,25 +18,45 @@
         </div>
         <!-- Map preview -->
         {% set bot = bots['lion'] %}
-{#        <div class="col-12 col-lg-6">#}
-{#            {% if True %}#}
-{#                <div>#}
-{#                    <div style="height: 100%; width: 100%;"#}
-{#                         class="position-relative">#}
-{#                        <img src="{{ url_for('static', filename="img/robot.png") }}"#}
-{#                             class="position-absolute col-3"#}
-{#                             style="#}
-{#                                     top: calc(28px + {{ bot.props['y_loc'] }}*25%);#}
-{#                                     left: calc(28px + {{ bot.props['x_loc'] }}*68%);#}
-{#                                     "/>#}
-{#                        <img src="{{ url_for('static', filename="img/office-maps_map1.svg") }}">#}
-{#                    </div>#}
-{#                </div>#}
-{#            {% endif %}#}
-{#        </div>#}
+        {#        <div class="col-12 col-lg-6">#}
+        {#            {% if True %}#}
+        {#                <div>#}
+        {#                    <div style="height: 100%; width: 100%;"#}
+        {#                         class="position-relative">#}
+        {#                        <img src="{{ url_for('static', filename="img/robot.png") }}"#}
+        {#                             class="position-absolute col-3"#}
+        {#                             style="#}
+        {#                                     top: calc(28px + {{ bot.props['y_loc'] }}*25%);#}
+        {#                                     left: calc(28px + {{ bot.props['x_loc'] }}*68%);#}
+        {#                                     "/>#}
+        {#                        <img src="{{ url_for('static', filename="img/office-maps_map1.svg") }}">#}
+        {#                    </div>#}
+        {#                </div>#}
+        {#            {% endif %}#}
+        {#        </div>#}
         <!-- Map -->
         <div class="col-12 col-lg-6">
-            <h2 class="font-weight-normal">Map</h2>
+            <h2 class="font-weight-normal">Map manager</h2>
+            <div>
+                <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                    {% for map in maps['available'] %}
+                        {% set this_map = map == maps['n'] %}
+                        <label class="btn btn-outline-success
+                           {% if this_map %}active{% endif %}"
+                               data-map="{{ map }}">
+                            <input type="radio"
+                                   {% if this_map %}checked{% endif %}> {{ map }}
+                        </label>
+                    {% endfor %}
+                </div>
+                <button class="btn btn-outline-light rounded-pill">
+                    <i class="fas fa-plus-circle fa-lg text-success"></i>
+                </button>
+            </div>
+            <p>{{ maps }}</p>
+
+            <hr>
+            <h2 class="font-weight-normal">Offices</h2>
             <p class="my-auto mr-2">Add office:</p>
             <form class="form-inline mb-2" id="add-office-form" method="post"
                   action="/api/add_office" name="add-office-form">
@@ -50,13 +70,15 @@
                            required placeholder="{{ var }}"
                            id="add-office-{{ var }}" name="{{ var }}">
                 {% endfor %}
-                <button type="submit"
-                        class="btn fas fa-plus-circle fa-lg text-success text-decoration-none my-auto"></button>
+                <button class="btn btn-outline-light rounded-pill"
+                        type="submit">
+                    <i class="fas fa-plus-circle fa-lg text-success"></i>
+                </button>
             </form>
             <hr>
             <ul class="list-group d-flex justify-content-center mx-auto">
                 {% for username, person in map.get().items() %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-1">
                         <span>{{ person.coordinates }}</span>
                         <span class="text-monospace">{{ person.name }}</span>
                         <button class="btn btn-outline-light rounded-pill"
@@ -170,6 +192,14 @@
                     });
                 }
             });
+            $('label[data-map]').click(function () {
+                let n = $(this).attr('data-map');
+                console.log(n);
+                $.post({
+                    url: '/api/changemap',
+                    data: {n: n}
+                })
+            })
         });
     </script>
 {% endblock %}
