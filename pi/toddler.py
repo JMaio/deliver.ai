@@ -72,7 +72,8 @@ class Toddler:
         self.accel_data = deque(
             [[0, 0, 0]] * 10)  # accelerometer array used for smoothing
         self.door_mech_motor = 2
-        self.lock_motor = 1
+        self.lock_motor = 3
+        self.motor_speed = 40
 
     def __del__(self):
         print("[__del__] Cleaning Up...")
@@ -93,7 +94,7 @@ class Toddler:
 
     def open_box_motor(self):
         self.open_lock()
-        self.motor_control.motor_move(self.door_mech_motor, 35)
+        self.motor_control.motor_move(self.door_mech_motor, self.motor_speed)
         # Open lid until bump switched is pressed
         while (self.getInputs()[1] == 1):
             time.sleep(0.01)
@@ -109,7 +110,7 @@ class Toddler:
         self.close_box_motor()
 
     def close_box_motor(self):
-        self.motor_control.motor_move(self.door_mech_motor, -35)
+        self.motor_control.motor_move(self.door_mech_motor, -self.motor_speed)
         # Close lid until bump switched is pressed
         while (self.getInputs()[2] == 1):
             time.sleep(0.01)
