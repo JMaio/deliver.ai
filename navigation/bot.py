@@ -157,8 +157,8 @@ class DeliverAIBot():
 
         # Reverse until we hit a junction
         self.bearing = (self.bearing + 180) % 360
-        self.update_server() # Probably don't need this to be honest
-        self.send_bearing(self.bearing) # Or this
+        self.update_server()  # Probably don't need this to be honest
+        self.send_bearing(self.bearing)  # Or this
         self.stop_event.clear()
         self.stop_it_pls = False
         self.tape_side = "right" if self.tape_side == "left" else "left"
@@ -287,10 +287,10 @@ class DeliverAIBot():
 
             # Continue with regular line-following
 
-            if error > 2: # Too far on black
+            if error > 2:  # Too far on black
                 self.correctBlack(fmotors)
                 continue
-            elif error < -2: # Too far on white
+            elif error < -2:  # Too far on white
                 self.correctWhite(fmotors)
                 continue
 
@@ -316,7 +316,7 @@ class DeliverAIBot():
     def correctBlack(self, motors):
         ''' Correct the robot's position if we are on black '''
 
-        self.translate(motors, "black") # Translation
+        self.translate(motors, "black")  # Translation
 
         # Then rotation
         if self.tape_side == "right":
@@ -329,7 +329,7 @@ class DeliverAIBot():
     def correctWhite(self, motors):
         ''' Correct the robot's position if we are on white '''
 
-        self.translate(motors, "white") # Translation
+        self.translate(motors, "white")  # Translation
 
         # Then rotation
         if self.tape_side == "right":
@@ -342,7 +342,7 @@ class DeliverAIBot():
     def translate(self, fmotors, colour):
         ''' Translate the robot to correct its bearing while line-following '''
 
-        motors = self.whichMotors((self.bearing+90)%360) if colour == "black" else self.whichMotors((self.bearing-90)%360) # Choose the side motors to move
+        motors = self.whichMotors((self.bearing+90)%360) if colour == "black" else self.whichMotors((self.bearing-90)%360)  # Choose the side motors to move  # noqa E501
 
         if self.tape_side == "right":
             self.moveMotor(motors[0], speed=-100, duration=75)
