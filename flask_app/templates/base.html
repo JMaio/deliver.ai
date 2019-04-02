@@ -5,7 +5,7 @@
 {% set navigation_bar = [
     (url_for('send'), 'send', 'Send'),
     (url_for('receive'), 'receive', 'Receive'),
-    (url_for('history'), 'history', 'Your tickets'),
+    (url_for('history'), 'history', 'Ticket history'),
 ] -%}
 {#    ('/about/', 'about', 'About'),#}
 {#    ('/help/', 'help', 'Help')#}
@@ -38,7 +38,7 @@
             </button>
 
             <div class="collapse navbar-collapse" id="navbarText">
-                <ul class="navbar-nav mr-auto">
+                <ul class="navbar-nav mr-auto mb-sm-0 mb-2">
                     {% for href, id, caption in navigation_bar %}
                         <li class="nav-item {% if id == active_page %} active{% endif %}">
                             <a class="nav-link"
@@ -49,9 +49,9 @@
 
                 {#                {% set username = user.username|default('ash.ketchum') %}#}
                 {#                     TODO update this to match request data / cookie / session with user#}
-                <div class="btn-group" role="group"
+                <div class="btn-group rounded-pill mx-1" role="group"
                      aria-label="Authentication buttons">
-                    <a class="btn btn-light"
+                    <a class="btn btn-light px-3"
                             {% if current_user.is_authenticated %}
                        href="/user/{{ current_user.username }}"
                             {% else %}
@@ -66,6 +66,11 @@
                         </a>
                         {# <button type="button" class="btn btn-secondary">Right</button>#}
                     {% endif %}
+                </div>
+                <div class="btn-group mx-1">
+                    <a href="" class="btn btn-light rounded-pill">
+                        <i class="fas fa-info px-2"></i>
+                    </a>
                 </div>
             </div>
         </div>
