@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1 class="text-center font-weight-light">deliver.ai info</h1>
+    <hr>
+    <div class="text-center">
+        <p>Thanks for using the <em>deliver.ai</em> service!</p>
+        <p>Here are some useful resources for using the system:</p>
+    </div>
+    {% set info_cards = [
+        ("GitHub", 'https://github.com/JMaio/deliver.ai', 'fa'),
+        ("", '', ''),
+    ] %}
+    <div class="row">
+        {% for name, link, icon in info_cards %}
+            <div class="col-12 col-md-6 col-lg-3">
+                <div class="card d-flex">
+                    <i class="fab fa-github"></i>
+                    <p>{{ name }}</p>
+                    <a href="{{ link }}" class="stretched-link"></a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

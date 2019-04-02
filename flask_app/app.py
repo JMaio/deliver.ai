@@ -379,6 +379,10 @@ def create_app():
             vars=[office_map.offices]
         )
 
+    @app.route('/info/')
+    def info_page():
+        return render_template('info.html')
+
     @app.route('/cmd/<string:command>', methods=['GET', 'POST'])
     def send_cmd(command):
         tcp_server.send_encoded_message(command)
