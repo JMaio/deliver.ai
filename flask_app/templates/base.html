@@ -53,7 +53,7 @@
                     <div class="btn-group rounded-pill mx-1" role="group"
                          aria-label="Authentication buttons">
                         <a class="btn btn-light px-3"
-                           href="{{ url_for('user.login') }}">
+                           href="{{ url_for('user_page', username=current_user.username) }}">
                             {{ current_user.username }}
                         </a>
                         <a href="{{ url_for('user.logout') }}"
