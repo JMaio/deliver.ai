@@ -6,6 +6,18 @@
 /*background-color: #5ca2ec;*/
 /*}*/
 
+.card {
+    border-radius: 1rem;
+}
+
+.btn-group.rounded-pill :first-child {
+    border-radius: 20rem 0 0 20rem;
+}
+
+.btn-group.rounded-pill :last-child {
+    border-radius: 0 20rem 20rem 0;
+}
+
 .card-name {
     font-weight: 300;
     font-size: 1.8rem;
