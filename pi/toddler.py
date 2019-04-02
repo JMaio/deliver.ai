@@ -55,7 +55,7 @@ class Toddler:
             stateChanged=self.on_client_msg
         )
         self.connected = False
-#        self.try_connect()
+        self.try_connect()
 
         # Set up robot state
         self.not_sent_stop = [True, True, True, True]
@@ -73,8 +73,7 @@ class Toddler:
         self.accel = LSM303()
         self.acc_counter = [0,0,0]
         self.calibrated = False
-	self.base_accel = np.array(
-            [-60, 17, 1038])  # values when robot is static
+	self.base_accel = np.zeros(3)  # will be set during calibration
         self.accel_val_num = 20
 	self.last_accels = deque()
 	self.accel_data = deque(
@@ -97,6 +96,7 @@ class Toddler:
         self.detect_obstacle()
         self.accel_alarm()  # needs improvement to be used again
         self.box_alarm()
+	self.open_box_motor()
         time.sleep(self.sleep_time)
 
     # VISION THREAD
@@ -343,15 +343,11 @@ class Toddler:
         print("Vel: x:%.2f   y:%.2f  z:%.2f" % (vel[0], vel[1], vel[2]))
         print("Pos: x:%.2f   y:%.2f  z:%.2f" % (pos[0], pos[1], pos[2]))
 
-        # if abs(accel_x) > 350 or abs(
-        #         accel_y) > 350 or abs(accel_z) > 350:
-        #     if not (self.alarm):
-        #         self.send_alarm()
-        #         self.alarm = True
-        #         print(
-        #             "[accel_alarm] ALARM STATE " + str(accel_x) + " X " +
-        #             str(
-        #                 accel_y) + " Y  " + str(accel_z) + " Z")
+        if abs(vel[2]) > 6 or abs(vel[1]) >10 or abs(vel[0]) > 10:
+            if not (self.alarm):
+                self.send_alarm()
+                self.alarm = True
+                print("[accel_alarm] ALARM STATE -- X: %.2f -- Y: %.2f -- Z: %.2f " % (vel[0], vel[1], vel[2]))
 
         self.last_accel = accel
         self.last_vel = vel
@@ -359,6 +355,7 @@ class Toddler:
     # Smooth accelerometer output by taking the average of the last n values
     # where n = len(self.accel_data)
     def read_smooth_accel(self):
+#        print(self.base_accel)
         cur_accel, _ = self.accel.read()
 	cur_accel = (np.array(cur_accel) - self.base_accel).tolist()  # calibrate input
 
