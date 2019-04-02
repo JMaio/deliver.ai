@@ -27,15 +27,13 @@
                         <div class="btn-toolbar btn-group-toggle"
                              data-toggle="buttons" role="toolbar">
                             <!-- class btn-toolbar  -->
-                            <div class="btn-group mb-1 mx-auto">
-                                <label class="btn btn-outline-info"
-                                       onclick="addTime(0)">
-                                    <input type="radio" name="options"
-                                           id="pickup-now-btn">
-                                    now
-                                </label>
-                            </div>
-                            <div class="btn-group mb-1 mx-auto">
+                            <label class="btn btn-outline-info rounded-pill mb-1 mx-auto"
+                                   onclick="addTime(0)">
+                                <input type="radio" name="options"
+                                       id="pickup-now-btn">
+                                now
+                            </label>
+                            <div class="btn-group rounded-pill mb-1 mx-auto">
                                 {% for d, scale in [
                             (5, 'minutes'),
                             (10, 'minutes'),
