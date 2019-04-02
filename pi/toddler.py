@@ -7,6 +7,10 @@ import operator
 from adafruit_lsm303 import LSM303
 from collections import deque
 import threading
+import os
+import ConfigParser
+from motor_mover import MotorMover
+import numpy as np
 
 
 class Toddler:
@@ -22,11 +26,23 @@ class Toddler:
         self.getSensors = IO.interface_kit.getSensors
         self.mc = IO.motor_control
         self.sc = IO.servo_control
+        self.motor_control = MotorMover()
+
+        # Get the config from the file
+        self.config = ConfigParser.ConfigParser()
+        self.config.read('/home/student/config.txt')
 
         # Set up servers and client
         self.server_port = 5010
-        self.client_port = 5005
-        self.client_connect_address = "brogdon.inf.ed.ac.uk"
+        self.client_port = int(
+            self.config.get(
+                "DELIVERAI",
+                'WEB_SERVER_COMM_PORT'
+            ))
+        self.client_connect_address = self.config.get(
+            "DELIVERAI",
+            'WEB_SERVER_IP'
+        )
 
         self.server = TCPServer(
             self.server_port,
@@ -39,7 +55,7 @@ class Toddler:
             stateChanged=self.on_client_msg
         )
         self.connected = False
-        self.try_connect()
+#        self.try_connect()
 
         # Set up robot state
         self.not_sent_stop = [True, True, True, True]
@@ -50,13 +66,26 @@ class Toddler:
         self.alarm = False
         self.box_open = False
         self.mode_debug_on = False
+        self.box_timeout = None
+        self.sleep_time = 0.05
 
         # Set up sensor + motor values
         self.accel = LSM303()
-        self.accel_data = deque(
-            [[0, 0, 0]] * 10)  # accelerometer array used for smoothing
+        self.acc_counter = [0,0,0]
+        self.calibrated = False
+	self.base_accel = np.array(
+            [-60, 17, 1038])  # values when robot is static
+        self.accel_val_num = 20
+	self.last_accels = deque()
+	self.accel_data = deque(
+            [-1] * self.accel_val_num)  # accelerometer array used for smoothing
+        self.vel = np.zeros(3)
+	self.pos = np.zeros(3)
+	self.last_accel = np.zeros(3)
+        self.last_vel = np.zeros(3)
         self.door_mech_motor = 2
-        self.lock_motor = 1
+        self.lock_motor = 3
+        self.motor_speed = 40
 
     def __del__(self):
         print("[__del__] Cleaning Up...")
@@ -66,9 +95,9 @@ class Toddler:
     # CONTROL THREAD
     def control(self):
         self.detect_obstacle()
-        # self.accel_alarm()    # needs improvement to be used again
+        self.accel_alarm()  # needs improvement to be used again
         self.box_alarm()
-        time.sleep(0.05)
+        time.sleep(self.sleep_time)
 
     # VISION THREAD
     def vision(self):
@@ -77,14 +106,23 @@ class Toddler:
 
     def open_box_motor(self):
         self.open_lock()
-        self.mc.setMotor(self.door_mech_motor, 100)
+        self.motor_control.motor_move(self.door_mech_motor, self.motor_speed)
         # Open lid until bump switched is pressed
         while (self.getInputs()[1] == 1):
             time.sleep(0.01)
         self.mc.stopMotor(self.door_mech_motor)
+        # If the close command does not get sent after 60 seconds the box will
+        # close its self
+        self.box_timeout = threading.Timer(60.0, self.auto_close_box)
+        self.box_timeout.start()
+
+    def auto_close_box(self):
+        self.server.sendMessage("AUTOCLOSE")
+        time.sleep(10)
+        self.close_box_motor()
 
     def close_box_motor(self):
-        self.mc.setMotor(self.door_mech_motor, -100)
+        self.motor_control.motor_move(self.door_mech_motor, -self.motor_speed)
         # Close lid until bump switched is pressed
         while (self.getInputs()[2] == 1):
             time.sleep(0.01)
@@ -169,6 +207,7 @@ class Toddler:
         elif (broken_msg[0] == "OPEN"):
             self.open_box_motor()
         elif (broken_msg[0] == "CLOSE"):
+            self.box_timeout.cancel()  # Cancel the auto-close
             self.close_box_motor()
         elif (broken_msg[0] == "ALARMSTOP"):
             self.server.sendMessage("ALARMSTOP")
@@ -181,6 +220,11 @@ class Toddler:
             self.server.sendMessage("UPDATEMAP")
         elif (broken_msg[0] == "BEARING"):
             self.current_movment_bearing = int(broken_msg[1])
+        elif (broken_msg[0] == "POWEROFF"):
+            self.server.sendMessage("POWEROFF")
+            self.client.disconnect()
+            time.sleep(5)
+            os.system("sudo poweroff")
 
     def process_debug_msg(self, msg):
         if (msg == "DEBUGMODEOFF"):
@@ -213,7 +257,8 @@ class Toddler:
         # If the dirrection is NOT (current_movment_bearing + 2 mod 4) i.e.
         # behind us - we can send stop
         if (dir != ((self.current_movment_bearing + 2) % 4)):
-            # print("[stop] Obstacle in {} - currently facing {}".format(dir, self.current_movment_bearing))  # noqa: E501
+            # print("[stop] Obstacle in {} - currently facing {}".format(
+            # dir, self.current_movment_bearing))  # noqa: E501
             self.not_sent_stop[dir] = False
             self.server.sendMessage("STOP")
 
@@ -249,33 +294,104 @@ class Toddler:
     def send_alarm(self):
         self.server.sendMessage("ALARM")
 
+    def integrate_accel(self, accel, last_accel):
+
+        last_accel = np.array(last_accel)
+        delta_vel = (accel + ((accel - last_accel) / 2.0)) * self.sleep_time
+        self.vel = np.array(delta_vel) + self.vel
+
+	# Check if no accel in any direction and increase corresponding counter
+        for i in range(len(accel)):
+            if accel[i] == 0:
+		self.acc_counter[i] += 1
+            else:
+                self.acc_counter[i] = 0
+        
+        # If the last 25 values for one direction have been 0, set velocity to 0
+        for i in range(len(self.acc_counter)):
+            if self.acc_counter[i] > 15:
+                self.vel[i] = 0
+
+	return np.array(self.vel)
+
+    def integrate_vel(self, vel, last_vel):
+        vel = np.array(vel)
+        last_vel = np.array(last_vel)
+
+        delta_pos = (vel + ((vel - last_vel) / 2.0)) * self.sleep_time
+        self.pos = np.array(delta_pos + self.pos)
+	return np.array(self.pos)
+
     # Checks for unexpected movement/robot being stolen - using accelerometer
     def accel_alarm(self):
-        cur_accel = self.read_smooth_accel()
-        accel_x, accel_y, accel_z = cur_accel
-        base_x, base_y, base_z = (-32, 31, 1075)  # values when robot is static
-        if abs(accel_x - base_x) > 350 or abs(
-                accel_y - base_y) > 350 or abs(accel_z - base_z) > 350:
-            if not (self.alarm):
-                self.send_alarm()
-                self.alarm = True
-                print(
-                    "[accel_alarm] ALARM STATE " + str(accel_x) + " X " + str(
-                        accel_y) + " Y  " + str(accel_z) + " Z")
+        if not self.calibrated:
+	    self.calibrate_accel()
+	    return;
+
+	cur_accel = self.read_smooth_accel()
+
+        # If we haven't had enough readings for averaging - don't continue
+        if (cur_accel == -1):
+            return
+
+        accel = np.array(cur_accel)
+        vel = self.integrate_accel(accel, self.last_accel)
+        pos = self.integrate_vel(vel, self.last_vel)
+        print("--------------------------------------------------------------")
+        print("Accel: x:%.2f   y:%.2f  z:%.2f" % (
+            accel[0], accel[1], accel[2]))
+        print("Vel: x:%.2f   y:%.2f  z:%.2f" % (vel[0], vel[1], vel[2]))
+        print("Pos: x:%.2f   y:%.2f  z:%.2f" % (pos[0], pos[1], pos[2]))
+
+        # if abs(accel_x) > 350 or abs(
+        #         accel_y) > 350 or abs(accel_z) > 350:
+        #     if not (self.alarm):
+        #         self.send_alarm()
+        #         self.alarm = True
+        #         print(
+        #             "[accel_alarm] ALARM STATE " + str(accel_x) + " X " +
+        #             str(
+        #                 accel_y) + " Y  " + str(accel_z) + " Z")
+
+        self.last_accel = accel
+        self.last_vel = vel
 
     # Smooth accelerometer output by taking the average of the last n values
     # where n = len(self.accel_data)
     def read_smooth_accel(self):
         cur_accel, _ = self.accel.read()
+	cur_accel = (np.array(cur_accel) - self.base_accel).tolist()  # calibrate input
+
+        # To filter out mechanical noise
+	for i in range(len(cur_accel)):	
+	    if cur_accel[i] > -30 and cur_accel[i] < 30:
+        	cur_accel[i] = 0
+
         self.accel_data.pop()
         self.accel_data.appendleft(cur_accel)
         # For the first len(accel_data) values the average is not
-        # representative - just return current value
-        if [0, 0, 0] in self.accel_data:
-            return cur_accel
+        # representative - return -1 to represent that
+        if -1 in self.accel_data:
+	    return -1
 
         av_accel = [sum(i) / float(len(i)) for i in zip(*self.accel_data)]
+
+	for i in range(len(av_accel)):	
+	    if av_accel[i]< 20 and av_accel[i] > -20:
+	        av_accel[i] = 0
+
         return av_accel
+
+    def calibrate_accel(self):
+	cur_accel, _ = self.accel.read()
+	if -1 in self.accel_data:
+            self.accel_data.pop()
+            self.accel_data.appendleft(cur_accel)
+	else:
+	    av_accel = [sum(i) / float(len(i)) for i in zip(*self.accel_data)]
+	    self.base_accel = np.array(av_accel)
+	    self.calibrated = True
+	    self.accel_data = deque([-1] * self.accel_val_num)    # reset data_accel deque
 
     def test_conn_ev3(self):
         self.server.sendMessage("DEBUGMODEON")
@@ -284,3 +400,4 @@ class Toddler:
         lines = file_in.readlines()
         for l in lines:
             self.server.sendMessage(l)
+
