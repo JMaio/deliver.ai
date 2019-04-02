@@ -2,11 +2,13 @@
 
 {% block content %}
     <h1 class="mb-3 text-center" style="font-weight: 300">Send to</h1>
-    <input class="mb-3 mx-auto form-control ds-input" style="max-width: 300px;" id="recipient-search"
+    <input class="mb-3 mx-auto form-control ds-input" style="max-width: 300px;"
+           id="recipient-search"
            title="Search recipients"
+           onkeyup="searchRecipients()"
            type="search" placeholder="Search...">
     <hr>
-    <div class="row">
+    <div class="row" id="recipients-list">
         {% for _, recipient in recipients.items() %}
             <div class="col-12 col-sm-6 col-lg-3">
                 {% with user = recipient %}
@@ -15,5 +17,32 @@
             </div>
         {% endfor %}
     </div>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        let searchRecipients = () => {
+            // Declare variables
+            var input, filter, ul, li, a, i, txtValue;
+            input = $('#recipient-search');
+            filter = input.val().toUpperCase();
+            ul = $('#recipients-list');
+            li = ul.find('.person-card');
+
+            console.log(li);
+            // Loop through all list items, and hide those who don't match the search query
+            for (i = 0; i < li.length; i++) {
+                a = li[i];
+                $(a).find("div.person-name");
+                txtValue = a.textContent || a.innerText;
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    li[i].style.display = "";
+                } else {
+                    li[i].style.display = "none";
+                }
+            }
+        };
+    </script>
 {% endblock %}
 
