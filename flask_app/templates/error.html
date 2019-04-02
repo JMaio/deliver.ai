@@ -3,12 +3,15 @@
 {% block title %}Oh noes!{% endblock %}
 
 {% block content %}
-    <div class="container text-center d-flex flex-column justify-content-center my-5" id="error">
+    <div class="container text-center d-flex flex-column justify-content-center my-5"
+         id="error">
         <div>
             <i class="{{ icon }} fa-5x text-muted mb-3"></i>
-            <h1 class="font-weight-light mb-3" style="font-size: 52pt">{{ line1 | safe }}</h1>
+            <h1 class="font-weight-light mb-3"
+                style="font-size: 52pt">{{ line1 | safe }}</h1>
             <h2 class="font-weight-normal mb-4">{{ line2 | safe }}</h2>
-            <a href="{{ button_href }}" class="btn btn-info mb-5 px-3 py-2">
+            <a href="{{ button_href }}"
+               class="btn btn-info rounded-pill mb-5 px-4 py-2">
                 <h5 class="mb-0 btn-upper">{{ button_text }}</h5>
             </a>
             <br>

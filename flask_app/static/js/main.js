@@ -11,7 +11,7 @@ $.get({
 let send_cmd = cmd => {
     console.log(`sending command: '${cmd}'`);
     $.get(`/cmd/${cmd}`);
-}
+};
 
 let alert_checker = () => {
     console.log(`user = ${user}`);
@@ -41,8 +41,8 @@ let alert_checker = () => {
             }
         }
     })
-}
-;
+};
+
 setInterval(alert_checker, 5 * 1000);
 
 $(document).ready(function () {
@@ -98,7 +98,6 @@ $(document).ready(function () {
                         .addClass('btn-success');
                 } else {
                     // verify failed!
-                    console.log(msg);
                     $('#code-box-feedback')
                         .text("PIN code incorrect!")
                         .addClass('text-danger');
@@ -106,22 +105,4 @@ $(document).ready(function () {
             },
         });
     })
-    // allow only digits in the pin
-    // $("input[type=number]").bind({
-    //     keydown: function(e) {
-    //         if (e.shiftKey === true ) {
-    //             if (e.which == 9) {
-    //                 return true;
-    //             }
-    //             return false;
-    //         }
-    //         if (e.which > 57) {
-    //             return false;
-    //         }
-    //         if (e.which==32) {
-    //             return false;
-    //         }
-    //         return true;
-    //     }
-    // });
 });
