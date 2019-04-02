@@ -1,0 +1,3 @@
+[DELIVERAI]
+WEB_SERVER_IP = brogdon.inf.ed.ac.uk
+WEB_SERVER_COMM_PORT = 5005

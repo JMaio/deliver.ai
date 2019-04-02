@@ -1,30 +1,27 @@
 #! /usr/bin/env python3
 
 import ev3dev.ev3 as ev3
-import sys  # noqa: F401
 import time
-import math
 from office import Office  # noqa: F401
 from map import Map
+import os
 
 from tcpcom import TCPClient
 import threading
 import urllib.request
 import urllib.parse
+import configparser
 # import requests
 
-server_ip = "abomasnow.inf.ed.ac.uk"
 server_port = 5010
-web_server = "brogdon.inf.ed.ac.uk"
-web_server_port = 5000
 robot_name = "lion"
 
 
 class DeliverAIBot():
     def __init__(self, map, init_office):
-        self.my_map = map
-        self.position = init_office
-        self.coords = self.position.coords
+        self.my_map = map  # Map for this robot
+        self.position = init_office  # Starting position
+        self.coords = self.position.coords  # Current coordinates of the robot
 
         # Motors which are attached to the EV3
         self.motors = [
@@ -38,35 +35,35 @@ class DeliverAIBot():
         self.bearing = 0
         self.tape_side = "right"
 
-        self.cs = ev3.ColorSensor("in1")
-        # assert self.cs.connected  # Reflectance sensor for line-following
-        self.rs = ev3.ColorSensor("in2")
-        # assert self.rs.connected  # Colour sensor for junction detection
+        self.cs = ev3.ColorSensor("in1")  # Colour sensor for junction detection  # noqa: E501
+        self.rs = ev3.ColorSensor("in2")  # Reflectance sensor for line-following  # noqa: E501
         self.rs.MODE_COL_REFLECT
         self.cs.MODE_COL_COLOR
 
-        # Add Client Connection
+        # Add Config Parsing
+        self.config = configparser.ConfigParser()
+        self.config.read('/home/robot/config.txt')
 
+        self.web_server_ip = self.config['DELIVERAI']['WEB_SERVER_IP']
+        self.web_server_port = int(self.config['DELIVERAI']['WEB_SERVER_PORT'])
+
+        # Add Client Connection
         self.client_connection = TCPClient(
-            server_ip,
+            self.config['DELIVERAI']['PI_IP'],
             server_port,
             stateChanged=self.onMsgRecv,
             isVerbose=False
         )
-
         self.connected = False
-
         self.try_connect()
 
         # Set up threading for non blocking line following
-
         self.movment_thread = None
         self.stop_event = threading.Event()
         self.stop_event.clear()
         self.stop_it_pls = False
 
         # Set up Alarm variables
-
         self.alarm_active = False
         self.alarm_on = False
 
@@ -83,7 +80,10 @@ class DeliverAIBot():
 
     def download_json_map(self):
         json_raw = urllib.request.urlopen(
-            "http://{}:{}/api/map.json".format(web_server, web_server_port)
+            "http://{}:{}/api/map.json".format(
+                self.web_server_ip,
+                self.web_server_port
+            )
         )
         self.my_map.addJsonFile(json_raw.read().decode())
         print("[download_json_map] Updated Map - Added " + str(len(self.my_map.offices)))  # noqa: E501
@@ -93,44 +93,143 @@ class DeliverAIBot():
 
         route = self.route(destination)  # List of coordinates to pass through
         print("Route: ", route)
+
         if len(route) == 1:
             print("Already here!")
             return
+
         for i in range(0, len(route)-1):
-            # print("Current bearing: ", self.bearing)
+            # Get new bearing to travel on
             self.bearing = self.getBearing(route[i], route[i+1])
+
             self.update_server()
-            # print("Going to: ", route[i+1])
-            # print("New bearing: ", self.bearing)
-            # print("TAPE SIDE: ", self.tape_side)
             self.send_bearing(self.bearing)
-            cs_port = "in1" if self.bearing == 0 or self.bearing == 90 else "in2"  # noqa: E501
-            rs_port = "in2" if cs_port == "in1" else "in1"
-            self.cs = ev3.ColorSensor(cs_port)
-            assert self.cs.connected
-            self.rs = ev3.ColorSensor(rs_port)
-            assert self.rs.connected
-            self.cs.mode = 'COL-COLOR'
-            self.rs.mode = 'COL-REFLECT'
-            self.followLine(self.bearing)
-            self.position = self.my_map.offices[route[i+1]]
-            self.coords = self.position.coords
-            self.update_server()
-            time.sleep(0.25)
+
+            # Update colour/reflectance sensors & Travel to the next stop on
+            # the route
+            self.updateColourSensors()
+            bonvoyage = self.followLine(self.bearing)
+
+            if bonvoyage == "success":
+                # If successful we update our position
+                self.position = self.my_map.offices[route[i+1]]
+                self.coords = self.position.coords
+                self.update_server()
+            elif bonvoyage == "obstacle":
+                print("REROUTING....")
+                self.rerouteMe(destination, self.my_map.offices[route[i+1]])
+                return
+            else:
+                print("UNKNOWN ERROR.")
+                return
+
+            time.sleep(0.1)
+
         print("Arrived at " + self.position.name + "\'s office.")
         self.send_arrived()
 
+    def updateColourSensors(self):
+        ''' Update colour/reflectance sensor depending on the bearing
+            so colour sensor is in front '''
+
+        if (
+            self.bearing == 0 or
+            (self.bearing == 90 and self.tape_side == "right") or
+            (self.bearing == 270 and self.tape_side == "left")
+        ):
+            cs_port = "in1"
+        else:
+            cs_port = "in2"
+        rs_port = "in2" if cs_port == "in1" else "in1"
+
+        self.cs = ev3.ColorSensor(cs_port)
+        assert self.cs.connected
+        self.rs = ev3.ColorSensor(rs_port)
+        assert self.rs.connected
+        self.cs.mode = 'COL-COLOR'
+        self.rs.mode = 'COL-REFLECT'
+
+    def rerouteMe(self, destination, next_stop):
+        ''' Find a different route to the destination '''
+
+        # Notify admin of issue
+        self.notify_server_of_obs(next_stop.coords[0], next_stop.coords[1])
+
+        # Reverse until we hit a junction
+        self.bearing = (self.bearing + 180) % 360
+        self.update_server()  # Probably don't need this to be honest
+        self.send_bearing(self.bearing)  # Or this
+        self.stop_event.clear()
+        self.stop_it_pls = False
+        self.tape_side = "right" if self.tape_side == "left" else "left"
+        self.updateColourSensors()
+        self.followLine(self.bearing)
+
+        # Delete edge
+        temp = self.position
+        side = self.delPath(self.position, next_stop)
+
+        # Call goTo to destination
+        self.goTo(destination)
+
+        # Add edge back
+        self.addPath(temp, next_stop, side)
+
+    def delPath(self, o1, o2):
+        ''' Delete an edge between the two given offices '''
+        # Find which neighbour we want
+        side = [k for (k, v) in o1.getNeighbours().items() if v == o2][0]
+
+        # Remove the two edges in question
+        if side == "right":
+            o1.setRightNeighbour(None)
+            o2.setLeftNeighbour(None)
+        elif side == "left":
+            o1.setLeftNeighbour(None)
+            o2.setRightNeighbour(None)
+        elif side == "upper":
+            o1.setUpperNeighbour(None)
+            o2.setLowerNeighbour(None)
+        elif side == "lower":
+            o1.setLowerNeighbour(None)
+            o2.setUpperNeighbour(None)
+        else:
+            print("ERROR. Offices are not neighbours")
+            return
+        # Return the side so we can add the edge back later
+        # (when carrying out a reroute)
+        return side
+
+    def addPath(self, o1, o2, side):
+        ''' Add an edge between the two given offices '''
+        if side == "right":
+            o1.setRightNeighbour(o2)
+            o2.setLeftNeighbour(o1)
+        elif side == "left":
+            o1.setLeftNeighbour(o2)
+            o2.setRightNeighbour(o1)
+        elif side == "upper":
+            o1.setUpperNeighbour(o2)
+            o2.setLowerNeighbour(o1)
+        elif side == "lower":
+            o1.setLowerNeighbour(o2)
+            o2.setUpperNeighbour(o1)
+        else:
+            print("ERROR. Invalid side.")
+            return
+
     def goToCoord(self, coord=(0, 0)):
-        ''' Travel to the destination from the current position
-        based on corrds'''
+        ''' Travel to the given coords from the current position'''
         destination = self.my_map.offices[coord]
-        print("Office at " + str(coord[0]) + " ," + str(coord[1]) + " is " + destination.name)  # noqa: E501
+        print("Office at (" + str(coord[0]) + "," + str(coord[1]) + ") is " + destination.name)  # noqa: E501
+        print("Heading to " + destination.name + "\'s office at (" + str(coord[0]) + "," + str(coord[1]) + ").")  # noqa: E501
         self.goTo(destination)
 
     def getBearing(self, a, b):
         ''' Return the bearing (cardinal direction) to move in to
         get from a to b '''
 
+        # Find the new bearing to travel on
         if a[0] == b[0]:
             if b[1] > a[1]:
                 new_bearing = 90
@@ -142,6 +241,7 @@ class DeliverAIBot():
             else:
                 new_bearing = 180
 
+        # Update which side the black line will be on in relation to the robot
         diff = (self.bearing - new_bearing) % 360
         if self.tape_side == "right":
             if diff == 180 or diff == 90:
@@ -152,74 +252,104 @@ class DeliverAIBot():
         return new_bearing
 
     def followLine(self, bearing):
-        target = 9
-        # if self.tape_side == "right":
-        #   b_tr = 90 if self.bearing == 0 or self.bearing == 90 else -90
-        # else:
-        #   b_tr = -90 if self.bearing == 0 or self.bearing == 90 else 90
-        b_tr = 90 if self.tape_side == "right" else -90
-        w_tr = -b_tr
-        rot_dir = 1 if self.tape_side == "right" else -1
+        # Reflectance value we aim to maintain by following the black line
+        target = 20
+        # Motors to move forward on this bearing
+        fmotors = self.whichMotors(bearing)
 
+        # We begin on a junction, we must move off it
         while self.cs.color == 5:
-            self.moveBearing(bearing, 300)
-            time.sleep(0.5)
-        while True:
-            error = target - self.rs.value()
+            self.moveMotor(fmotors[0], speed=-300, duration=500)
+            self.moveMotor(fmotors[1], 300, 500)
 
-            while (self.stop_event.is_set()):
-                count = 0
-                print("[follow_line] STOP - Object in Way!")
+        # Line-following
+        while True:
+            # If we have reached a junction we must stop
+            if self.cs.color == 5:
+                print("Reached an office! Stopping...")
+                self.stopMotors()
+                return "success"
+
+            error = target - self.rs.value()  # Read the reflectance sensor
+
+            count = 0
+            # Obstacle-detection
+            while self.stop_event.is_set():
+                print("Stopping. Obstacle in the way.")
                 self.stopMotors()
                 count += 1
-                if (count > 10):
-                    print("ReRoutePlease")
-                time.sleep(5)
+                if count > 10:  # If we have been stuck for >10 seconds reroute
+                    print("Rerouting...")
+                    self.stop_event.clear()
+                    return "obstacle"
+                # Wait one second before rechecking the obstacle has moved
+                time.sleep(1)
 
-            if error > 0:  # Too far on black
-                self.rotate(rot_dir*25*(error/9))  # Rotation
-                time.sleep(0.05)
+            # Continue with regular line-following
 
-                self.moveBearing(bearing+b_tr, 300)  # Translation
-                time.sleep(0.025)
+            if error > 2:  # Too far on black
+                self.correctBlack(fmotors)
+                continue
+            elif error < -2:  # Too far on white
+                self.correctWhite(fmotors)
+                continue
 
-                self.moveBearing(bearing, 300)
-                if not self.carryOn():
-                    return
-            elif error < -5:  # Too far on white
-                self.rotate(rot_dir*-25*(abs(error)/76))  # Rotation
-                time.sleep(0.05)
+            # Otherwise just move forward
+            self.moveMotor(fmotors[0], speed=-300, duration=500)
+            self.moveMotor(fmotors[1], 300, 500)
 
-                self.moveBearing(bearing+w_tr, 300)  # Translation
-                time.sleep(0.025)
+    def whichMotors(self, bearing):
+        ''' Return (left,right) motors to turn when moving on bearing '''
 
-                self.moveBearing(bearing, 300)
-                if not self.carryOn():
-                    return
-            else:
-                self.moveBearing(bearing, 300)
-                if not self.carryOn():
-                    return
-
-    def carryOn(self):
-        for i in range(5):
-            if self.cs.color == 5:
-                print("Junction reached! Stopping...")
-                self.stopMotors()
-                return False
-            time.sleep(0.1)
-        return True
-
-    def rotate(self, angle=90, speed=350):
-        ''' Rotate the robot by a given angle from the x-axis '''
-
-        sign = -1 if angle < 0 else 1
-        if self.bearing == 0 or self.bearing == 180:
-            self.moveMotor(0, speed=sign*speed, duration=4200*(abs(angle)/360))
-            self.moveMotor(2, speed=sign*speed, duration=4200*(abs(angle)/360))
+        if bearing == 0:
+            return (0, 2)
+        elif bearing == 90:
+            return (3, 1)
+        elif bearing == 180:
+            return (2, 0)
+        elif bearing == 270:
+            return (1, 3)
         else:
-            self.moveMotor(1, speed=sign*speed, duration=4200*(abs(angle)/360))
-            self.moveMotor(3, speed=sign*speed, duration=4200*(abs(angle)/360))
+            print("ERROR. Illegal bearing.")
+            return None
+
+    def correctBlack(self, motors):
+        ''' Correct the robot's position if we are on black '''
+
+        self.translate(motors, "black")  # Translation
+
+        # Then rotation
+        if self.tape_side == "right":
+            self.moveMotor(motors[0], speed=-240, duration=500)
+            self.moveMotor(motors[1], 300, 500)
+        else:
+            self.moveMotor(motors[0], speed=-300, duration=500)
+            self.moveMotor(motors[1], 240, 500)
+
+    def correctWhite(self, motors):
+        ''' Correct the robot's position if we are on white '''
+
+        self.translate(motors, "white")  # Translation
+
+        # Then rotation
+        if self.tape_side == "right":
+            self.moveMotor(motors[0], speed=-300, duration=500)
+            self.moveMotor(motors[1], 240, 500)
+        else:
+            self.moveMotor(motors[0], speed=-240, duration=500)
+            self.moveMotor(motors[1], 300, 500)
+
+    def translate(self, fmotors, colour):
+        ''' Translate the robot to correct its bearing while line-following '''
+
+        motors = self.whichMotors((self.bearing+90)%360) if colour == "black" else self.whichMotors((self.bearing-90)%360)  # Choose the side motors to move  # noqa E501
+
+        if self.tape_side == "right":
+            self.moveMotor(motors[0], speed=-100, duration=75)
+            self.moveMotor(motors[1], 100, 75)
+        else:
+            self.moveMotor(motors[0], speed=100, duration=75)
+            self.moveMotor(motors[1], -100, 75)
 
     def moveMotor(self, motor=0, speed=100, duration=500, wait=False):
         ''' Move a specific motor (given speed and duration of movement) '''
@@ -227,27 +357,6 @@ class DeliverAIBot():
         motor = self.motors[motor]
         assert motor.connected
         motor.run_timed(speed_sp=speed, time_sp=duration)
-
-    def moveBearing(self, direction=0, speed=100):
-        ''' Move the robot on the desired bearing (zeroed on the x-axis) '''
-
-        # 2x4 matrix of vectors of each motor
-        r = math.radians(direction % 360)
-        x = speed * math.cos(r)
-        y = speed * math.sin(r)
-
-        # the vector associated with each motor
-        axes = [
-            (-1, 0),  # B
-            (0, 1),  # A
-            (1, 0),  # D
-            (0, -1)  # C
-        ]
-        pairs = [(x * a, y * b) for (a, b) in axes]
-
-        for (m, p) in enumerate(pairs):
-            #  Speed of each motor is sum of its vector components
-            self.moveMotor(m, speed=sum(p), duration=1000)
 
     def stopMotors(self):
         for motor in self.motors:
@@ -278,8 +387,32 @@ class DeliverAIBot():
                         shortest = newroute
         return shortest
 
+    def notify_server_of_obs(self, x, y):
+        to_access = "http://" + self.web_server_ip
+        to_access = to_access + ":" + str(self.web_server_port)
+        to_access = to_access + "/api/botinfo"
+        to_provide = {
+            "name": robot_name,
+            "x_loc": self.coords[0],
+            "y_loc": self.coords[1],
+            "x_issue": x,
+            "y_issue": y,
+            "state": "OBSTACLEINWAY",
+            "battery_volts": ev3.PowerSupply().measured_volts,
+            "bearing": self.send_bearing(self.bearing)
+        }
+        post_data = urllib.parse.urlencode(to_provide)
+        try:
+            urllib.request.urlopen(
+                url='{}?{}'.format(to_access, post_data),
+                data="TEMP=TEMP".encode()
+            )
+        except:  # noqa: E722
+            print("[notify_server_of_obs] Has failed - failed to connect to: " + to_access)  # noqa: E501
+
     def update_server(self):
-        to_access = "http://" + web_server + ":" + str(web_server_port)
+        to_access = "http://" + self.web_server_ip
+        to_access = to_access + ":" + str(self.web_server_port)
         to_access = to_access + "/api/botinfo"
         to_provide = {
             "name": robot_name,
@@ -345,7 +478,7 @@ class DeliverAIBot():
             self.status = "STOPPED"
             self.stop_event.set()
             self.stop_it_pls = True
-            print("[process_msg] STOP EVENT MSG RECEIVED")
+            # print("[process_msg] STOP EVENT MSG RECEIVED")
         elif (broken_msg[0] == "CONT"):
             # Start moving again
             self.status = "MOVING"
@@ -378,8 +511,17 @@ class DeliverAIBot():
         elif (broken_msg[0] == "UPDATEMAP"):
             self.my_map = Map()
             self.download_json_map()
+        elif (broken_msg[0] == "POWEROFF"):
+            os.system("sudo poweroff")
+        elif (broken_msg[0] == "AUTOCLOSE"):
+            self.auto_close_announce()
         else:
             print("[process_msg] UNPROCESSED MSG received: " + msg)
+
+    def auto_close_announce(self):
+        ev3.Sound.speak("ALERT, ALERT, the door is about the close!")
+        time.sleep(5)
+        ev3.Sound.beep("-f 350 -d 10 -r 10")
 
     def process_debug_msg(self, msg):
         if (msg == "DEBUGMODEOFF"):
@@ -392,7 +534,6 @@ class DeliverAIBot():
 
     def send_bearing(self, bearing):
         dir_go = -1
-        # self.client_connection.sendMessage("test")
         if (bearing == 0):
             dir_go = 0
         elif (bearing == 90):
@@ -401,8 +542,6 @@ class DeliverAIBot():
             dir_go = 2
         elif (bearing == 270):
             dir_go = 3
-        # print("Sentbearing " + str(dir_go))
-        # temp = self.client_connection.sendMessage("BEARING$" + str(dir_go))
         return dir_go
 
     def alarm(self):
@@ -421,7 +560,25 @@ class DeliverAIBot():
 
 
 if __name__ == '__main__':
+    # m = Map()
+    # a = Office("a", (1,0))
+    # b = Office("b", (0,1))
+    # c = Office("c", (1,1))
+    # d = Office("d", (0,2))
+    # e = Office("e", (1,2))
+    # f = Office("f", (0,3))
+    # g = Office("g", (1,3))
+    # h = Office("h", (0,4))
+    # i = Office("i", (1,4))
+    # m.addOffices([a,b,c,d,e,f,g,h,i])
+    # mbot = DeliverAIBot(m, m.home)
+    # while(True):
+    #     dest = input("Where shall we go?: ")
+    #     if dest == "home":
+    #         mbot.goTo(m.home)
+    #     else:
+    #         mbot.goTo(globals()[dest])
     m = Map()
-    mbot = DeliverAIBot(m, m.home)
-    while(True):
+    b = DeliverAIBot(m, m.home)
+    while True:
         pass

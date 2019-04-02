@@ -7,6 +7,9 @@ import operator
 from adafruit_lsm303 import LSM303
 from collections import deque
 import threading
+import os
+import ConfigParser
+from motor_mover import MotorMover
 
 
 class Toddler:
@@ -22,11 +25,23 @@ class Toddler:
         self.getSensors = IO.interface_kit.getSensors
         self.mc = IO.motor_control
         self.sc = IO.servo_control
+        self.motor_control = MotorMover()
+
+        # Get the config from the file
+        self.config = ConfigParser.ConfigParser()
+        self.config.read('/home/student/config.txt')
 
         # Set up servers and client
         self.server_port = 5010
-        self.client_port = 5005
-        self.client_connect_address = "brogdon.inf.ed.ac.uk"
+        self.client_port = int(
+            self.config.get(
+                "DELIVERAI",
+                'WEB_SERVER_COMM_PORT'
+            ))
+        self.client_connect_address = self.config.get(
+            "DELIVERAI",
+            'WEB_SERVER_IP'
+        )
 
         self.server = TCPServer(
             self.server_port,
@@ -50,13 +65,15 @@ class Toddler:
         self.alarm = False
         self.box_open = False
         self.mode_debug_on = False
+        self.box_timeout = None
 
         # Set up sensor + motor values
         self.accel = LSM303()
         self.accel_data = deque(
             [[0, 0, 0]] * 10)  # accelerometer array used for smoothing
         self.door_mech_motor = 2
-        self.lock_motor = 1
+        self.lock_motor = 3
+        self.motor_speed = 40
 
     def __del__(self):
         print("[__del__] Cleaning Up...")
@@ -77,14 +94,23 @@ class Toddler:
 
     def open_box_motor(self):
         self.open_lock()
-        self.mc.setMotor(self.door_mech_motor, 100)
+        self.motor_control.motor_move(self.door_mech_motor, self.motor_speed)
         # Open lid until bump switched is pressed
         while (self.getInputs()[1] == 1):
             time.sleep(0.01)
         self.mc.stopMotor(self.door_mech_motor)
+        # If the close command does not get sent after 60 seconds the box will
+        # close its self
+        self.box_timeout = threading.Timer(60.0, self.auto_close_box)
+        self.box_timeout.start()
+
+    def auto_close_box(self):
+        self.server.sendMessage("AUTOCLOSE")
+        time.sleep(10)
+        self.close_box_motor()
 
     def close_box_motor(self):
-        self.mc.setMotor(self.door_mech_motor, -100)
+        self.motor_control.motor_move(self.door_mech_motor, -self.motor_speed)
         # Close lid until bump switched is pressed
         while (self.getInputs()[2] == 1):
             time.sleep(0.01)
@@ -169,6 +195,7 @@ class Toddler:
         elif (broken_msg[0] == "OPEN"):
             self.open_box_motor()
         elif (broken_msg[0] == "CLOSE"):
+            self.box_timeout.cancel()  # Cancel the auto-close
             self.close_box_motor()
         elif (broken_msg[0] == "ALARMSTOP"):
             self.server.sendMessage("ALARMSTOP")
@@ -181,6 +208,11 @@ class Toddler:
             self.server.sendMessage("UPDATEMAP")
         elif (broken_msg[0] == "BEARING"):
             self.current_movment_bearing = int(broken_msg[1])
+        elif (broken_msg[0] == "POWEROFF"):
+            self.server.sendMessage("POWEROFF")
+            self.client.disconnect()
+            time.sleep(5)
+            os.system("sudo poweroff")
 
     def process_debug_msg(self, msg):
         if (msg == "DEBUGMODEOFF"):
