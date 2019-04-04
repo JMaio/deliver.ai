@@ -5,9 +5,9 @@ import json
 
 
 class Map():
-    def __init__(self, size=(10, 10)):
+    def __init__(self, size=(50, 50)):
 
-        # Store dimensions of office space (default is 10x10)
+        # Store dimensions of office space (default is 50x50)
         self.xlim = size[0]
         self.ylim = size[1]
 
