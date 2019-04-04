@@ -72,7 +72,7 @@ class Toddler:
         # Set up sensor + motor values
         self.accel = LSM303()
         self.acc_counter = [0,0,0]
-        self.calibrated = False
+        self.calibrated = 0
 	self.base_accel = np.zeros(3)  # will be set during calibration
         self.accel_val_num = 20
 	self.last_accels = deque()
@@ -96,7 +96,6 @@ class Toddler:
         self.detect_obstacle()
         self.accel_alarm()  # needs improvement to be used again
         self.box_alarm()
-	self.open_box_motor()
         time.sleep(self.sleep_time)
 
     # VISION THREAD
@@ -324,7 +323,7 @@ class Toddler:
 
     # Checks for unexpected movement/robot being stolen - using accelerometer
     def accel_alarm(self):
-        if not self.calibrated:
+        if self.calibrated < 3:
 	    self.calibrate_accel()
 	    return;
 
@@ -387,7 +386,7 @@ class Toddler:
 	else:
 	    av_accel = [sum(i) / float(len(i)) for i in zip(*self.accel_data)]
 	    self.base_accel = np.array(av_accel)
-	    self.calibrated = True
+	    self.calibrated = self.calibrated + 1
 	    self.accel_data = deque([-1] * self.accel_val_num)    # reset data_accel deque
 
     def test_conn_ev3(self):
