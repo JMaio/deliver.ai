@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#! /usr/bin/env python3
 
 import time
 from tcpcom import TCPServer, TCPClient
@@ -71,16 +71,17 @@ class Toddler:
 
         # Set up sensor + motor values
         self.accel = LSM303()
-        self.acc_counter = [0,0,0]
+        self.acc_counter = [0, 0, 0]
         self.calibrated = 0
-	self.base_accel = np.zeros(3)  # will be set during calibration
+        self.base_accel = np.zeros(3)  # will be set during calibration
         self.accel_val_num = 20
-	self.last_accels = deque()
-	self.accel_data = deque(
-            [-1] * self.accel_val_num)  # accelerometer array used for smoothing
+        self.last_accels = deque()
+        self.accel_data = deque(
+            [-1] * self.accel_val_num
+        )  # accelerometer array used for smoothing
         self.vel = np.zeros(3)
-	self.pos = np.zeros(3)
-	self.last_accel = np.zeros(3)
+        self.pos = np.zeros(3)
+        self.last_accel = np.zeros(3)
         self.last_vel = np.zeros(3)
         self.door_mech_motor = 2
         self.lock_motor = 3
@@ -299,19 +300,19 @@ class Toddler:
         delta_vel = (accel + ((accel - last_accel) / 2.0)) * self.sleep_time
         self.vel = np.array(delta_vel) + self.vel
 
-	# Check if no accel in any direction and increase corresponding counter
+    # Check if no accel in any direction and increase corresponding counter
         for i in range(len(accel)):
             if accel[i] == 0:
-		self.acc_counter[i] += 1
+                self.acc_counter[i] += 1
             else:
                 self.acc_counter[i] = 0
-        
-        # If the last 25 values for one direction have been 0, set velocity to 0
+
+        # If the last 25 values for 1 direction have been 0, set velocity to 0
         for i in range(len(self.acc_counter)):
             if self.acc_counter[i] > 15:
                 self.vel[i] = 0
 
-	return np.array(self.vel)
+        return np.array(self.vel)
 
     def integrate_vel(self, vel, last_vel):
         vel = np.array(vel)
@@ -319,15 +320,15 @@ class Toddler:
 
         delta_pos = (vel + ((vel - last_vel) / 2.0)) * self.sleep_time
         self.pos = np.array(delta_pos + self.pos)
-	return np.array(self.pos)
+        return np.array(self.pos)
 
     # Checks for unexpected movement/robot being stolen - using accelerometer
     def accel_alarm(self):
         if self.calibrated < 3:
-	    self.calibrate_accel()
-	    return;
+            self.calibrate_accel()
+            return
 
-	cur_accel = self.read_smooth_accel()
+        cur_accel = self.read_smooth_accel()
 
         # If we haven't had enough readings for averaging - don't continue
         if (cur_accel == -1):
@@ -342,11 +343,11 @@ class Toddler:
         print("Vel: x:%.2f   y:%.2f  z:%.2f" % (vel[0], vel[1], vel[2]))
         print("Pos: x:%.2f   y:%.2f  z:%.2f" % (pos[0], pos[1], pos[2]))
 
-        if abs(vel[2]) > 6 or abs(vel[1]) >10 or abs(vel[0]) > 10:
+        if abs(vel[2]) > 6 or abs(vel[1]) > 10 or abs(vel[0]) > 10:
             if not (self.alarm):
                 self.send_alarm()
                 self.alarm = True
-                print("[accel_alarm] ALARM STATE -- X: %.2f -- Y: %.2f -- Z: %.2f " % (vel[0], vel[1], vel[2]))
+                print("[accel_alarm] ALARM STATE -- X: %.2f -- Y: %.2f -- Z: %.2f " % (vel[0], vel[1], vel[2]))  # noqa E501
 
         self.last_accel = accel
         self.last_vel = vel
@@ -354,40 +355,42 @@ class Toddler:
     # Smooth accelerometer output by taking the average of the last n values
     # where n = len(self.accel_data)
     def read_smooth_accel(self):
-#        print(self.base_accel)
+        #        print(self.base_accel)
         cur_accel, _ = self.accel.read()
-	cur_accel = (np.array(cur_accel) - self.base_accel).tolist()  # calibrate input
+        # calibrate input
+        cur_accel = (np.array(cur_accel) - self.base_accel).tolist()
 
         # To filter out mechanical noise
-	for i in range(len(cur_accel)):	
-	    if cur_accel[i] > -30 and cur_accel[i] < 30:
-        	cur_accel[i] = 0
+        for i in range(len(cur_accel)):
+            if cur_accel[i] > -30 and cur_accel[i] < 30:
+                cur_accel[i] = 0
 
-        self.accel_data.pop()
-        self.accel_data.appendleft(cur_accel)
-        # For the first len(accel_data) values the average is not
-        # representative - return -1 to represent that
-        if -1 in self.accel_data:
-	    return -1
-
-        av_accel = [sum(i) / float(len(i)) for i in zip(*self.accel_data)]
-
-	for i in range(len(av_accel)):	
-	    if av_accel[i]< 20 and av_accel[i] > -20:
-	        av_accel[i] = 0
-
-        return av_accel
-
-    def calibrate_accel(self):
-	cur_accel, _ = self.accel.read()
-	if -1 in self.accel_data:
             self.accel_data.pop()
             self.accel_data.appendleft(cur_accel)
-	else:
-	    av_accel = [sum(i) / float(len(i)) for i in zip(*self.accel_data)]
-	    self.base_accel = np.array(av_accel)
-	    self.calibrated = self.calibrated + 1
-	    self.accel_data = deque([-1] * self.accel_val_num)    # reset data_accel deque
+            # For the first len(accel_data) values the average is not
+            # representative - return -1 to represent that
+            if -1 in self.accel_data:
+                return -1
+
+            av_accel = [sum(i) / float(len(i)) for i in zip(*self.accel_data)]
+
+        for i in range(len(av_accel)):
+            if av_accel[i] < 20 and av_accel[i] > -20:
+                av_accel[i] = 0
+
+            return av_accel
+
+    def calibrate_accel(self):
+        cur_accel, _ = self.accel.read()
+        if -1 in self.accel_data:
+            self.accel_data.pop()
+            self.accel_data.appendleft(cur_accel)
+        else:
+            av_accel = [sum(i) / float(len(i)) for i in zip(*self.accel_data)]
+            self.base_accel = np.array(av_accel)
+            self.calibrated = self.calibrated + 1
+            self.accel_data = deque([-1] * self.accel_val_num)
+            # reset data_accel deque
 
     def test_conn_ev3(self):
         self.server.sendMessage("DEBUGMODEON")
@@ -396,4 +399,3 @@ class Toddler:
         lines = file_in.readlines()
         for l in lines:
             self.server.sendMessage(l)
-
