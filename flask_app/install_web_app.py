@@ -1,19 +1,18 @@
-#! python3
-
 import subprocess
 import venv
 import os
 
 
 def main():
-    PRE = '\n[deliver.ai] --> '
+    MSG = '[deliver.ai] --> {}\n'
     APP_PATH = os.path.dirname(os.path.abspath(__file__))
-    VENV_PATH = os.path.join(APP_PATH, 'v   env')
+    os.chdir(APP_PATH)
+    VENV_PATH = os.path.join(APP_PATH, 'venv')
 
-    print(" --- ##   deliver.ai web app intaller   ## --- ")
+    print("\n --- ##   deliver.ai web app installer   ## --- \n")
 
-    # create the virtual enviroment
-    print(PRE + "Creating the virtual enviroment...")
+    # create the virtual environment
+    print(MSG.format("Creating the virtual environment..."))
 
     class ExtendedEnvBuilder(venv.EnvBuilder):
         def post_setup(self, context):
@@ -27,20 +26,26 @@ def main():
     if not path:
         raise Exception("Could not create virtual environment!")
 
-    print(PRE + "Virtual environment created at: {}".format(APP_PATH))
+    print(MSG.format("Virtual environment created at: {}".format(APP_PATH)))
 
     py_path = os.path.join(path, 'python')
+    with open('path.py', 'w') as f:
+        f.writelines('\n'.join([
+            'py_path = {}'.format(py_path.encode()),
+            'app_path = {}'.format(APP_PATH.encode()),
+            '',
+        ]))
 
     # upgrade pip
-    print(PRE + "Upgrading pip:")
+    print(MSG.format("Upgrading pip:"))
     subprocess.run([py_path, '-m', 'pip', 'install', '--upgrade', 'pip'])
 
     # install using pip (https://stackoverflow.com/a/15950647/9184658)
     req = 'requirements.txt'
-    print(PRE + "Installing dependencies from file: {}".format(req))
+    print(MSG.format("Installing dependencies from file: {}".format(req)))
     subprocess.run([py_path, '-m', 'pip', 'install', '-r', req])
 
-    print(PRE + "Install successful!")
+    print(MSG.format("Install successful!"))
 
 
 if __name__ == "__main__":

@@ -1,0 +1,46 @@
+{
+  "offices": [
+    {
+      "name": "Winona Fortree",
+      "username": "winona.fortree",
+      "x_coord": 0,
+      "y_coord": 4
+    },
+    {
+      "name": "Norman Petalburg",
+      "username": "norman.petalburg",
+      "x_coord": 0,
+      "y_coord": 6
+    },
+    {
+      "name": "Ash Ketchum",
+      "username": "ash.ketchum",
+      "x_coord": 2,
+      "y_coord": 0
+    },
+    {
+      "name": "Tate Mossdeep",
+      "username": "tate.mossdeep",
+      "x_coord": 2,
+      "y_coord": 2
+    },
+    {
+      "name": "Liza Mossdeep",
+      "username": "liza.mossdeep",
+      "x_coord": 2,
+      "y_coord": 4
+    },
+    {
+      "name": "Misty Water",
+      "username": "misty.water",
+      "x_coord": 4,
+      "y_coord": 0
+    },
+    {
+      "name": "Blaine Fire",
+      "username": "blaine.fire",
+      "x_coord": 4,
+      "y_coord": 4
+    }
+  ]
+}

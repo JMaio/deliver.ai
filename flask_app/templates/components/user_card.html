@@ -1,19 +1,19 @@
-<a href="{{ user.username }}" class="text-decoration-none text-secondary">
-    <div class="card border-light mb-3 shadow-hover text-decoration-none text-center">
-        <div class="card-body">
-            <div class="card-title">
-                <p class="mb-0 card-name">{{ user.last }}
-                    <span style="font-size: 1.2rem"> , {{ user.first }}</span>
-                </p>
-                <code class="text-info">{{ user.username }}</code>
-            </div>
+<div class="card person-card border-light mb-3 shadow-hover text-decoration-none text-center">
+    <div class="card-body">
+        <div class="d-none person-name">{{ user.name }}</div>
+        <div class="card-title">
+            <p class="mb-0 card-name text-ellipsis">{{ user.last }}
+                <span style="font-size: 1.2rem"> , {{ user.first }}</span>
+            </p>
+            <code class="text-info">{{ user.username }}</code>
+        </div>
 
-            <p class="card-text">Office {{ user.coordinates }}</p>
-            <div class="text-center">
-                <div class="btn btn-info">
-                    <p class="btn-upper">Schedule <i class="fas fa-pen fa-sm"></i></p>
-                </div>
-            </div>
+        <p class="card-text">Office {{ user.coordinates }}</p>
+        <div class="text-center">
+            <a href="{{ user.username }}"
+               class="btn btn-info btn-upper stretched-link rounded-pill px-3">Schedule
+                <i class="fas fa-pen fa-sm"></i>
+            </a>
         </div>
     </div>
-</a>
+</div>

@@ -1,0 +1,46 @@
+{
+  "offices": [
+    {
+      "name": "Brock Rock",
+      "username": "brock.rock",
+      "x_coord": 0,
+      "y_coord": 2
+    },
+    {
+      "name": "Surge Lt",
+      "username": "surge.lt",
+      "x_coord": 0,
+      "y_coord": 4
+    },
+    {
+      "name": "Wattson Mauville",
+      "username": "wattson.mauville",
+      "x_coord": 0,
+      "y_coord": 6
+    },
+    {
+      "name": "Ash Ketchum",
+      "username": "ash.ketchum",
+      "x_coord": 2,
+      "y_coord": 0
+    },
+    {
+      "name": "Misty Water",
+      "username": "misty.water",
+      "x_coord": 2,
+      "y_coord": 2
+    },
+    {
+      "name": "Erika Grass",
+      "username": "erika.grass",
+      "x_coord": 2,
+      "y_coord": 4
+    },
+    {
+      "name": "Roxanne Rust",
+      "username": "roxanne.rust",
+      "x_coord": 2,
+      "y_coord": 6
+    }
+  ]
+}

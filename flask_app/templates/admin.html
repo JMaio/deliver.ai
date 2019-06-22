@@ -4,50 +4,116 @@
     <h1 class="mb-3 text-center" style="font-weight: 300">Admin dashboard</h1>
     <hr>
     <div class="row">
+        <!-- Robots -->
         <div class="col-12 col-lg-6">
             <h2 class="font-weight-normal">Robots</h2>
             <div class="row justify-content-start">
                 {% for _, bot in bots.items() %}
-                    <div class="col-12 col-sm-6">
+                    <div class="col-12">
                         {% include 'components/bot_card.html' %}
                     </div>
                 {% endfor %}
             </div>
             <hr>
         </div>
+        <!-- Map preview -->
+        {% set bot = bots['lion'] %}
+        {#        <div class="col-12 col-lg-6">#}
+        {#            {% if True %}#}
+        {#                <div>#}
+        {#                    <div style="height: 100%; width: 100%;"#}
+        {#                         class="position-relative">#}
+        {#                        <img src="{{ url_for('static', filename="img/robot.png") }}"#}
+        {#                             class="position-absolute col-3"#}
+        {#                             style="#}
+        {#                                     top: calc(28px + {{ bot.props['y_loc'] }}*25%);#}
+        {#                                     left: calc(28px + {{ bot.props['x_loc'] }}*68%);#}
+        {#                                     "/>#}
+        {#                        <img src="{{ url_for('static', filename="img/office-maps_map1.svg") }}">#}
+        {#                    </div>#}
+        {#                </div>#}
+        {#            {% endif %}#}
+        {#        </div>#}
+        <!-- Map -->
         <div class="col-12 col-lg-6">
-            <h2 class="font-weight-normal">Map</h2>
+            <h2 class="font-weight-normal">Map manager</h2>
+            <div class="mb-2">
+                <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                    {% for map in maps['available'] %}
+                        {% set this_map = map == maps['n'] %}
+                        <label class="btn btn-outline-success
+                           {% if this_map %}active{% endif %}"
+                               data-map="{{ map }}">
+                            <input type="radio"
+                                   {% if this_map %}checked{% endif %}> {{ map }}
+                        </label>
+                    {% endfor %}
+                </div>
+                <button class="btn btn-outline-light rounded-pill" onclick="
+                $.post({
+                    url: '/api/newmap',
+                    success: function (msg) {
+                        window.location.reload();
+                    }
+                });">
+                    <i class="fas fa-plus-circle fa-lg text-success"></i>
+                </button>
+            </div>
+            <button class="btn btn-info" onclick="
+            $.post({
+                url: '/api/savemap',
+                success: function(msg) {
+                    alert(msg)
+                }
+            })">Save current map
+            </button>
+            <button class="btn btn-outline-danger" onclick="
+                    let conf = confirm('Are you sure you want to delete this map?');
+                    if (conf) {
+                        $.post({
+                            url: '/api/delete_map',
+                            success: function(msg) {
+                                alert(msg);
+                                window.location.reload();
+                            },
+                        })
+                    }">Delete map
+            </button>
+{#            <p>{{ maps }}</p>#}
+            <hr>
+            <h2 class="font-weight-normal">Offices</h2>
             <p class="my-auto mr-2">Add office:</p>
             <form class="form-inline mb-2" id="add-office-form" method="post"
                   action="/api/add_office" name="add-office-form">
-                {% for var, type, val, w in [
-                    ('x', 'number', 2, 50),
-                    ('y', 'number', 1, 50),
-                    ('username', 'text', 'brock.rock', 160),
+                {% for var, type, w in [
+                    ('x', 'number', 50),
+                    ('y', 'number', 50),
+                    ('username', 'text', 160),
                 ] %}
                     <input class="form-control mr-1"
                            style="max-width: {{ w }}px;" type="{{ type }}"
-                           value="{{ val }}" placeholder="{{ var }}"
+                           required placeholder="{{ var }}"
                            id="add-office-{{ var }}" name="{{ var }}">
                 {% endfor %}
-                <button type="submit"
-                        class="btn fas fa-plus-circle fa-lg text-success text-decoration-none my-auto"></button>
+                <button class="btn btn-outline-light rounded-pill"
+                        type="submit">
+                    <i class="fas fa-plus-circle fa-lg text-success"></i>
+                </button>
             </form>
-            <div class="row justify-content-start">
-                <div class="col-12 col-sm-6">
-                    <ul class="list-group d-flex justify-content-center mx-auto"
-                        style="max-width: 400px">
-                        {% for username, person in map.get().items() %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span>{{ person.coordinates }}</span>
-                                <span class="text-monospace">{{ person.name }}</span>
-                                <a href=""
-                                   class="fas fa-minus-circle text-danger"></a>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
+            <hr>
+            <ul class="list-group d-flex justify-content-center mx-auto">
+                {% for username, person in map.get().items() %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-1">
+                        <span>{{ person.coordinates }}</span>
+                        <span class="text-monospace">{{ person.name }}</span>
+                        <button class="btn btn-outline-light rounded-pill"
+                                data-action="remove-office"
+                                data-username="{{ person.username }}">
+                            <i class="fas fa-minus-circle text-danger"></i>
+                        </button>
+                    </li>
+                {% endfor %}
+            </ul>
             <hr>
         </div>
         <div class="col-12 col-lg-6">
@@ -73,31 +139,93 @@
     {{ super() }}
     <script>
         $(document).ready(function () {
-            const admin_refresh = function () {
-                window.location.reload();
+            // refresh EV3 status periodically
+            let botRefresh = () => {
+                $.get({
+                    url: '/api/botinfo',
+                    data: $.param({'name': 'lion'}),
+                    success: function (msg) {
+                        let m = JSON.parse(msg);
+                        let card = $('#bot-card-lion');
+                        // coordinates
+                        card.find('span.bot-coords-x').text(m['x_loc']);
+                        card.find('span.bot-coords-y').text(m['y_loc']);
+                        // battery
+                        let volts = Number.parseFloat(m['battery_volts']).toFixed(2);
+                        card.find('span.battery-volts').text(volts);
+                        let percent = m['battery_percent'];
+                        card.find('span.battery-percent').text(percent);
+                        card.find('div.battery-indicator')
+                            .css({
+                                'width': `${percent}%`,
+                            })
+                            .prop({'aria-valuenow': percent});
+                    }
+                });
             };
-            // setTimeout(admin_refresh, 15 * 1000);
+            // refresh Pi status periodically
+            let piRefresh = () => {
+                $.get({
+                    url: '/api/tcp_server',
+                    success: function (msg) {
+                        let m = JSON.parse(msg);
+                        let card = $('#bot-card-lion');
+                        card.find('div.robot-status-light')
+                            .attr('data-connected', m['connected']);
+                    }
+                })
+            };
+            setInterval(botRefresh, 5 * 1000);
+            setInterval(piRefresh, 15 * 1000);
+
+            $('button.btn[data-action="power-off"]').click(function (e) {
+                send_cmd("POWEROFF");
+                $(this)
+                    .prop('disabled', true)
+                    .toggleClass('btn-danger')
+                    .toggleClass('btn-outline-secondary');
+            });
 
             $('form[name=add-office-form]').submit(function (e) {
                 e.preventDefault();
                 console.log($(this).serialize());
-                $.ajax({
-                    type: 'POST',
-                    cache: false,
+                $.post({
                     url: '/api/add_office',
                     data: $(this).serialize(),
                     success: function (msg) {
-                        {#alert(msg);#}
-                        window.location.reload()
+                        console.log(msg);
+                        if (msg) {
+                            alert(msg);
+                        } else {
+                            window.location.reload()
+                        }
                     }
                 });
             });
+
+            $('button.btn[data-action=remove-office]').click(function (e) {
+                let username = $(this).attr('data-username');
+                if (confirm(`Are you sure you want to remove ${username} from the map?`)) {
+                    $.post({
+                        url: '/api/remove_office',
+                        data: {
+                            'username': username,
+                        },
+                        success: function (msg) {
+                            window.location.reload()
+                        }
+                    });
+                }
+            });
+            $('label[data-map]').click(function () {
+                let n = $(this).attr('data-map');
+                console.log(n);
+                $.post({
+                    url: '/api/changemap',
+                    data: {n: n},
+                    success: window.location.reload(),
+                })
+            })
         });
-        {#const add_office = form => {#}
-        {#    console.log(form);#}
-        {#    $.post('/api/add_office', form.serialize(), function (data) {#}
-        {#        alert(data);#}
-        {#    });#}
-        {# } #}
     </script>
 {% endblock %}

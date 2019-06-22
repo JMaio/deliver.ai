@@ -5,7 +5,7 @@
 {% set navigation_bar = [
     (url_for('send'), 'send', 'Send'),
     (url_for('receive'), 'receive', 'Receive'),
-    (url_for('history'), 'history', 'Your tickets'),
+    (url_for('history'), 'history', 'Ticket history'),
 ] -%}
 {#    ('/about/', 'about', 'About'),#}
 {#    ('/help/', 'help', 'Help')#}
@@ -26,7 +26,7 @@
 <body>
 {% block nav %}
     <nav class="navbar navbar-expand-md navbar-dark bg-lightblue shadow text-center sticky-top"
-         style="z-index: 1;">
+         style="z-index: 10;">
         <div class="container">
             <a href="/" class="navbar-brand">deliver.ai</a>
 
@@ -38,7 +38,7 @@
             </button>
 
             <div class="collapse navbar-collapse" id="navbarText">
-                <ul class="navbar-nav mr-auto">
+                <ul class="navbar-nav mr-auto mb-sm-0 mb-2">
                     {% for href, id, caption in navigation_bar %}
                         <li class="nav-item {% if id == active_page %} active{% endif %}">
                             <a class="nav-link"
@@ -49,39 +49,44 @@
 
                 {#                {% set username = user.username|default('ash.ketchum') %}#}
                 {#                     TODO update this to match request data / cookie / session with user#}
-                <div class="btn-group" role="group"
-                     aria-label="Authentication buttons">
-                    <a class="btn btn-light"
-                            {% if current_user.is_authenticated %}
-                       href="/user/{{ current_user.username }}"
-                            {% else %}
-                       href="{{ url_for('user.login') }}"
-                            {% endif %}
-                    >{{ current_user.username | default('Log in') }}
-                    </a>
-                    {% if current_user.is_authenticated %}
+                {% if current_user.is_authenticated %}
+                    <div class="btn-group rounded-pill mx-1" role="group"
+                         aria-label="Authentication buttons">
+                        <a class="btn btn-light px-3"
+                           href="{{ url_for('user_page', username=current_user.username) }}">
+                            {{ current_user.username }}
+                        </a>
                         <a href="{{ url_for('user.logout') }}"
                            class="btn btn-light border-left">
                             <i class="fas fa-sign-out-alt"></i>
                         </a>
-                        {# <button type="button" class="btn btn-secondary">Right</button>#}
-                    {% endif %}
-                </div>
+                    </div>
+                {% else %}
+                    <a class="btn btn-light rounded-pill px-3"
+                       href="{{ url_for('user.login') }}">Log in</a>
+                {% endif %}
+
+                <a href="{{ url_for('info_page') }}" class="btn btn-light rounded-pill mx-2">
+                    <i class="fas fa-info px-2"></i>
+                </a>
             </div>
         </div>
     </nav>
 {% endblock %}
-<div class="container align-content-center align-items-center mt-4">
-    {% block content %}
-
-    {% endblock %}
-    <section id="footer">
-        <footer class="align-middle mt-5 mb-3">
-            <hr>
-            <p class="text-dark m-0">&copy; 2019 deliver.ai</p>
-        </footer>
-    </section>
-</div>
+{% block pre_content %}{% endblock %}
+{% block main_container %}
+    <div class="container align-content-center align-items-center mt-4">
+        {% block content %}{% endblock %}
+        {% block footer %}
+            <section id="footer">
+                <footer class="align-middle mt-5 mb-3">
+                    <hr>
+                    <p class="text-dark m-0">&copy; 2019 deliver.ai</p>
+                </footer>
+            </section>
+        {% endblock %}
+    </div>
+{% endblock %}
 
 
 

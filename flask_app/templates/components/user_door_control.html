@@ -1,0 +1,65 @@
+{% set bot_here = bot_here and user.username == current_user.username %}
+<div class="text-center">
+    {% if bot_here %}
+        <h3 class="font-weight-light">A deliver.ai robot has arrived
+            at your office!</h3>
+    {% elif user.username == current_user.username %}
+        <p class="font-italic">(Robot door control is enabled once a robot
+            reaches your office...)</p>
+    {% else %}
+        <a href="{{ url_for('send') + user.username }}"
+           class="btn btn-info btn-upper">Send something!
+            <i class="fas fa-sm fa-fw fa-paper-plane"></i></a>
+    {% endif %}
+</div>
+{% if bot_here %}
+    <div class="text-center">
+        <button class="btn btn-warning rounded-pill px-3"
+                id="verify-pin-button"
+                data-target="#open-door-modal" data-toggle="modal">Verify PIN
+            Code
+        </button>
+    </div>
+{% endif %}
+{% if user.username == current_user.username %}
+    <div class="text-center btn-group rounded-pill d-flex mx-auto"
+         style="max-width: 500px;">
+        {% for cmd, text, type in [
+            ('OPEN', 'Open', 'outline-success'),
+            ('CLOSE', 'Close', 'outline-danger'),
+        ] %}
+            {% set t = type if bot_here else 'outline-secondary' %}
+            <button class="btn my-4 px-4 py-3 btn-{{ t }}" disabled
+                    style="font-size: 1.5rem"
+                    data-cmd="{{ cmd }}">{{ text }}</button>
+        {% endfor %}
+    </div>
+{% endif %}
+<div class="modal fade" id="open-door-modal" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Verify PIN</h5>
+                <button type="button" class="close" data-dismiss="modal"
+                        aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form name="user-pin-code-form" id="user-pin-code-form"
+                  class="modal-body text-center">
+                <input class="form-control bg-light w-auto mx-auto text-center mb-2"
+                       id="code-box" type="number" min="0" max="9999" autofocus
+                       title="PIN code" pattern="\d{4}">
+                <p id="code-box-feedback" class="mb-0"></p>
+            </form>
+            <div class="modal-footer text-center">
+                <button class="btn btn-primary mx-auto" type="submit"
+                        {#                        data-dismiss="modal" #}
+                        form="user-pin-code-form"
+                        id="user-pin-code-submit">
+                    Verify
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

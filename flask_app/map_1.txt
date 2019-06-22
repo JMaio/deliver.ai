@@ -1,5 +1,0 @@
-ash.ketchum, Ash Ketchum, 1, 0
-brock.rock, Brock Rock, 0, 1
-misty.water, Misty Water, 1, 1
-surge.lt, Lt. Surge, 0, 2
-erika.grass, Erika Grass, 1, 2

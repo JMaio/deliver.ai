@@ -1,26 +1,30 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1 class="text-center font-weight-light font-italic">Your tickets</h1>
+    <h1 class="text-center font-weight-light">Ticket history</h1>
     <hr>
     <div class="container">
         <div class="row">
-            <div class="col col-12 col-sm-6">
+            <div class="col col-12 col-sm-6 mb-3">
                 <div class="card">
                     <div class="card-header">
                         <p class="my-0">Sent ({{ sent | length }})</p>
                     </div>
-                    <ul class="list-group list-group-flush">
-                        {% for ticket in sent %}
-                            <li class="list-group-item">
-                                <div class="d-flex flex-column">
-                                    <h4>{{ ticket.pickup_time }}</h4>
-                                    <h5></h5>
-                                </div>
-                                <p>{{ ticket.recipient }}</p>
-                            </li>
-                        {% endfor %}
-                    </ul>
+                    {% if sent %}
+                        <ul class="list-group list-group-flush">
+                            {% for ticket in sent %}
+                                <li class="list-group-item bg-transparent">
+                                    <div class="d-flex flex-column">
+                                        <h4>{{ ticket.pickup_time }}</h4>
+                                        <h5></h5>
+                                    </div>
+                                    <p>{{ ticket.recipient }}</p>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="mb-0 card-body">No tickets</p>
+                    {% endif %}
                 </div>
             </div>
             <div class="col col-12 col-sm-6">
@@ -28,17 +32,21 @@
                     <div class="card-header">
                         <p class="my-0">Received ({{ received | length }})</p>
                     </div>
-                    <ul class="list-group list-group-flush">
-                        {% for ticket in received %}
-                            <li class="list-group-item">
-                                <div class="d-flex flex-column">
-                                    <h4>{{ ticket.pickup_time }}</h4>
-                                    <h5></h5>
-                                </div>
-                                <p>{{ ticket.sender }}</p>
-                            </li>
-                        {% endfor %}
-                    </ul>
+                    {% if received %}
+                        <ul class="list-group list-group-flush">
+                            {% for ticket in received %}
+                                <li class="list-group-item">
+                                    <div class="d-flex flex-column">
+                                        <h4>{{ ticket.pickup_time }}</h4>
+                                        <h5></h5>
+                                    </div>
+                                    <p>{{ ticket.sender }}</p>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="mb-0 card-body">No tickets</p>
+                    {% endif %}
                 </div>
             </div>
         </div>

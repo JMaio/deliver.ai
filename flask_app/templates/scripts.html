@@ -1,13 +1,76 @@
-<!-- jquery -->
-<script src="/static/js/jquery-3.3.1.js"></script>
-<!-- bootstrap -->
-<script src="/static/js/bootstrap.min.js"></script>
-<!-- moment.js -->
-<script src="/static/js/moment.min.js"></script>
+{% for s in [
+    'jquery-3.3.1.js',
+    'bootstrap.min.js',
+    'moment.min.js',
+    'main.js',
+] %}
+    <script src="{{ url_for("static", filename="js/" + s) }}"></script>
+{% endfor %}
 
-<script>
-    const send_cmd = cmd => {
-        console.log(`sending command: '${cmd}'`);
-        $.ajax(`/cmd/${cmd}`);
-    }
-</script>
+{##}
+{#<!-- jquery -->#}
+{#<script src="/static/js/jquery-3.3.1.js"></script>#}
+{#<!-- bootstrap -->#}
+{#<script src="/static/js/bootstrap.min.js"></script>#}
+{#<!-- moment.js -->#}
+{#<script src="{{ url_for("static", filename="js/main.js") }}"></script>#}
+{##}
+{#<script src="{{ url_for("static", filename="js/main.js") }}"></script>#}
+
+{#<script>#}
+{#    const send_cmd = cmd => {#}
+{#        console.log(`sending command: '${cmd}'`);#}
+{#        $.ajax(`/cmd/${cmd}`);#}
+{#    };#}
+{#    let user = null;#}
+{#    $.get({#}
+{#        url: '/api/current_user',#}
+{#        success: function (msg) {#}
+{#            console.log(`user (msg) = ${msg}`);#}
+{#            user = msg#}
+{#        }#}
+{#    });#}
+{#    console.log("hi");#}
+{#    let alert_checker = () => {#}
+{#        let user = current_user();#}
+{#        console.log(`user = ${user}`);#}
+{#        $.get({#}
+{#            url: '/api/confirm',#}
+{#            params: {#}
+{#                user: user,#}
+{#            },#}
+{#            success: function (msg) {#}
+{#                alert(msg);#}
+{#            }#}
+{#        })#}
+{#    };#}
+{##}
+{#    $(document).ready(function () {#}
+{#        // door open / close user controls#}
+{#        $('button[data-cmd]').click(function (e) {#}
+{#            if (!$(this).prop('disabled')) {#}
+{#                let cmd = $(this).attr('data-cmd');#}
+{#                // toggle state on open#}
+{#                if (cmd === 'OPEN') {#}
+{#                    $(this)#}
+{#                        .prop('disabled', true)#}
+{#                        .toggleClass('btn-success')#}
+{#                        .toggleClass('btn-outline-secondary');#}
+{#                    setTimeout(function () {#}
+{#                        $('button[data-cmd=CLOSE]')#}
+{#                            .prop('disabled', false)#}
+{#                            .toggleClass('btn-danger')#}
+{#                            .toggleClass('btn-outline-danger')#}
+{#                    }, 3000)#}
+{#                } else if (cmd === 'CLOSE') {#}
+{#                    // wait a little before engaging 'close' button#}
+{#                    $(this)#}
+{#                        .prop('disabled', true)#}
+{#                        .toggleClass('btn-danger')#}
+{#                        .toggleClass('btn-outline-secondary');#}
+{#                }#}
+{#                send_cmd(cmd);#}
+{#            }#}
+{#        });#}
+{#    });#}
+{#</script>#}

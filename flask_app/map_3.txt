@@ -1,5 +1,0 @@
-ash.ketchum, Ash Ketchum, 0, 1
-misty.water, Misty Water, 1, 1
-sabrina.psychic, Sabrina Psychic, 0, 2
-blaine.fire, Blaine Fire, 1, 2
-giovanni.rocket, Giovanni Rocket, 1, 3

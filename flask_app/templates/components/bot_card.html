@@ -1,29 +1,69 @@
-<div class="card border-light mb-3 shadow-hover text-decoration-none text-center">
+<div class="card border-light mb-3 shadow-hover text-decoration-none text-center"
+     id="bot-card-{{ bot.name }}">
     <div class="card-body">
         <div class="card-title">
-            <div class="d-flex mx-auto justify-content-center">
-                <div class="mx-2 my-auto">
-                    <div class="robot-status-light {% if not tcp_server.server.isConnected() %}dis{% endif %}connected"></div>
-                </div>
-                <p class="mb-0 mx-3 card-name">{{ bot.name }}</p>
-            </div>
-            <code class="text-info">{{ bot.uid }}</code>
-        </div>
-        <div>
-            {% with batt = bot.battery() %}
-                <code>{{ batt }}%
-                    ({{ bot.props['battery_volts'] | round(2) }}V)</code>
-                <div class="progress" style="height: 4px;">
-                    <div class="progress-bar"
-                         role="progressbar"
-                         style="width: {{ batt }}%;"
-                         aria-valuenow="{{ batt }}"
-                         aria-valuemin="0"
-                         aria-valuemax="100"></div>
-                </div>
-                <p class="m-0">Battery level</p>
-            {% endwith %}
-        </div>
 
+            <div class="row justify-content-center">
+                <div class="col-4 my-auto">
+                    <button class="btn btn-danger rounded-pill"
+                         data-action="power-off">
+                        <i class="fas fa-power-off mx-1 align-middle"
+                           style=""></i>
+                        <span class="mr-1">off</span>
+                    </button>
+                </div>
+                <div class="col-4 d-flex justify-content-center">
+                    <div class="my-auto">
+                        <div class="robot-status-light"
+                             data-connected="{{ tcp_server.server.isConnected() | lower }}"></div>
+                    </div>
+                    <p class="mb-0 mx-2 card-name text-ellipsis">{{ bot.name }}</p>
+                </div>
+                <div class="col-4"></div>
+
+            </div>
+                <code class="text-info">{{ bot.uid }}</code>
+            </div>
+            <div>
+                <p class="mb-0 text-monospace align-middle">(
+                    <span class="bot-coords-x align-middle mx-1"
+                          style="font-size: 1.3rem">{{ bot.props.x_loc }}</span>
+                    ,
+                    <span class="bot-coords-y align-middle mx-1"
+                          style="font-size: 1.3rem">{{ bot.props.y_loc }}</span>
+                    )</p>
+                <p>Current location</p>
+            </div>
+            <div class="mb-2">
+                {% with batt = bot.battery() %}
+                    <code>
+                        <span class="battery-percent">{{ batt }}</span>% (<span
+                            class="battery-volts">{{ '%0.2f'| format(bot.props['battery_volts']) }}</span>
+                        V)
+                    </code>
+                    <div class="progress" style="height: 4px;">
+                        <div class="progress-bar battery-indicator"
+                             role="progressbar"
+                             style="width: {{ batt }}%;"
+                             aria-valuenow="{{ batt }}"
+                             aria-valuemin="0"
+                             aria-valuemax="100"></div>
+                    </div>
+                    <p class="m-0">Battery level</p>
+                {% endwith %}
+            </div>
+            <div>
+                <div class="btn-group">
+                    {% for cmd, text, type in [
+                    ('GOHOME', 'Send home', 'info'),
+                    ('ALARMSTOP', 'Stop alarm', 'danger'),
+                ] %}
+                        <button class="btn btn-{{ type }}"
+                                style="font-size: 1.0rem"
+                                onclick="send_cmd('{{ cmd }}')">{{ text }}</button>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
     </div>
-</div>

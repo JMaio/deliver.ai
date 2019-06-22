@@ -5,7 +5,10 @@ import json
 class Person:
     def __init__(self, username, name, coordinates):
         self.name = name  # type: str
-        self.first, self.last = name.split()
+        try:
+            self.first, self.last = name.split()
+        except ValueError:
+            self.first, self.last = "", ""
         self.username = username  # type: str
         self.coordinates = coordinates  # type: (int, int)
         self.x, self.y = coordinates
@@ -27,6 +30,7 @@ class Person:
     def json_dict(self):
         return {
             'name': self.name,
+            'username': self.username,
             'x_coord': self.x,
             'y_coord': self.y,
         }
@@ -39,27 +43,76 @@ class Person:
 
     @classmethod
     def from_params(cls, params):
-        username, name, x, y = map(str.strip, params.split(','))
+        username, x, y = map(str.strip, params.split(','))
+        name = " ".join(username.split('.')).title()
         return cls(username, name, (int(x), int(y)))
 
     @classmethod
     def from_file(cls, filename):
         with open(filename) as f:
-            return [Person.from_params(person)
+            # return [Person.from_params(person) for person in json.load(f)]
+            return [cls.from_params(person)
                     for person in f.readlines()]
+
+    @classmethod
+    def from_json(cls, json_str):
+        j = json.loads(json_str)
+        name = " ".join(j.username.split('.')).title()
+        return cls(
+            j.username,
+            name,
+            (int(j.x), int(j.y)),
+        )
+
+    @classmethod
+    def from_json_file(cls, file):
+        with open(file) as f:
+            j = f.read()
+        return [cls(
+            p['username'],
+            p['name'],
+            (p['x_coord'], p['y_coord'])
+        ) for p in json.loads(j)['offices'] if p]
+
+
+class Progress:
+    def __init__(self):
+        self.stage = 0
+        self.order_rank = (
+            ('created', "created"),
+            ('pickup', "pickup"),
+            ('transit', "in transit"),
+            ('delivered', "delivered"),
+        )
+
+    def next_stage(self):
+        if 0 <= self.stage < 3:
+            self.stage += 1
+        else:
+            raise Exception
+
+    def get_stage(self):
+        return self.order_rank[self.stage]
+
+    def __repr__(self):
+        return self.get_stage()
 
 
 class Ticket:
     def __init__(self, pickup_time, sender, recipient, message,
                  created=None):
-        self.id = datetime.now().strftime("%Y-%m-%d-%H%M%S")
+        self.id = \
+            f'{datetime.now().strftime("%Y-%m-%d-%H%M%S")}_{sender.username}'
         self.pickup_time = pickup_time  # type: datetime
         self.sender = sender  # type: Person
         self.recipient = recipient  # type: Person
         self.message = message  # type: str
+        self.status = Progress()
+        self.pending = True
+        self.accepted = None
         self.delivered = False
         if not created:
-            self.created = datetime.utcnow()
+            self.created = datetime.utcnow()  # type: datetime
 
     def __repr__(self):
         return "Ticket[{}] {} --> {}".format(
@@ -68,6 +121,12 @@ class Ticket:
             self.recipient,
         )
 
+    def progress(self):
+        self.status.next_stage()
+
+    def stage_text(self):
+        return self.status.get_stage()[1]
+
     def to_params(self):
         return {
             'created': ('Created on', self.created),
@@ -75,6 +134,18 @@ class Ticket:
             'sender': ('Sender', self.sender),
             'recipient': ('Recipient', self.recipient),
             'message': ('Message', self.message),
+            'status': ('Status', self.stage_text())
+        }
+
+    def to_json(self):
+        return {
+            'created': self.created.isoformat(),
+            'pickup_time': self.pickup_time,
+            'sender': self.sender.username,
+            'recipient': self.recipient.username,
+            'message': self.message,
+            'status': self.stage_text(),
+            'id': self.id,
         }
 
 
@@ -97,6 +168,9 @@ class TicketRegister:
     def get_received(self, user):
         return list(filter(lambda x: x.recipient == user, self.tickets))
 
+    def get_all_pending(self, user):
+        return [ticket for ticket in self.get_received(user) if ticket.pending]
+
 
 class Bot:
     def __init__(self, uid, name):
@@ -109,7 +183,8 @@ class Bot:
             'y_loc': 0,
             'bearing': 0,
             'state': 'unknown',
-            'battery_volts': 5,
+            'battery_volts': 0.00,
+            'battery_percent': 0,
             'dest': (0, 0),
             'route': "none",
         }
@@ -124,15 +199,19 @@ class Bot:
     def __repr__(self):
         return str(self)
 
+    def battery(self):
+        # estimate battery % - between 5 and 8.21 Volt
+        return max(0,
+                   min(
+                       round(100 * (self.props['battery_volts'] - 5) /
+                             (8.21 - 5)),
+                       100)
+                   )
+
     def update_from_dict(self, props):
         for prop, val in props.items():
             self.props[prop] = val
-
-    def battery(self):
-        # estimate battery % - between 5 and 7.5 Volt
-        return max(0, min(
-            round(100 * (self.props['battery_volts'] - 5) / 2.5),
-            100))
+        self.props['battery_percent'] = self.battery()
 
     def to_json(self):
         return json.dumps(self.props)
@@ -155,6 +234,7 @@ class Map:
 
     def add_office(self, person):
         print(self.in_coordinates(person.coordinates))
+        print(self.in_map(person))
         if self.in_map(person) or self.in_coordinates(person.coordinates):
             raise KeyError
         if person.coordinates == (0, 0):
@@ -164,7 +244,9 @@ class Map:
 
     def remove_office(self, person):
         if self.in_map(person):
-            self.offices.pop(person.username)
+            if type(person) is Person:
+                person = person.username
+            self.offices.pop(person)
         else:
             raise KeyError
 

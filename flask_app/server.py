@@ -1,6 +1,6 @@
 import datetime
 
-from tcpcom import TCPServer
+from .tcpcom import TCPServer
 
 
 class DeliverAIServer:

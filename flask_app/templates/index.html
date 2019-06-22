@@ -2,21 +2,48 @@
 
 {% block title %}{{ title }}{% endblock %}
 
-{% block content %}
-    <div class="p-4 mx-auto">
-        <h1 class="text-center font-italic font-weight-light mb-1">deliver.ai</h1>
-        <h3 class="text-center font-weight-light text-info mb-3">secure delivery service</h3>
+{% block pre_content %}
+    <div class="container-fluid p-0 text-center">
+        <img src="{{ url_for('static', filename='img/deliverai_logo.png') }}"
+             style="max-width: 300px"/>
+        <hr class="w-50">
+        <h2 class="font-weight-light pb-4">
+            efficient, secure delivery<br>
+            for your office</h2>
+        <hr>
+        <div class="container">
+            <h3 class="font-italic font-weight-light">Get your stuff from A to
+                B,<br>the easy way</h3>
+            <p>deliver.ai aims to ease the process of delivering physical
+                items, with a secure point-to-point delivery
+                service</p>
+            <a class="btn btn-success btn-upper rounded-pill px-3" href="{{ url_for('send') }}">Get
+                started!</a>
+        </div>
+        <img src="{{ url_for('static', filename='img/deliverai_poster_slim.png') }}"
+             class="img-fluid"/>
     </div>
-    <hr>
-    <div class="text-center py-4 py-sm-5 px-3">
-        <h3 class="font-italic font-weight-light">Get your stuff from A to B, the easy way</h3>
-        <p>deliver.ai aims to ease the process of delivering physical items, with a secure point-to-point delivery
-            service</p>
-        <a class="btn btn-success btn-upper" href="{{ url_for('send') }}">Get started!</a>
-    </div>
-    <hr>
-    <div class="jumbotron p-0 text-center overflow-hidden mb-1">
-        <img src="/static/img/bot.jpg" class="img-fluid" style="">
-    </div>
-    <p class="font-italic text-center">A deliver.ai bot in its natural habitat</p>
 {% endblock %}
+
+{% block content %}
+
+    {#    <div class="p-4 mx-auto">#}
+    {#        <h1 class="text-center font-italic font-weight-light mb-1">#}
+    {#            deliver.ai</h1>#}
+    {#        <h3 class="text-center font-weight-light text-info mb-3">secure#}
+    {#            delivery service</h3>#}
+    {#    </div>#}
+    {#    <hr>#}
+{#    <div class="text-center px-3" style="height: 400px;">#}
+{#        <div class="my-auto">#}
+{##}
+{#        </div>#}
+{#    </div>#}
+{#    <hr>#}
+{#    <div class="jumbotron p-0 text-center overflow-hidden mb-1">#}
+{#        <img src="/static/img/bot.jpg" class="img-fluid" style="">#}
+{#    </div>#}
+{#    <p class="font-italic text-center">A deliver.ai bot in its natural#}
+{#        habitat</p>#}
+{% endblock %}
+{% block main_container %}{% endblock %}

@@ -6,9 +6,24 @@
 /*background-color: #5ca2ec;*/
 /*}*/
 
+.card {
+    border-radius: 1rem;
+}
+
+.btn-group.rounded-pill :first-child {
+    border-radius: 20rem 0 0 20rem;
+}
+
+.btn-group.rounded-pill :last-child {
+    border-radius: 0 20rem 20rem 0;
+}
+
 .card-name {
     font-weight: 300;
     font-size: 1.8rem;
+}
+
+.text-ellipsis {
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
@@ -27,11 +42,11 @@
     animation: blink 3s cubic-bezier(0, 0, 0.1, 1) 0s infinite;
 }
 
-.robot-status-light.connected {
+.robot-status-light[data-connected="true"] {
     background-color: #28a745;
 }
 
-.robot-status-light.disconnected {
+.robot-status-light[data-connected="false"] {
     background-color: #dc3545;
 }
 
@@ -55,4 +70,9 @@
 .shadow-hover:hover {
     box-shadow: 0 .25rem .8rem .1rem rgba(0, 0, 0, .1);
     transition: 0.2s box-shadow ease;
+}
+
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none; margin: 0;
 }
